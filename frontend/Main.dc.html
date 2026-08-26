@@ -1,0 +1,974 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --wine:#722F37; --wine-dark:#551F26; --wine-tint:#8A424B;
+      --dutch:#EFDFBB; --ivory:#FBF5E7; --cocoa:#5C4033; --blush:#EFD3C8; --navy:#1B1F2E;
+      --line: rgba(114,47,55,0.18);
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Work Sans', -apple-system, sans-serif;
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--dutch); font-family:var(--sans); color:var(--wine-dark); -webkit-font-smoothing:antialiased; }
+    a{ color:var(--wine); } a:hover{ color:var(--wine-dark); }
+    button{ font-family:var(--sans); cursor:pointer; }
+    ::selection{ background:var(--wine); color:var(--dutch); }
+    .scrim{ scrollbar-width:thin; }
+    @keyframes pulse{ 0%,100%{ opacity:.45 } 50%{ opacity:1 } }
+    @keyframes rise{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:translateY(0);} }
+    @keyframes spin{ to{ transform:rotate(360deg);} }
+    @keyframes scan{ 0%{ top:0; } 100%{ top:100%; } }
+  </style>
+</helmet>
+
+<div style="width:1440px; min-height:900px; background:var(--dutch); position:relative;">
+
+  <!-- ============ TOP NAV ============ -->
+  <div style="display:flex; align-items:center; justify-content:space-between; padding:22px 48px; border-bottom:1px solid var(--line); background:var(--ivory); position:sticky; top:0; z-index:50;">
+    <div style="display:flex; align-items:center; gap:44px;">
+      <div onClick="{{goDiscover}}" style="font-family:var(--serif); font-weight:700; font-size:26px; color:var(--wine); letter-spacing:-0.5px; cursor:pointer;">NeeShops</div>
+      <sc-if value="{{isCustomer}}" hint-placeholder-val="{{true}}">
+        <div style="display:flex; gap:8px;">
+          <sc-for list="{{customerNav}}" as="item" hint-placeholder-count="4">
+            <button onClick="{{item.go}}" style="border:none; background:{{item.bg}}; color:{{item.color}}; padding:10px 18px; border-radius:100px; font-size:14.5px; font-weight:600; font-family:var(--sans);">{{item.label}}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{isDeveloper}}" hint-placeholder-val="{{false}}">
+        <div style="display:flex; gap:6px;">
+          <sc-for list="{{devNav}}" as="item" hint-placeholder-count="6">
+            <button onClick="{{item.go}}" style="border:none; background:{{item.bg}}; color:{{item.color}}; padding:9px 15px; border-radius:100px; font-size:13.5px; font-weight:600; font-family:var(--sans);">{{item.label}}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <sc-if value="{{isCustomer}}" hint-placeholder-val="{{true}}">
+        <button onClick="{{goDiscoverFocusComposer}}" style="display:flex; align-items:center; gap:8px; border:1.5px solid var(--wine); background:var(--wine); color:var(--dutch); padding:10px 18px; border-radius:100px; font-size:14px; font-weight:600;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18" stroke-linecap="round"/></svg>
+          Ask AI
+        </button>
+      </sc-if>
+      <button onClick="{{toggleMode}}" style="border:1.5px solid var(--wine); background:transparent; color:var(--wine); padding:9px 16px; border-radius:100px; font-size:13px; font-weight:600;">{{modeToggleLabel}}</button>
+      <div style="width:38px; height:38px; border-radius:50%; background:var(--blush); border:1.5px solid var(--wine); display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-weight:600; color:var(--wine-dark); font-size:14px;">S</div>
+    </div>
+  </div>
+
+  <!-- ============ CUSTOMER: DISCOVER ============ -->
+  <sc-if value="{{showDiscover}}" hint-placeholder-val="{{true}}">
+    <div style="padding:72px 48px 40px; max-width:1000px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:36px;">
+        <div style="font-family:var(--sans); font-size:13px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:var(--cocoa); margin-bottom:14px;">Issue No. 12 &middot; Discover</div>
+        <h1 style="font-family:var(--serif); font-weight:600; font-size:64px; line-height:1.02; color:var(--wine-dark); margin:0; letter-spacing:-1px;">What are we<br/>finding today?</h1>
+      </div>
+
+      <div style="background:var(--ivory); border:1.5px solid var(--line); border-radius:28px; padding:22px 26px; box-shadow:0 18px 40px -18px rgba(85,31,38,0.25);">
+        <input placeholder="{{composerPlaceholder}}" value="{{composerText}}" onInput="{{onComposerInput}}" style="width:100%; border:none; outline:none; background:transparent; font-family:var(--sans); font-size:19px; color:var(--wine-dark); padding:6px 4px 18px;"/>
+        <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--line); padding-top:14px;">
+          <div style="display:flex; gap:10px;">
+            <button onClick="{{onUploadImage}}" style="display:flex; align-items:center; gap:7px; border:1.5px solid var(--line); background:var(--dutch); color:var(--cocoa); padding:9px 15px; border-radius:100px; font-size:13.5px; font-weight:600;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+              Image
+            </button>
+            <button onClick="{{onUploadVideo}}" style="display:flex; align-items:center; gap:7px; border:1.5px solid var(--line); background:var(--dutch); color:var(--cocoa); padding:9px 15px; border-radius:100px; font-size:13.5px; font-weight:600;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3"/></svg>
+              Video
+            </button>
+          </div>
+          <button onClick="{{sendComposer}}" style="display:flex; align-items:center; gap:8px; border:none; background:var(--wine); color:var(--dutch); padding:12px 24px; border-radius:100px; font-size:14.5px; font-weight:700;">
+            Find it
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:22px;">
+        <sc-for list="{{chips}}" as="chip" hint-placeholder-count="5">
+          <button onClick="{{chip.go}}" style="border:1.5px solid var(--wine); background:transparent; color:var(--wine); padding:9px 18px; border-radius:100px; font-size:13.5px; font-weight:600;">{{chip.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- masonry feed -->
+    <div style="padding:20px 48px 90px; max-width:1340px; margin:0 auto;">
+      <div style="columns:4; column-gap:20px;">
+        <sc-for list="{{feed}}" as="card" hint-placeholder-count="12">
+          <div onClick="{{card.open}}" style="break-inside:avoid; margin-bottom:20px; background:var(--ivory); border-radius:22px; overflow:hidden; border:1px solid var(--line); cursor:pointer; animation:rise .5s ease both;">
+            <div style="height:{{card.h}}px; background:{{card.grad}}; position:relative; display:flex; align-items:flex-end; padding:14px;">
+              <sc-if value="{{card.tag}}" hint-placeholder-val="{{true}}">
+                <span style="background:rgba(27,31,46,0.55); color:var(--dutch); font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; padding:5px 10px; border-radius:100px; backdrop-filter:blur(2px);">{{card.tag}}</span>
+              </sc-if>
+            </div>
+            <div style="padding:16px 16px 18px;">
+              <div style="font-family:var(--serif); font-weight:600; font-size:17px; color:var(--wine-dark); margin-bottom:4px;">{{card.title}}</div>
+              <div style="font-size:13px; color:var(--cocoa);">{{card.sub}}</div>
+              <sc-if value="{{card.price}}" hint-placeholder-val="{{true}}">
+                <div style="font-size:15px; font-weight:700; color:var(--wine); margin-top:8px;">{{card.price}}</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ CUSTOMER: SEARCH (Visual Search) ============ -->
+  <sc-if value="{{showSearch}}" hint-placeholder-val="{{false}}">
+    <div style="padding:56px 48px 90px; max-width:1200px; margin:0 auto;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+        <span style="background:var(--wine); color:var(--dutch); font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:5px 11px; border-radius:100px;">Experimental AI</span>
+        <span style="font-size:13px; color:var(--cocoa);">Visual Search</span>
+      </div>
+      <h1 style="font-family:var(--serif); font-weight:600; font-size:42px; color:var(--wine-dark); margin:8px 0 28px; letter-spacing:-0.5px;">Show me, don't tell me.</h1>
+
+      <sc-if value="{{vsEmpty}}" hint-placeholder-val="{{true}}">
+        <div style="border:2px dashed var(--wine); border-radius:26px; padding:70px 40px; text-align:center; background:var(--ivory);">
+          <div style="font-family:var(--serif); font-size:24px; color:var(--wine-dark); margin-bottom:10px;">Drop an image or a short video</div>
+          <div style="font-size:14px; color:var(--cocoa); margin-bottom:26px;">We'll read what's in it and go find it for you.</div>
+          <div style="display:flex; gap:12px; justify-content:center;">
+            <button onClick="{{vsUploadImage}}" style="border:none; background:var(--wine); color:var(--dutch); padding:12px 24px; border-radius:100px; font-weight:700; font-size:14px;">Upload image</button>
+            <button onClick="{{vsUploadVideo}}" style="border:1.5px solid var(--wine); background:transparent; color:var(--wine); padding:12px 24px; border-radius:100px; font-weight:700; font-size:14px;">Upload video</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{vsProcessingVideo}}" hint-placeholder-val="{{false}}">
+        <div style="border-radius:26px; padding:48px; background:var(--navy); color:var(--dutch);">
+          <div style="font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:var(--blush); margin-bottom:14px; font-weight:700;">Extracting frames</div>
+          <div style="display:flex; gap:10px; margin-bottom:22px;">
+            <sc-for list="{{frames}}" as="f" hint-placeholder-count="6">
+              <div style="width:88px; height:64px; border-radius:10px; background:{{f.grad}}; opacity:{{f.op}}; animation:pulse 1.4s ease infinite;"></div>
+            </sc-for>
+          </div>
+          <div style="font-family:var(--serif); font-size:20px; margin-bottom:6px;">2 products detected across 4 frames</div>
+          <div style="font-size:13px; color:var(--blush); margin-bottom:22px;">Identifying the clearest match&hellip;</div>
+          <button onClick="{{vsFinishVideo}}" style="border:none; background:var(--dutch); color:var(--wine-dark); padding:11px 20px; border-radius:100px; font-weight:700; font-size:13.5px;">View detected product</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{vsProcessingImage}}" hint-placeholder-val="{{false}}">
+        <div style="display:flex; gap:24px;">
+          <div style="width:340px; height:340px; border-radius:24px; background:linear-gradient(135deg,#8A424B,#5C4033); flex-shrink:0; position:relative; overflow:hidden;">
+            <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent, rgba(27,31,46,0.5) 90%);"></div>
+            <div style="position:absolute; left:0; right:0; top:0; height:3px; background:var(--dutch); animation:scan 1.6s linear infinite;"></div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+            <div style="font-family:var(--serif); font-size:24px; color:var(--wine-dark); margin-bottom:10px;">Reading the image&hellip;</div>
+            <div style="font-size:14px; color:var(--cocoa);">Detecting category, colour, material and style.</div>
+            <button onClick="{{vsFinishImage}}" style="align-self:flex-start; margin-top:20px; border:none; background:var(--wine); color:var(--dutch); padding:11px 22px; border-radius:100px; font-weight:700; font-size:13.5px;">Show results</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{vsResults}}" hint-placeholder-val="{{false}}">
+        <div>
+          <div style="display:flex; gap:28px; margin-bottom:16px;">
+            <div style="width:300px; height:300px; border-radius:24px; background:linear-gradient(135deg,#8A424B,#5C4033); flex-shrink:0;"></div>
+            <div style="flex:1;">
+              <div style="font-family:var(--serif); font-size:26px; color:var(--wine-dark); margin-bottom:14px;">Here's what we think you're looking at.</div>
+              <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">
+                <sc-for list="{{vsAttrs}}" as="a" hint-placeholder-count="5">
+                  <div style="background:var(--ivory); border:1px solid var(--line); border-radius:14px; padding:10px 14px;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--cocoa); font-weight:700; margin-bottom:3px;">{{a.label}}</div>
+                    <input value="{{a.value}}" onInput="{{a.onEdit}}" style="border:none; background:transparent; font-family:var(--sans); font-size:15px; font-weight:600; color:var(--wine-dark); width:100%; outline:none;"/>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div style="border:1.5px solid var(--wine); background:var(--ivory); border-radius:20px; padding:20px 24px; margin:24px 0; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:700; font-size:14.5px; color:var(--wine-dark); margin-bottom:4px;">Media Check &middot; AI-generated likelihood: 74%</div>
+              <div style="font-size:13px; color:var(--cocoa);">Moderate confidence &mdash; some visual characteristics are consistent with synthetic imagery. This does not mean the product itself is fake.</div>
+            </div>
+            <div style="display:flex; gap:8px; flex-shrink:0; margin-left:20px;">
+              <button onClick="{{openMediaCheck}}" style="border:1.5px solid var(--wine); background:transparent; color:var(--wine); padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700;">See analysis</button>
+              <button onClick="{{dismissMediaCheck}}" style="border:none; background:var(--wine); color:var(--dutch); padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700;">Continue search</button>
+            </div>
+          </div>
+
+          <sc-for list="{{vsSections}}" as="sec" hint-placeholder-count="4">
+            <div style="margin-bottom:30px;">
+              <div style="font-family:var(--serif); font-size:20px; color:var(--wine-dark); margin-bottom:12px;">{{sec.title}}</div>
+              <div style="display:flex; gap:16px; overflow-x:auto; padding-bottom:6px;">
+                <sc-for list="{{sec.items}}" as="p" hint-placeholder-count="4">
+                  <div onClick="{{p.open}}" style="width:190px; flex-shrink:0; cursor:pointer;">
+                    <div style="height:190px; border-radius:18px; background:{{p.grad}};"></div>
+                    <div style="font-weight:600; font-size:14px; color:var(--wine-dark); margin-top:8px;">{{p.name}}</div>
+                    <div style="font-size:13px; color:var(--wine); font-weight:700;">{{p.price}}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ============ CUSTOMER: SAVED ============ -->
+  <sc-if value="{{showSaved}}" hint-placeholder-val="{{false}}">
+    <div style="padding:56px 48px 90px; max-width:1200px; margin:0 auto;">
+      <h1 style="font-family:var(--serif); font-weight:600; font-size:42px; color:var(--wine-dark); margin:0 0 28px; letter-spacing:-0.5px;">Your saved edit</h1>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:20px;">
+        <sc-for list="{{savedFeed}}" as="card" hint-placeholder-count="8">
+          <div onClick="{{card.open}}" style="background:var(--ivory); border-radius:20px; overflow:hidden; border:1px solid var(--line); cursor:pointer;">
+            <div style="height:180px; background:{{card.grad}};"></div>
+            <div style="padding:14px;">
+              <div style="font-weight:600; font-size:14.5px; color:var(--wine-dark);">{{card.title}}</div>
+              <div style="font-size:14px; font-weight:700; color:var(--wine); margin-top:4px;">{{card.price}}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ CUSTOMER: PROFILE ============ -->
+  <sc-if value="{{showProfile}}" hint-placeholder-val="{{false}}">
+    <div style="padding:56px 48px 90px; max-width:820px; margin:0 auto;">
+      <div style="display:flex; gap:20px; align-items:center; margin-bottom:36px;">
+        <div style="width:74px; height:74px; border-radius:50%; background:var(--blush); border:2px solid var(--wine); display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:28px; color:var(--wine-dark);">S</div>
+        <div>
+          <div style="font-family:var(--serif); font-size:30px; color:var(--wine-dark);">Shaneen</div>
+          <div style="font-size:14px; color:var(--cocoa);">Member since 2026 &middot; 12 saved &middot; 3 conversations</div>
+        </div>
+      </div>
+      <div style="background:var(--navy); color:var(--dutch); border-radius:24px; padding:32px; margin-bottom:24px;">
+        <div style="font-family:var(--serif); font-size:22px; margin-bottom:10px;">Your taste, so far</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <sc-for list="{{tasteChips}}" as="t" hint-placeholder-count="6">
+            <span style="border:1px solid var(--blush); color:var(--blush); padding:7px 14px; border-radius:100px; font-size:13px;">{{t}}</span>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div style="background:var(--ivory); border:1px solid var(--line); border-radius:18px; padding:20px;">
+          <div style="font-size:12px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:var(--cocoa);">Budget default</div>
+          <div style="font-family:var(--serif); font-size:22px; color:var(--wine-dark); margin-top:6px;">Under $150</div>
+        </div>
+        <div style="background:var(--ivory); border:1px solid var(--line); border-radius:18px; padding:20px;">
+          <div style="font-size:12px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:var(--cocoa);">Sizes</div>
+          <div style="font-family:var(--serif); font-size:22px; color:var(--wine-dark); margin-top:6px;">W 8 &middot; M 42</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ CUSTOMER: CONVERSATION ============ -->
+  <sc-if value="{{showConversation}}" hint-placeholder-val="{{false}}">
+    <div style="display:flex;">
+      <div style="flex:1; max-width:760px; margin:0 auto; padding:40px 48px 100px;">
+        <button onClick="{{goDiscover}}" style="border:none; background:none; color:var(--cocoa); font-size:13px; font-weight:600; margin-bottom:24px; display:flex; align-items:center; gap:6px;">&larr; Back to Discover</button>
+
+        <!-- user message -->
+        <div style="display:flex; justify-content:flex-end; margin-bottom:18px;">
+          <div style="background:var(--wine); color:var(--dutch); padding:14px 20px; border-radius:22px 22px 4px 22px; max-width:70%; font-size:15px; line-height:1.5;">{{userMessage}}</div>
+        </div>
+
+        <!-- extracted chips -->
+        <div style="display:flex; gap:8px; margin:0 0 20px; flex-wrap:wrap;">
+          <sc-for list="{{prefChips}}" as="c" hint-placeholder-count="3">
+            <span style="background:var(--blush); color:var(--wine-dark); padding:6px 14px; border-radius:100px; font-size:12.5px; font-weight:700;">{{c}}</span>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{chatLoading}}" hint-placeholder-val="{{false}}">
+          <div style="display:flex; gap:6px; padding:14px 4px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:var(--wine); animation:pulse 1s ease infinite;"></div>
+            <div style="width:8px; height:8px; border-radius:50%; background:var(--wine); animation:pulse 1s ease .15s infinite;"></div>
+            <div style="width:8px; height:8px; border-radius:50%; background:var(--wine); animation:pulse 1s ease .3s infinite;"></div>
+          </div>
+        </sc-if>
+
+        <!-- clarify question -->
+        <sc-if value="{{showClarify}}" hint-placeholder-val="{{false}}">
+          <div style="margin-bottom:16px;">
+            <div style="background:var(--ivory); border:1px solid var(--line); color:var(--wine-dark); padding:14px 20px; border-radius:22px 22px 22px 4px; max-width:78%; font-size:15px; line-height:1.5; margin-bottom:14px;">Does she normally prefer sneakers, or something a little dressier?</div>
+            <div style="display:flex; gap:10px;">
+              <sc-for list="{{clarifyOptions}}" as="o" hint-placeholder-count="2">
+                <button onClick="{{o.pick}}" style="border:1.5px solid var(--wine); background:transparent; color:var(--wine); padding:10px 20px; border-radius:100px; font-size:14px; font-weight:600;">{{o.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{clarifyChosen}}" hint-placeholder-val="{{false}}">
+          <div style="display:flex; justify-content:flex-end; margin-bottom:18px;">
+            <div style="background:var(--wine); color:var(--dutch); padding:12px 18px; border-radius:22px 22px 4px 22px; font-size:14.5px;">{{clarifyChosen}}</div>
+          </div>
+        </sc-if>
+
+        <!-- product recs -->
+        <sc-if value="{{showProducts}}" hint-placeholder-val="{{false}}">
+          <div style="background:var(--ivory); border:1px solid var(--line); color:var(--wine-dark); padding:14px 20px; border-radius:22px 22px 22px 4px; font-size:15px; margin-bottom:18px; max-width:80%;">Good to know &mdash; here's what I'd point her toward, casual and under $120.</div>
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <sc-for list="{{chatProducts}}" as="p" hint-placeholder-count="3">
+              <div style="display:flex; gap:16px; background:var(--ivory); border:1px solid var(--line); border-radius:20px; padding:16px; animation:rise .4s ease both;">
+                <div onClick="{{p.open}}" style="width:110px; height:110px; border-radius:14px; background:{{p.grad}}; flex-shrink:0; cursor:pointer;"></div>
+                <div style="flex:1;">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                      <div style="font-family:var(--serif); font-size:17px; color:var(--wine-dark);">{{p.name}}</div>
+                      <div style="font-size:14px; font-weight:700; color:var(--wine); margin-top:2px;">{{p.price}}</div>
+                    </div>
+                    <span style="background:var(--wine); color:var(--dutch); font-size:11px; font-weight:700; padding:5px 11px; border-radius:100px;">{{p.badge}}</span>
+                  </div>
+                  <div style="font-size:13px; color:var(--cocoa); margin:8px 0 10px;">{{p.reason}}</div>
+                  <div style="display:flex; gap:8px;">
+                    <button onClick="{{p.open}}" style="border:1.5px solid var(--wine); background:transparent; color:var(--wine); padding:7px 14px; border-radius:100px; font-size:12.5px; font-weight:700;">View product</button>
+                    <button onClick="{{p.save}}" style="border:1.5px solid var(--line); background:{{p.saveBg}}; color:var(--wine-dark); padding:7px 14px; border-radius:100px; font-size:12.5px; font-weight:700;">{{p.saveLabel}}</button>
+                    <button onClick="{{p.similar}}" style="border:none; background:none; color:var(--cocoa); padding:7px 6px; border-radius:100px; font-size:12.5px; font-weight:700;">Find similar</button>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ CUSTOMER: PRODUCT DETAIL ============ -->
+  <sc-if value="{{showProduct}}" hint-placeholder-val="{{false}}">
+    <div>
+      <div style="display:flex; min-height:560px;">
+        <div style="width:50%; background:{{activeProduct.grad}}; position:relative;">
+          <button onClick="{{goBack}}" style="position:absolute; top:24px; left:24px; border:none; background:rgba(251,245,231,0.9); color:var(--wine-dark); padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700;">&larr; Back</button>
+        </div>
+        <div style="width:50%; padding:64px 56px; display:flex; flex-direction:column; justify-content:center;">
+          <div style="font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--cocoa); font-weight:700; margin-bottom:10px;">{{activeProduct.category}}</div>
+          <h1 style="font-family:var(--serif); font-size:40px; color:var(--wine-dark); margin:0 0 10px; letter-spacing:-0.5px;">{{activeProduct.name}}</h1>
+          <div style="font-size:26px; font-weight:700; color:var(--wine); margin-bottom:18px;">{{activeProduct.price}}</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+            <sc-for list="{{activeProduct.attrs}}" as="a" hint-placeholder-count="4">
+              <span style="background:var(--ivory); border:1px solid var(--line); padding:6px 13px; border-radius:100px; font-size:12.5px; color:var(--wine-dark);">{{a}}</span>
+            </sc-for>
+          </div>
+          <div style="background:var(--navy); color:var(--dutch); border-radius:18px; padding:18px 20px; margin-bottom:24px;">
+            <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:700; color:var(--blush); margin-bottom:6px;">Why the AI selected this</div>
+            <div style="font-size:14px; line-height:1.5;">{{activeProduct.why}}</div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button onClick="{{viewActiveProduct}}" style="border:none; background:var(--wine); color:var(--dutch); padding:13px 24px; border-radius:100px; font-weight:700; font-size:14px;">View Product</button>
+            <button onClick="{{findSimilarActive}}" style="border:1.5px solid var(--wine); background:transparent; color:var(--wine); padding:13px 24px; border-radius:100px; font-weight:700; font-size:14px;">Find Similar</button>
+            <button onClick="{{toggleSaveActive}}" style="border:1.5px solid var(--line); background:var(--ivory); color:var(--wine-dark); padding:13px 20px; border-radius:100px; font-weight:700; font-size:14px;">{{activeProduct.saveLabel}}</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="max-width:1100px; margin:0 auto; padding:64px 48px 100px; display:flex; flex-direction:column; gap:48px;">
+        <div>
+          <div style="font-family:var(--serif); font-size:26px; color:var(--wine-dark); margin-bottom:14px;">Why this matches you</div>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+            <sc-for list="{{matchReasons}}" as="m" hint-placeholder-count="3">
+              <div style="background:var(--blush); border-radius:18px; padding:18px;">
+                <div style="font-weight:700; font-size:14.5px; color:var(--wine-dark); margin-bottom:4px;">{{m.title}}</div>
+                <div style="font-size:13px; color:var(--cocoa);">{{m.body}}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-family:var(--serif); font-size:26px; color:var(--wine-dark); margin-bottom:14px;">Important specifications</div>
+          <div style="background:var(--ivory); border:1px solid var(--line); border-radius:18px; overflow:hidden;">
+            <sc-for list="{{specs}}" as="s" hint-placeholder-count="5">
+              <div style="display:flex; justify-content:space-between; padding:14px 22px; border-bottom:1px solid var(--line); font-size:14px;">
+                <span style="color:var(--cocoa); font-weight:600;">{{s.k}}</span>
+                <span style="color:var(--wine-dark); font-weight:600;">{{s.v}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px;">
+            <div style="font-family:var(--serif); font-size:26px; color:var(--wine-dark);">Similar alternatives</div>
+            <button style="border:1.5px solid var(--wine); background:none; color:var(--wine); padding:8px 16px; border-radius:100px; font-size:13px; font-weight:700;">Compare products</button>
+          </div>
+          <div style="display:flex; gap:16px; overflow-x:auto;">
+            <sc-for list="{{alternatives}}" as="p" hint-placeholder-count="4">
+              <div style="width:190px; flex-shrink:0;">
+                <div style="height:190px; border-radius:18px; background:{{p.grad}};"></div>
+                <div style="font-weight:600; font-size:14px; color:var(--wine-dark); margin-top:8px;">{{p.name}}</div>
+                <div style="font-size:13px; color:var(--wine); font-weight:700;">{{p.price}}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:var(--wine); color:var(--dutch); border-radius:24px; padding:32px 36px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-family:var(--serif); font-size:22px; margin-bottom:6px;">Ask AI about this product</div>
+            <div style="font-size:13.5px; color:var(--blush);">"Does this run true to size?" &middot; "Is this good for wide feet?"</div>
+          </div>
+          <button style="border:none; background:var(--dutch); color:var(--wine-dark); padding:12px 22px; border-radius:100px; font-weight:700; font-size:14px; flex-shrink:0;">Ask a question</button>
+        </div>
+
+        <div>
+          <div style="font-family:var(--serif); font-size:26px; color:var(--wine-dark); margin-bottom:14px;">You may also like</div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+            <sc-for list="{{alsoLike}}" as="p" hint-placeholder-count="4">
+              <div>
+                <div style="height:160px; border-radius:18px; background:{{p.grad}};"></div>
+                <div style="font-weight:600; font-size:13.5px; color:var(--wine-dark); margin-top:8px;">{{p.name}}</div>
+                <div style="font-size:12.5px; color:var(--wine); font-weight:700;">{{p.price}}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ MEDIA CHECK MODAL ============ -->
+  <sc-if value="{{mediaCheckOpen}}" hint-placeholder-val="{{false}}">
+    <div onClick="{{dismissMediaCheck}}" style="position:fixed; inset:0; background:rgba(27,31,46,0.55); z-index:200; display:flex; align-items:center; justify-content:center;">
+      <div onClick="{{stopProp}}" style="background:var(--ivory); width:520px; border-radius:26px; padding:36px; box-shadow:0 30px 60px -20px rgba(0,0,0,0.4);">
+        <div style="font-size:11px; letter-spacing:1.5px; text-transform:uppercase; font-weight:700; color:var(--cocoa); margin-bottom:8px;">Media Check</div>
+        <div style="font-family:var(--serif); font-size:26px; color:var(--wine-dark); margin-bottom:18px;">AI-generated likelihood: 74%</div>
+        <div style="height:10px; background:var(--dutch); border-radius:100px; overflow:hidden; margin-bottom:8px;">
+          <div style="width:74%; height:100%; background:var(--wine);"></div>
+        </div>
+        <div style="font-size:13px; font-weight:700; color:var(--wine); margin-bottom:16px;">Moderate confidence</div>
+        <div style="font-size:14px; line-height:1.6; color:var(--cocoa); margin-bottom:14px;">Some visual characteristics &mdash; unusually smooth texture gradients and inconsistent shadow direction &mdash; are consistent with synthetic imagery.</div>
+        <div style="background:var(--dutch); border-radius:14px; padding:14px 16px; font-size:13px; color:var(--wine-dark); margin-bottom:22px;">This does not mean the product itself is fake or unavailable. It only reflects the likely origin of this specific image.</div>
+        <button onClick="{{dismissMediaCheck}}" style="width:100%; border:none; background:var(--wine); color:var(--dutch); padding:13px; border-radius:100px; font-weight:700; font-size:14.5px;">Continue product search</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ DEVELOPER: OVERVIEW ============ -->
+  <sc-if value="{{showDevOverview}}" hint-placeholder-val="{{false}}">
+    <div style="padding:56px 48px 90px; max-width:1240px; margin:0 auto;">
+      <div style="font-size:12px; letter-spacing:1.5px; text-transform:uppercase; font-weight:700; color:var(--cocoa); margin-bottom:8px;">Shopping Copilot &middot; Developer</div>
+      <h1 style="font-family:var(--serif); font-size:38px; color:var(--wine-dark); margin:0 0 30px;">Current Shopping Strategy</h1>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:36px;">
+        <div style="background:var(--navy); color:var(--dutch); border-radius:22px; padding:26px;">
+          <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:700; color:var(--blush); margin-bottom:12px;">Buying intent</div>
+          <div style="display:flex; align-items:center; gap:10px; font-family:var(--serif); font-size:19px;">
+            <span>Hybrid Retrieval</span>
+            <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <span>LLM Reranker</span>
+          </div>
+        </div>
+        <div style="background:var(--wine); color:var(--dutch); border-radius:22px; padding:26px;">
+          <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:700; color:var(--blush); margin-bottom:12px;">Browsing intent</div>
+          <div style="display:flex; align-items:center; gap:10px; font-family:var(--serif); font-size:19px;">
+            <span>Semantic Retrieval</span>
+            <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <span>Diversity Reranker</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-family:var(--serif); font-size:22px; color:var(--wine-dark); margin-bottom:14px;">Evaluation snapshot</div>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:18px;">
+        <sc-for list="{{evalCards}}" as="e" hint-placeholder-count="3">
+          <div style="background:var(--ivory); border:1px solid var(--line); border-radius:20px; padding:22px;">
+            <div style="font-size:12px; font-weight:700; letter-spacing:0.5px; color:var(--cocoa); text-transform:uppercase; margin-bottom:10px;">{{e.label}}</div>
+            <div style="font-family:var(--serif); font-size:34px; color:var(--wine-dark);">{{e.value}}</div>
+            <div style="font-size:12.5px; color:{{e.deltaColor}}; font-weight:700; margin-top:6px;">{{e.delta}} vs {{e.prev}} previous</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ DEVELOPER: RUNS (Agent Run Inspector) ============ -->
+  <sc-if value="{{showDevRuns}}" hint-placeholder-val="{{false}}">
+    <div style="padding:56px 48px 90px; max-width:900px; margin:0 auto;">
+      <div style="font-size:12px; letter-spacing:1.5px; text-transform:uppercase; font-weight:700; color:var(--cocoa); margin-bottom:8px;">Run #A19F-2201</div>
+      <h1 style="font-family:var(--serif); font-size:36px; color:var(--wine-dark); margin:0 0 6px;">Agent Run Inspector</h1>
+      <div style="font-size:13.5px; color:var(--cocoa); margin-bottom:30px;">"casual women's shoes under $120" &middot; 812ms total &middot; completed</div>
+
+      <div style="display:flex; flex-direction:column;">
+        <sc-for list="{{runStages}}" as="st" hint-placeholder-count="10">
+          <div style="border-left:2px solid var(--wine); padding-left:24px; padding-bottom:22px; position:relative;">
+            <div style="position:absolute; left:-7px; top:2px; width:12px; height:12px; border-radius:50%; background:var(--wine);"></div>
+            <div onClick="{{st.toggle}}" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; background:var(--ivory); border:1px solid var(--line); border-radius:16px; padding:14px 18px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:12px; font-weight:700; color:var(--cocoa); width:20px;">{{st.n}}</span>
+                <span style="font-family:var(--serif); font-size:17px; color:var(--wine-dark);">{{st.name}}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:14px;">
+                <span style="font-size:12.5px; color:var(--cocoa);">{{st.time}}</span>
+                <span style="font-size:16px; color:var(--wine); transform:{{st.arrow}};">&#8250;</span>
+              </div>
+            </div>
+            <sc-if value="{{st.open}}" hint-placeholder-val="{{false}}">
+              <div style="background:var(--navy); color:var(--dutch); border-radius:0 0 16px 16px; margin-top:-1px; padding:16px 20px; font-family:'SF Mono',monospace; font-size:12.5px; line-height:1.7; white-space:pre-wrap;">{{st.detail}}</div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ DEVELOPER: EXPERIMENTS (AI Research Lab) ============ -->
+  <sc-if value="{{showDevExperiments}}" hint-placeholder-val="{{false}}">
+    <div style="padding:56px 48px 90px; max-width:1240px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+        <div>
+          <div style="font-size:12px; letter-spacing:1.5px; text-transform:uppercase; font-weight:700; color:var(--cocoa); margin-bottom:8px;">Recommendation Research Agent</div>
+          <h1 style="font-family:var(--serif); font-size:36px; color:var(--wine-dark); margin:0;">AI Research Lab</h1>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button onClick="{{proposeExperiment}}" style="border:1.5px solid var(--wine); background:transparent; color:var(--wine); padding:11px 18px; border-radius:100px; font-weight:700; font-size:13.5px;">Propose Experiment</button>
+          <button onClick="{{runAutonomous}}" style="border:none; background:var(--wine); color:var(--dutch); padding:11px 20px; border-radius:100px; font-weight:700; font-size:13.5px;">{{autoResearchLabel}}</button>
+        </div>
+      </div>
+
+      <sc-if value="{{autoResearchNote}}" hint-placeholder-val="{{false}}">
+        <div style="background:var(--blush); border-radius:16px; padding:14px 20px; font-size:13.5px; color:var(--wine-dark); margin-bottom:22px;">{{autoResearchNote}}</div>
+      </sc-if>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <sc-for list="{{experiments}}" as="ex" hint-placeholder-count="4">
+          <div style="background:var(--ivory); border:1px solid var(--line); border-radius:22px; padding:22px 26px;">
+            <div onClick="{{ex.toggle}}" style="display:flex; justify-content:space-between; align-items:flex-start; cursor:pointer;">
+              <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                  <span style="font-family:var(--sans); font-weight:700; font-size:12.5px; color:var(--cocoa);">{{ex.id}}</span>
+                  <span style="background:{{ex.statusBg}}; color:{{ex.statusColor}}; font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; padding:4px 11px; border-radius:100px;">{{ex.status}}</span>
+                </div>
+                <div style="font-family:var(--serif); font-size:18px; color:var(--wine-dark); line-height:1.4;">{{ex.hypothesis}}</div>
+              </div>
+              <sc-if value="{{ex.improvement}}" hint-placeholder-val="{{true}}">
+                <div style="text-align:right; flex-shrink:0; margin-left:24px;">
+                  <div style="font-family:var(--serif); font-size:26px; color:var(--wine);">{{ex.improvement}}</div>
+                  <div style="font-size:11.5px; color:var(--cocoa);">vs baseline</div>
+                </div>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ex.open}}" hint-placeholder-val="{{false}}">
+              <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--line);">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                  <div style="background:var(--dutch); border-radius:14px; padding:16px;">
+                    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--cocoa); margin-bottom:6px;">Configuration A &middot; Baseline</div>
+                    <div style="font-family:var(--serif); font-size:16px; color:var(--wine-dark); margin-bottom:6px;">{{ex.configA}}</div>
+                    <div style="font-size:20px; font-weight:700; color:var(--wine-dark);">{{ex.baselineScore}}</div>
+                  </div>
+                  <div style="background:var(--wine); border-radius:14px; padding:16px; color:var(--dutch); position:relative;">
+                    <sc-if value="{{ex.winner}}" hint-placeholder-val="{{true}}">
+                      <span style="position:absolute; top:-9px; right:14px; background:var(--dutch); color:var(--wine-dark); font-size:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; padding:3px 9px; border-radius:100px;">Winner</span>
+                    </sc-if>
+                    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--blush); margin-bottom:6px;">Configuration B &middot; Candidate</div>
+                    <div style="font-family:var(--serif); font-size:16px; margin-bottom:6px;">{{ex.configB}}</div>
+                    <div style="font-size:20px; font-weight:700;">{{ex.candidateScore}}</div>
+                  </div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                  <button onClick="{{ex.run}}" style="border:1.5px solid var(--wine); background:transparent; color:var(--wine); padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700;">{{ex.runLabel}}</button>
+                  <button onClick="{{ex.viewResults}}" style="border:none; background:none; color:var(--cocoa); padding:9px 6px; font-size:13px; font-weight:700;">View Results</button>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ DEVELOPER: EVALUATION ============ -->
+  <sc-if value="{{showDevEvaluation}}" hint-placeholder-val="{{false}}">
+    <div style="padding:56px 48px 90px; max-width:1240px; margin:0 auto;">
+      <div style="font-size:12px; letter-spacing:1.5px; text-transform:uppercase; font-weight:700; color:var(--cocoa); margin-bottom:8px;">Offline &amp; online eval</div>
+      <h1 style="font-family:var(--serif); font-size:36px; color:var(--wine-dark); margin:0 0 30px;">Evaluation</h1>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:32px;">
+        <sc-for list="{{evalCards}}" as="e" hint-placeholder-count="3">
+          <div style="background:var(--ivory); border:1px solid var(--line); border-radius:20px; padding:22px;">
+            <div style="font-size:12px; font-weight:700; letter-spacing:0.5px; color:var(--cocoa); text-transform:uppercase; margin-bottom:10px;">{{e.label}}</div>
+            <div style="font-family:var(--serif); font-size:34px; color:var(--wine-dark);">{{e.value}}</div>
+            <div style="font-size:12.5px; color:{{e.deltaColor}}; font-weight:700; margin-top:6px;">{{e.delta}} vs {{e.prev}} previous</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:var(--ivory); border:1px solid var(--line); border-radius:20px; overflow:hidden;">
+        <sc-for list="{{evalScenarios}}" as="sc" hint-placeholder-count="5">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 22px; border-bottom:1px solid var(--line);">
+            <div>
+              <div style="font-weight:600; font-size:14.5px; color:var(--wine-dark);">{{sc.name}}</div>
+              <div style="font-size:12.5px; color:var(--cocoa);">{{sc.n}} scenarios</div>
+            </div>
+            <div style="font-family:var(--serif); font-size:20px; color:{{sc.color}};">{{sc.score}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ DEVELOPER: MEDIA AI ============ -->
+  <sc-if value="{{showDevMediaAI}}" hint-placeholder-val="{{false}}">
+    <div style="padding:56px 48px 90px; max-width:1240px; margin:0 auto;">
+      <div style="font-size:12px; letter-spacing:1.5px; text-transform:uppercase; font-weight:700; color:var(--cocoa); margin-bottom:8px;">Uploads &amp; media analysis</div>
+      <h1 style="font-family:var(--serif); font-size:36px; color:var(--wine-dark); margin:0 0 30px;">Media AI Dashboard</h1>
+      <div style="background:var(--ivory); border:1px solid var(--line); border-radius:20px; overflow:hidden;">
+        <div style="display:grid; grid-template-columns:64px 1.4fr 1fr 1fr 1fr 1fr; gap:10px; padding:12px 22px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--cocoa); border-bottom:1px solid var(--line);">
+          <div></div><div>Classification</div><div>Retrieval</div><div>AI-gen likelihood</div><div>Confidence</div><div>Status</div>
+        </div>
+        <sc-for list="{{mediaUploads}}" as="m" hint-placeholder-count="6">
+          <div style="display:grid; grid-template-columns:64px 1.4fr 1fr 1fr 1fr 1fr; gap:10px; padding:14px 22px; border-bottom:1px solid var(--line); align-items:center;">
+            <div style="width:44px; height:44px; border-radius:12px; background:{{m.grad}};"></div>
+            <div style="font-weight:600; font-size:13.5px; color:var(--wine-dark);">{{m.classification}}</div>
+            <div style="font-size:13px; color:var(--cocoa);">{{m.retrieval}}</div>
+            <div style="font-size:13.5px; font-weight:700; color:var(--wine-dark);">{{m.likelihood}}</div>
+            <div style="font-size:13px; color:var(--cocoa);">{{m.confidence}}</div>
+            <div><span style="background:{{m.statusBg}}; color:{{m.statusColor}}; font-size:11px; font-weight:700; padding:4px 10px; border-radius:100px;">{{m.status}}</span></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ DEVELOPER: SYSTEM ============ -->
+  <sc-if value="{{showDevSystem}}" hint-placeholder-val="{{false}}">
+    <div style="padding:56px 48px 90px; max-width:1240px; margin:0 auto;">
+      <div style="font-size:12px; letter-spacing:1.5px; text-transform:uppercase; font-weight:700; color:var(--cocoa); margin-bottom:8px;">Infrastructure</div>
+      <h1 style="font-family:var(--serif); font-size:36px; color:var(--wine-dark); margin:0 0 30px;">System</h1>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:18px;">
+        <sc-for list="{{systemCards}}" as="c" hint-placeholder-count="6">
+          <div style="background:var(--ivory); border:1px solid var(--line); border-radius:20px; padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div style="font-weight:700; font-size:14.5px; color:var(--wine-dark);">{{c.name}}</div>
+              <span style="width:9px; height:9px; border-radius:50%; background:{{c.dot}};"></span>
+            </div>
+            <div style="font-size:13px; color:var(--cocoa);">{{c.detail}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+
+<script data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      mode: 'customer',
+      view: 'discover',
+      devView: 'overview',
+      composerText: '',
+      chatLoading: false,
+      chatStep: 0,
+      clarifyChosen: null,
+      vsState: 'empty',
+      mediaCheckOpen: false,
+      attrs: { category: 'Sneakers', colour: 'Black leather', style: 'Minimal', material: 'Leather', aesthetic: 'Off-duty streetwear' },
+      runOpen: { 1: true },
+      expOpen: { 'EXP-014': true },
+      autoRunning: false,
+      autoDone: false,
+      saved: {},
+      activeProductId: 'p1',
+    };
+  }
+
+  grad(i) {
+    const g = [
+      'linear-gradient(135deg,#8A424B,#5C4033)',
+      'linear-gradient(135deg,#EFD3C8,#8A424B)',
+      'linear-gradient(135deg,#1B1F2E,#722F37)',
+      'linear-gradient(135deg,#5C4033,#EFDFBB)',
+      'linear-gradient(135deg,#722F37,#EFD3C8)',
+      'linear-gradient(150deg,#1B1F2E,#5C4033)',
+    ];
+    return g[i % g.length];
+  }
+
+  go(view) { return () => this.setState({ view, mode: 'customer' }); }
+  goDev(devView) { return () => this.setState({ devView, mode: 'developer' }); }
+
+  renderVals() {
+    const s = this.state;
+    const grad = this.grad.bind(this);
+
+    const products = [
+      { id:'p1', name:'The Weekend Slip-On', price:'$98', category:'Women\'s Footwear',
+        why:'Casual construction, canvas upper and a soft footbed — closest match to "everyday and comfortable" with room under your $120 ceiling.',
+        attrs:['Casual','Canvas','True to size','Machine washable'] },
+      { id:'p2', name:'Low-Top Court Classic', price:'$112', category:'Women\'s Footwear',
+        why:'The best-reviewed casual sneaker in your budget band, with the most versatile neutral colourway.',
+        attrs:['Casual','Leather','Cushioned','Runs slightly narrow'] },
+      { id:'p3', name:'Cloud Knit Trainer', price:'$76', category:'Women\'s Footwear',
+        why:'Lowest price of the three while still matching the casual, neutral brief — best value.',
+        attrs:['Casual','Knit mesh','Lightweight','Breathable'] },
+    ];
+    const activeProduct = { ...products.find(p => p.id === s.activeProductId), grad: grad(0), saveLabel: s.saved[s.activeProductId] ? 'Saved' : 'Save' };
+
+    const openProduct = (id) => () => this.setState({ view: 'product', activeProductId: id, mode: 'customer' });
+    const toggleSave = (id) => () => this.setState({ saved: { ...s.saved, [id]: !s.saved[id] } });
+
+    return {
+      isCustomer: s.mode === 'customer',
+      isDeveloper: s.mode === 'developer',
+      modeToggleLabel: s.mode === 'customer' ? 'Developer' : 'Exit Developer',
+      toggleMode: () => this.setState({ mode: s.mode === 'customer' ? 'developer' : 'customer' }),
+
+      customerNav: [
+        { label:'Discover', go: this.go('discover'), bg: s.view==='discover' ? 'var(--wine)':'transparent', color: s.view==='discover' ? 'var(--dutch)':'var(--wine-dark)' },
+        { label:'Search', go: this.go('search'), bg: s.view==='search' ? 'var(--wine)':'transparent', color: s.view==='search' ? 'var(--dutch)':'var(--wine-dark)' },
+        { label:'Saved', go: this.go('saved'), bg: s.view==='saved' ? 'var(--wine)':'transparent', color: s.view==='saved' ? 'var(--dutch)':'var(--wine-dark)' },
+        { label:'Profile', go: this.go('profile'), bg: s.view==='profile' ? 'var(--wine)':'transparent', color: s.view==='profile' ? 'var(--dutch)':'var(--wine-dark)' },
+      ],
+      devNav: [
+        { label:'Overview', go: this.goDev('overview'), bg: s.devView==='overview'?'var(--wine)':'transparent', color: s.devView==='overview'?'var(--dutch)':'var(--wine-dark)' },
+        { label:'Runs', go: this.goDev('runs'), bg: s.devView==='runs'?'var(--wine)':'transparent', color: s.devView==='runs'?'var(--dutch)':'var(--wine-dark)' },
+        { label:'Experiments', go: this.goDev('experiments'), bg: s.devView==='experiments'?'var(--wine)':'transparent', color: s.devView==='experiments'?'var(--dutch)':'var(--wine-dark)' },
+        { label:'Evaluation', go: this.goDev('evaluation'), bg: s.devView==='evaluation'?'var(--wine)':'transparent', color: s.devView==='evaluation'?'var(--dutch)':'var(--wine-dark)' },
+        { label:'Media AI', go: this.goDev('mediaai'), bg: s.devView==='mediaai'?'var(--wine)':'transparent', color: s.devView==='mediaai'?'var(--dutch)':'var(--wine-dark)' },
+        { label:'System', go: this.goDev('system'), bg: s.devView==='system'?'var(--wine)':'transparent', color: s.devView==='system'?'var(--dutch)':'var(--wine-dark)' },
+      ],
+
+      goDiscover: this.go('discover'),
+      goDiscoverFocusComposer: this.go('discover'),
+      goBack: () => this.setState({ view: 'discover' }),
+
+      showDiscover: s.mode==='customer' && s.view==='discover',
+      showSearch: s.mode==='customer' && s.view==='search',
+      showSaved: s.mode==='customer' && s.view==='saved',
+      showProfile: s.mode==='customer' && s.view==='profile',
+      showConversation: s.mode==='customer' && s.view==='conversation',
+      showProduct: s.mode==='customer' && s.view==='product',
+
+      composerPlaceholder: 'Something like this but cheaper…',
+      composerText: s.composerText,
+      onComposerInput: (e) => this.setState({ composerText: e.target.value }),
+      onUploadImage: () => this.setState({ view:'search', vsState:'processingImage' }),
+      onUploadVideo: () => this.setState({ view:'search', vsState:'processingVideo' }),
+
+      chips: [
+        { label:'Date-night outfit', go: () => this.setState({ composerText:'A date-night outfit that feels effortless' }) },
+        { label:'Gifts under $80', go: () => this.setState({ composerText:'A gift under $80' }) },
+        { label:'Everyday sneakers', go: this.startShoeChat() },
+        { label:'Something unexpected', go: () => this.setState({ composerText:'Surprise me with something unexpected' }) },
+        { label:'Upgrade my wardrobe', go: () => this.setState({ composerText:'Help me upgrade my wardrobe' }) },
+      ],
+      sendComposer: this.startShoeChat(),
+
+      feed: [
+        { title:'The Editor\'s Coat', sub:'Cocoa wool blend', price:'$210', tag:'Trending', h:260, grad: grad(0), open: openProduct('p1') },
+        { title:'Gifts for coffee lovers', sub:'Curated edit · 12 picks', price:null, tag:'Guide', h:190, grad: grad(2), open: this.go('conversation') },
+        { title:'Cloud Knit Trainer', sub:'Everyday sneaker', price:'$76', tag:null, h:220, grad: grad(3), open: openProduct('p3') },
+        { title:'Low-Top Court Classic', sub:'Women\'s footwear', price:'$112', tag:'Best value', h:300, grad: grad(1), open: openProduct('p2') },
+        { title:'Beach wedding, solved', sub:'Full outfit edit', price:null, tag:'Guide', h:230, grad: grad(4), open: this.go('conversation') },
+        { title:'The Weekend Slip-On', sub:'Canvas, casual', price:'$98', tag:'Best match', h:210, grad: grad(5), open: openProduct('p1') },
+        { title:'Something unexpected', sub:'Outside your usual picks', price:null, tag:'Wild card', h:260, grad: grad(2), open: this.go('conversation') },
+        { title:'Soft Blush Clutch', sub:'Occasion accessory', price:'$64', tag:null, h:200, grad: grad(1), open: openProduct('p2') },
+        { title:'Upgrade: outerwear', sub:'3 pieces worth the spend', price:null, tag:'Guide', h:240, grad: grad(0), open: this.go('conversation') },
+        { title:'Cocoa Leather Tote', sub:'Everyday carry', price:'$185', tag:null, h:200, grad: grad(3), open: openProduct('p3') },
+        { title:'Minimal Court Sneaker', sub:'Neutral colourway', price:'$112', tag:'Closest to your style', h:250, grad: grad(5), open: openProduct('p2') },
+        { title:'Graduation gifts, sorted', sub:'For the coffee obsessive', price:null, tag:'Guide', h:210, grad: grad(4), open: this.go('conversation') },
+      ],
+
+      savedFeed: products.concat(products).map((p,i) => ({ title:p.name, price:p.price, grad: grad(i), open: openProduct(p.id) })),
+      tasteChips: ['Casual over dressy','Neutral tones','Under $150','Sustainable materials','Minimal branding','Comfort first'],
+
+      // conversation
+      userMessage: "I need shoes for my girlfriend. Something casual, preferably below $120.",
+      prefChips: ['Casual','Women\'s','Under $120'],
+      chatLoading: s.chatLoading,
+      showClarify: s.chatStep >= 1 && !s.clarifyChosen,
+      clarifyOptions: [
+        { label:'Sneakers', pick: () => this.pickClarify('Sneakers') },
+        { label:'Something dressier', pick: () => this.pickClarify('Something dressier') },
+      ],
+      clarifyChosen: s.clarifyChosen,
+      showProducts: s.chatStep >= 2,
+      chatProducts: products.map((p,i) => ({
+        name:p.name, price:p.price, grad: grad(i),
+        badge: i===0?'Best match': i===1?'Closest to your style':'Best value',
+        reason: p.why,
+        open: openProduct(p.id),
+        save: toggleSave(p.id),
+        saveLabel: s.saved[p.id] ? 'Saved' : 'Save',
+        saveBg: s.saved[p.id] ? 'var(--blush)' : 'var(--ivory)',
+        similar: () => {},
+      })),
+
+      // product detail
+      activeProduct,
+      toggleSaveActive: toggleSave(s.activeProductId),
+      viewActiveProduct: () => {},
+      findSimilarActive: () => this.setState({ view:'search', mode:'customer', vsState:'results' }),
+      matchReasons: [
+        { title:'Fits your budget', body:'Priced well under your usual $150 ceiling.' },
+        { title:'Matches your taste', body:'Neutral tone and minimal branding, consistent with your saved items.' },
+        { title:'Right for the occasion', body:'Casual construction suited to everyday wear.' },
+      ],
+      specs: [
+        { k:'Upper material', v:'Canvas / leather trim' },
+        { k:'Sole', v:'Rubber, cushioned' },
+        { k:'Fit', v:'True to size' },
+        { k:'Care', v:'Wipe clean' },
+        { k:'Origin', v:'Imported' },
+      ],
+      alternatives: products.map((p,i) => ({ name:p.name, price:p.price, grad: grad(i+2) })),
+      alsoLike: products.concat(products).map((p,i) => ({ name:p.name, price:p.price, grad: grad(i+3) })),
+
+      // visual search
+      vsEmpty: s.view==='search' && s.vsState==='empty',
+      vsProcessingImage: s.view==='search' && s.vsState==='processingImage',
+      vsProcessingVideo: s.view==='search' && s.vsState==='processingVideo',
+      vsResults: s.view==='search' && s.vsState==='results',
+      vsUploadImage: () => this.setState({ vsState:'processingImage' }),
+      vsUploadVideo: () => this.setState({ vsState:'processingVideo' }),
+      vsFinishImage: () => this.setState({ vsState:'results' }),
+      vsFinishVideo: () => this.setState({ vsState:'results' }),
+      frames: [0,1,2,3,4,5].map(i => ({ grad: grad(i), op: 0.5 + (i%3)*0.15 })),
+      vsAttrs: [
+        { label:'Category', value: s.attrs.category, onEdit: (e) => this.setState({ attrs:{...s.attrs, category:e.target.value} }) },
+        { label:'Colour', value: s.attrs.colour, onEdit: (e) => this.setState({ attrs:{...s.attrs, colour:e.target.value} }) },
+        { label:'Style', value: s.attrs.style, onEdit: (e) => this.setState({ attrs:{...s.attrs, style:e.target.value} }) },
+        { label:'Material', value: s.attrs.material, onEdit: (e) => this.setState({ attrs:{...s.attrs, material:e.target.value} }) },
+        { label:'Aesthetic', value: s.attrs.aesthetic, onEdit: (e) => this.setState({ attrs:{...s.attrs, aesthetic:e.target.value} }) },
+      ],
+      openMediaCheck: () => this.setState({ mediaCheckOpen: true }),
+      dismissMediaCheck: () => this.setState({ mediaCheckOpen: false }),
+      mediaCheckOpen: s.mediaCheckOpen,
+      stopProp: (e) => e.stopPropagation(),
+      vsSections: [
+        { title:'Visually similar', items: products.map((p,i) => ({ name:p.name, price:p.price, grad: grad(i), open: openProduct(p.id) })) },
+        { title:'Similar but cheaper', items: products.map((p,i) => ({ name:p.name, price:'$'+(parseInt(p.price.slice(1))-20), grad: grad(i+1), open: openProduct(p.id) })) },
+        { title:'Same vibe, different brand', items: products.map((p,i) => ({ name:'Alt. ' + p.name, price:p.price, grad: grad(i+2), open: openProduct(p.id) })) },
+        { title:'Under my budget', items: products.map((p,i) => ({ name:p.name, price:'$'+(parseInt(p.price.slice(1))-35), grad: grad(i+3), open: openProduct(p.id) })) },
+      ],
+
+      // developer overview / evaluation
+      evalCards: [
+        { label:'Hit Rate@10', value:'0.71', delta:'▲ +0.04', deltaColor:'#2E6E4E', prev:'0.67' },
+        { label:'MRR', value:'0.52', delta:'▲ +0.03', deltaColor:'#2E6E4E', prev:'0.49' },
+        { label:'Mean Turns to Conversion', value:'2.3', delta:'▼ −0.4', deltaColor:'#2E6E4E', prev:'2.7' },
+      ],
+      evalScenarios: [
+        { name:'High-intent buying queries', n:214, score:'0.74', color:'var(--wine)' },
+        { name:'Ambiguous / browsing queries', n:180, score:'0.61', color:'var(--wine)' },
+        { name:'Gift-finding queries', n:96, score:'0.58', color:'var(--cocoa)' },
+        { name:'Visual search queries', n:64, score:'0.52', color:'var(--cocoa)' },
+        { name:'Constraint-heavy (budget/size)', n:140, score:'0.69', color:'var(--wine)' },
+      ],
+      showDevOverview: s.mode==='developer' && s.devView==='overview',
+      showDevEvaluation: s.mode==='developer' && s.devView==='evaluation',
+
+      // developer runs
+      showDevRuns: s.mode==='developer' && s.devView==='runs',
+      runStages: this.buildRunStages(),
+
+      // developer experiments
+      showDevExperiments: s.mode==='developer' && s.devView==='experiments',
+      proposeExperiment: () => {},
+      autoResearchLabel: s.autoRunning ? 'Researching…' : 'Run Autonomous Research',
+      runAutonomous: () => {
+        this.setState({ autoRunning: true, autoDone: false });
+        setTimeout(() => this.setState({ autoRunning: false, autoDone: true }), 1400);
+      },
+      autoResearchNote: s.autoRunning
+        ? 'The research agent is scanning weak-performing scenarios and forming a new hypothesis…'
+        : (s.autoDone ? 'New hypothesis queued: "Gift-finding queries may benefit from a persona-aware reranker pass." Added to the queue below.' : null),
+      experiments: this.buildExperiments(),
+
+      // developer media ai
+      showDevMediaAI: s.mode==='developer' && s.devView==='mediaai',
+      mediaUploads: [
+        { grad: grad(0), classification:'Sneaker, low-top', retrieval:'14 matches', likelihood:'74%', confidence:'Moderate', status:'Completed', statusBg:'var(--blush)', statusColor:'var(--wine-dark)' },
+        { grad: grad(2), classification:'Handbag, tote', retrieval:'9 matches', likelihood:'12%', confidence:'High', status:'Completed', statusBg:'var(--blush)', statusColor:'var(--wine-dark)' },
+        { grad: grad(4), classification:'Outerwear, coat', retrieval:'21 matches', likelihood:'88%', confidence:'High', status:'Completed', statusBg:'var(--blush)', statusColor:'var(--wine-dark)' },
+        { grad: grad(1), classification:'Video · sneaker (2 candidates)', retrieval:'6 matches', likelihood:'41%', confidence:'Low', status:'Needs review', statusBg:'#EAD9A0', statusColor:'#5C4033' },
+        { grad: grad(3), classification:'Watch, analog', retrieval:'3 matches', likelihood:'—', confidence:'—', status:'Failed', statusBg:'#E4B8B8', statusColor:'#722F37' },
+        { grad: grad(5), classification:'Dress, midi', retrieval:'17 matches', likelihood:'22%', confidence:'High', status:'Completed', statusBg:'var(--blush)', statusColor:'var(--wine-dark)' },
+      ],
+
+      // developer system
+      showDevSystem: s.mode==='developer' && s.devView==='system',
+      systemCards: [
+        { name:'Retrieval service', detail:'p95 latency 118ms · 3 replicas', dot:'#2E6E4E' },
+        { name:'LLM Reranker', detail:'p95 latency 340ms · queue depth 2', dot:'#2E6E4E' },
+        { name:'Vision pipeline', detail:'p95 latency 610ms · 1 replica', dot:'#EAD9A0' },
+        { name:'Vector index', detail:'4.2M items · last built 3h ago', dot:'#2E6E4E' },
+        { name:'Media authenticity model', detail:'v0.9.2 · 210ms avg', dot:'#2E6E4E' },
+        { name:'Feature store', detail:'sync healthy · 6m lag', dot:'#2E6E4E' },
+      ],
+    };
+  }
+
+  startShoeChat() {
+    return () => {
+      this.setState({ view:'conversation', chatStep:0, clarifyChosen:null, chatLoading:true, composerText:'' });
+      setTimeout(() => this.setState({ chatLoading:false, chatStep:1 }), 900);
+    };
+  }
+  pickClarify(label) {
+    this.setState({ clarifyChosen:label, chatLoading:true });
+    setTimeout(() => this.setState({ chatLoading:false, chatStep:2 }), 900);
+  }
+
+  buildRunStages() {
+    const s = this.state;
+    const data = [
+      { name:'Intent Detection', time:'42ms', detail:'intent: "buying"\nconfidence: high\nsignals: ["need", "for my girlfriend", "$ constraint"]' },
+      { name:'Constraint Extraction', time:'38ms', detail:'category: footwear\ngender: women\nprice_max: 120\nstyle: casual (unconfirmed)' },
+      { name:'Conversation State Update', time:'11ms', detail:'turn: 1\nslots_filled: [category, gender, price_max]\nslots_open: [style]' },
+      { name:'Retrieval Route Selection', time:'9ms', detail:'route: hybrid\nreason: buying intent + partial constraints\nfallback: semantic_only' },
+      { name:'Keyword Retrieval', time:'64ms', detail:'engine: BM25\nquery: "women casual shoes"\ncandidates: 340' },
+      { name:'Semantic Retrieval', time:'88ms', detail:'model: text-embed-v3\ntop_k: 200\ncandidates: 200' },
+      { name:'Candidate Merge', time:'14ms', detail:'method: reciprocal_rank_fusion\nmerged_candidates: 412\ndeduped: 287' },
+      { name:'LLM Reranking', time:'298ms', detail:'model: shopping-reranker-v2\ninput_candidates: 40\noutput_candidates: 8\ncriteria: [budget_fit, style_match, review_quality]' },
+      { name:'Response Generation', time:'244ms', detail:'model: copilot-chat-v4\ntemplate: clarify_then_recommend\nclarifying_question: true' },
+      { name:'User Feedback', time:'—', detail:'saved: 0\nclicked: 0\nawaiting_interaction: true' },
+    ];
+    return data.map((d,i) => ({
+      n: String(i+1).padStart(2,'0'),
+      name: d.name, time: d.time, detail: d.detail,
+      open: !!s.runOpen[i],
+      arrow: s.runOpen[i] ? 'rotate(90deg)' : 'rotate(0deg)',
+      toggle: () => this.setState({ runOpen: { ...s.runOpen, [i]: !s.runOpen[i] } }),
+    }));
+  }
+
+  buildExperiments() {
+    const s = this.state;
+    const data = [
+      { id:'EXP-014', status:'completed', statusBg:'var(--blush)', statusColor:'var(--wine-dark)',
+        hypothesis:'High-intent buying requests may benefit from increased keyword retrieval weighting.',
+        configA:'BM25 60% / Semantic 40%', configB:'BM25 75% / Semantic 25%',
+        baselineScore:'0.67 Hit Rate@10', candidateScore:'0.74 Hit Rate@10', improvement:'+10.4%', winner:true, runLabel:'Re-run' },
+      { id:'EXP-017', status:'running', statusBg:'#EAD9A0', statusColor:'#5C4033',
+        hypothesis:'Gift-finding queries may benefit from a persona-aware reranker pass.',
+        configA:'Reranker: standard', configB:'Reranker: persona-aware',
+        baselineScore:'0.58 Hit Rate@10', candidateScore:'evaluating…', improvement:null, winner:false, runLabel:'Stop' },
+      { id:'EXP-011', status:'queued', statusBg:'var(--dutch)', statusColor:'var(--cocoa)',
+        hypothesis:'Visual search results may improve with a stricter colour-match threshold.',
+        configA:'Colour tolerance: 0.35', configB:'Colour tolerance: 0.18',
+        baselineScore:'0.52 Hit Rate@10', candidateScore:'not yet run', improvement:null, winner:false, runLabel:'Run Experiment' },
+      { id:'EXP-009', status:'rejected', statusBg:'#E4B8B8', statusColor:'#722F37',
+        hypothesis:'Browsing sessions may convert faster with a smaller diversity penalty.',
+        configA:'Diversity λ 0.30', configB:'Diversity λ 0.12',
+        baselineScore:'2.7 turns', candidateScore:'3.1 turns', improvement:'−14.8%', winner:false, runLabel:'Re-run' },
+    ];
+    return data.map(e => ({
+      ...e,
+      open: !!s.expOpen[e.id],
+      toggle: () => this.setState({ expOpen: { ...s.expOpen, [e.id]: !s.expOpen[e.id] } }),
+      run: () => {},
+      viewResults: () => this.setState({ expOpen: { ...s.expOpen, [e.id]: true } }),
+    }));
+  }
+}
+</script>
+</body>
+</html>

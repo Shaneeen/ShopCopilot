@@ -1,0 +1,21 @@
+# The official starter/evaluator uses only the Python standard library —
+# no dependencies required to run the official baseline (see README.md).
+#
+# The lines below are needed only for NeeShops' own implementation
+# (neeshops/) layered on top of it — kept minimal and conservative.
+
+# Core (required to import neeshops/ and run its tests)
+python-dotenv>=1.0.0
+pydantic>=2.6.0
+pytest>=8.0.0
+
+# BM25 / catalog storage in neeshops/retrieval/bm25.py uses stdlib sqlite3
+# (FTS5), same as the official starter — no extra dependency needed there.
+
+# Optional, only needed once semantic retrieval / LLM reranking are
+# switched on via feature flags in .env — keep commented out until a
+# workstream actually needs them, so the baseline install stays fast:
+# sentence-transformers>=2.7.0
+# faiss-cpu>=1.8.0
+# anthropic>=0.40.0
+# openai>=1.40.0

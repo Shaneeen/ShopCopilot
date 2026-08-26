@@ -109,3 +109,74 @@ evaluator/local_evaluator.py      public-set simulator and scorer
 
 The catalog and sessions are derived from Amazon Reviews 2023 by McAuley Lab, UCSD. See `DATA_ATTRIBUTION.md` before using or redistributing the data.
 Sessions are sampled deterministically from the official Clothing 5-core leave-last-out split and joined to the frozen catalog.
+
+---
+
+# NeeShops implementation
+
+Everything above this line is the organiser's official participant kit
+(`TechJam2026/techjam-conversational-search`), unmodified. Everything below
+documents **our team's implementation**, layered on top of it without
+touching the official contract.
+
+## What we built
+
+`starter/agent.py` is now a thin adapter (unchanged interface — still
+`Agent(catalog_path)`, `reset()`, `respond()`) that delegates to our own
+`neeshops/` package: conversation state (intent-override + no-preference
+semantics), buying/browsing routing, a clarification engine, hybrid
+BM25+semantic retrieval (semantic currently a disabled interface stub),
+metadata filtering, a heuristic reranker with human-readable
+recommendation reasons, a soft personalisation signal, and a controlled
+research/experimentation framework for tuning retrieval weights against
+the evaluator's metrics. Full architecture: `docs/neeshops/ARCHITECTURE.md`.
+
+## Repository layout (additions)
+
+```text
+neeshops/            our implementation — see docs/neeshops/ARCHITECTURE.md
+scripts/             our setup/eval/experiment helper scripts (do not replace the official evaluator)
+frontend/            a decoupled demo prototype — not part of the competition Agent, see frontend/README.md
+docs/neeshops/        our architecture, team workstreams, experiment log, competition notes
+```
+
+## Setup (adds to the official steps above)
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt   # only needed for neeshops/ — the official baseline itself is stdlib-only
+cp .env.example .env              # optional, only for LLM-backed features (disabled by default)
+```
+
+## Running things
+
+```bash
+# Official baseline / evaluation (unchanged commands, works as documented above)
+python3 -m evaluator.local_evaluator
+
+# Our tests (official evaluator tests + our supplementary tests)
+pytest
+
+# Fast local smoke check of the adapter, without the full evaluator
+python scripts/run_baseline.py
+
+# Our dev/holdout split + experiment tooling (see docs/neeshops/EXPERIMENTS.md)
+python scripts/create_dev_split.py
+python scripts/run_experiment.py --random 3
+```
+
+## Team workstreams
+
+Five streams, each owning its own module folder to minimise merge
+conflicts: conversation & agent intelligence, retrieval & search, ranking
+& personalisation, research agent & evaluation, and integration/demo/DX.
+Full breakdown: `docs/neeshops/TEAM_WORKSTREAMS.md`.
+
+## Status
+
+Architecture-first migration onto the official base. Semantic retrieval
+and LLM reranking remain disabled interface stubs; the research agent's
+optimizer is a simple grid/random search. Nothing in `neeshops/` has been
+scored against the real 50k catalog yet — see
+`docs/neeshops/COMPETITION_NOTES.md` for the reproduction checklist and
+`docs/neeshops/EXPERIMENTS.md` for the (currently empty) experiment log.

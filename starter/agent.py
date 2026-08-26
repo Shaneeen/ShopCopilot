@@ -1,78 +1,57 @@
+"""Thin adapter satisfying the official evaluator's required import:
+
+    from starter.agent import Agent
+
+This file is intentionally small: it constructs a `neeshops.agent.
+NeeShopsAgent` and translates between its (richer, internal) response shape
+and the official Agent API contract in `docs/agent_api_contract.json`. All
+real logic lives in `neeshops/` — see `docs/neeshops/ARCHITECTURE.md`.
+
+Constructor signature matches the organiser's original weak baseline
+(`Agent(catalog_path: str | Path = "data/catalog.jsonl")`), since
+`evaluator/local_evaluator.py` instantiates it positionally as
+`Agent(args.catalog)`.
+"""
 from __future__ import annotations
 
-import json
-import re
-import sqlite3
 from pathlib import Path
+from typing import Any, Optional, Union
 
-
-TOKEN_RE = re.compile(r"[a-z0-9]+", re.IGNORECASE)
-STOPWORDS = {
-    "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "from",
-    "i", "in", "is", "it", "me", "my", "of", "on", "or", "please", "some",
-    "that", "the", "this", "to", "want", "with", "would", "you", "looking",
-}
-
-
-def _text(value: object) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, dict):
-        return " ".join(f"{key} {item}" for key, item in value.items())
-    if isinstance(value, list):
-        return " ".join(str(item) for item in value)
-    return str(value)
-
-
-def _terms(text: str) -> list[str]:
-    return [
-        token.lower()
-        for token in TOKEN_RE.findall(text)
-        if len(token) > 1 and token.lower() not in STOPWORDS
-    ]
+from neeshops.agent import NeeShopsAgent
+from neeshops.retrieval.bm25 import BM25Retriever
+from neeshops.retrieval.hybrid import HybridRetriever
+from neeshops.utils.catalog import load_catalog_lookup
 
 
 class Agent:
-    """Editable weak baseline: stateless BM25 retrieval with no LLM dependency."""
+    """Required interface (per docs/agent_api_contract.json):
 
-    def __init__(self, catalog_path: str | Path = "data/catalog.jsonl") -> None:
-        self.catalog_path = Path(catalog_path)
-        self.connection = sqlite3.connect(":memory:")
-        self._sessions: set[str] = set()
-        self._build_index()
+        reset(session_id: str, user_profile: dict) -> None
+        respond(session_id: str, user_message: str, turn: int, top_k: int) -> dict
 
-    def _build_index(self) -> None:
-        cursor = self.connection.cursor()
-        cursor.execute(
-            "CREATE VIRTUAL TABLE products USING fts5("
-            "parent_asin UNINDEXED, title, categories, features, details, store, description, "
-            "tokenize='unicode61 remove_diacritics 2')"
+    `catalog_path` is positional to match the organiser's original weak
+    baseline signature (`evaluator/local_evaluator.py` calls
+    `Agent(args.catalog)`). `strategy` is a NeeShops-only extension (keyword,
+    optional, defaults to `neeshops/config/default_strategy.json`) that lets
+    `scripts/run_experiment.py` evaluate a candidate config without touching
+    this file — the official evaluator never passes it.
+    """
+
+    def __init__(
+        self,
+        catalog_path: Union[str, Path] = "data/catalog.jsonl",
+        strategy: Optional[dict[str, Any]] = None,
+    ) -> None:
+        catalog_path = Path(catalog_path)
+        bm25 = BM25Retriever(catalog_path=catalog_path)
+        retriever = HybridRetriever(bm25=bm25, strategy=strategy)
+        catalog_lookup = load_catalog_lookup(catalog_path)
+        self._impl = NeeShopsAgent(
+            retriever=retriever, catalog_lookup=catalog_lookup, strategy=strategy
         )
-        batch: list[tuple[str, str, str, str, str, str, str]] = []
-        with self.catalog_path.open(encoding="utf-8") as handle:
-            for line in handle:
-                product = json.loads(line)
-                batch.append(
-                    (
-                        str(product["parent_asin"]),
-                        _text(product.get("title")),
-                        _text(product.get("categories")),
-                        _text(product.get("features")),
-                        _text(product.get("details")),
-                        _text(product.get("store")),
-                        _text(product.get("description")),
-                    )
-                )
-                if len(batch) >= 1000:
-                    cursor.executemany("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?)", batch)
-                    batch.clear()
-        if batch:
-            cursor.executemany("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?)", batch)
-        self.connection.commit()
 
     def reset(self, session_id: str, user_profile: dict) -> None:
-        # The profile is anonymized and may be used for personalization.
-        self._sessions.add(session_id)
+        self._impl.reset(session_id, user_profile)
 
     def respond(
         self,
@@ -81,22 +60,18 @@ class Agent:
         turn: int,
         top_k: int,
     ) -> dict:
-        if session_id not in self._sessions:
-            raise RuntimeError("reset must be called before respond")
-        unique_terms = list(dict.fromkeys(_terms(user_message)))[:40]
-        expression = " OR ".join(f'"{term}"' for term in unique_terms)
-        if not expression:
-            recommendations: list[dict] = []
-        else:
-            rows = self.connection.execute(
-                "SELECT parent_asin FROM products WHERE products MATCH ? "
-                "ORDER BY bm25(products, 0.0, 6.0, 4.0, 2.5, 2.5, 1.5, 1.0) LIMIT ?",
-                (expression, top_k),
-            ).fetchall()
-            recommendations = [{"parent_asin": str(row[0])} for row in rows]
+        result = self._impl.respond(session_id, user_message, turn, top_k)
+
+        # Conform strictly to docs/agent_api_contract.json's turn_response
+        # schema (additionalProperties: false) — NeeShopsAgent's internal
+        # response carries extra fields (route, per-item reason) that are
+        # useful for our own logging/frontend but not part of the contract.
         return {
-            "message": "Here are the closest matches I found.",
-            "ask_attribute": None,
-            "recommendations": recommendations,
-            "usage": {"prompt_tokens": 0, "completion_tokens": 0},
+            "message": result["message"],
+            "ask_attribute": result.get("ask_attribute"),
+            "recommendations": [
+                {"parent_asin": rec["parent_asin"], "score": rec["score"]}
+                for rec in result["recommendations"]
+            ],
+            "usage": result.get("usage", {"prompt_tokens": 0, "completion_tokens": 0}),
         }

@@ -1,0 +1,47 @@
+"""BM25Retriever returns valid parent_asin values against a small fixture
+catalog (not the real 50k catalog — that's not committed, see data/README.md)."""
+import json
+
+import pytest
+
+from neeshops.models.session import ConversationState
+from neeshops.retrieval.bm25 import BM25Retriever
+
+FIXTURE_ROWS = [
+    {"parent_asin": "B001", "title": "Black Canvas Sneaker", "description": "casual everyday sneaker", "category": "shoes", "brand": "Acme", "color": "black", "material": "canvas"},
+    {"parent_asin": "B002", "title": "Red Leather Boot", "description": "durable leather boot", "category": "shoes", "brand": "Acme", "color": "red", "material": "leather"},
+    {"parent_asin": "B003", "title": "Blue Denim Jacket", "description": "classic denim jacket", "category": "outerwear", "brand": "Zeta", "color": "blue", "material": "denim"},
+]
+
+
+@pytest.fixture
+def catalog_path(tmp_path):
+    path = tmp_path / "catalog.jsonl"
+    with open(path, "w") as f:
+        for row in FIXTURE_ROWS:
+            f.write(json.dumps(row) + "\n")
+    return path
+
+
+def test_bm25_returns_valid_parent_asins(catalog_path):
+    retriever = BM25Retriever(catalog_path=catalog_path)
+    state = ConversationState(session_id="s1")
+
+    results = retriever.search("black sneaker", state, top_k=5)
+
+    assert results, "expected at least one match for 'black sneaker'"
+    valid_asins = {row["parent_asin"] for row in FIXTURE_ROWS}
+    for candidate in results:
+        assert candidate.parent_asin in valid_asins
+        assert candidate.source == "bm25"
+
+
+def test_bm25_empty_query_returns_no_candidates(catalog_path):
+    retriever = BM25Retriever(catalog_path=catalog_path)
+    state = ConversationState(session_id="s1")
+    assert retriever.search("", state, top_k=5) == []
+
+
+def test_bm25_unavailable_without_catalog(tmp_path):
+    retriever = BM25Retriever(catalog_path=tmp_path / "missing.jsonl")
+    assert retriever.is_available() is False

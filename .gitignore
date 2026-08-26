@@ -16,3 +16,16 @@ docs/participant_release_checklist.md
 tests/test_5core_builder.py
 tests/test_organizer_pipeline.py
 *.log
+
+# --- NeeShops additions (development environment / generated output) ---
+.venv/
+venv/
+data/*.fts.db
+data/*.sqlite
+data/dev_split.jsonl
+data/holdout_split.jsonl
+artifacts/
+.pytest_cache/
+*.egg-info/
+.vscode/
+.idea/

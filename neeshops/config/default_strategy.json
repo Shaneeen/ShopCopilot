@@ -1,0 +1,31 @@
+{
+  "_comment": "Starting defaults only — see docs/EXPERIMENTS.md. The research agent (neeshops/research/) proposes and evaluates changes to these values; nothing here is tuned yet beyond a sane starting point.",
+
+  "retrieval": {
+    "candidate_limit": 200,
+    "buying": {
+      "bm25_weight": 0.7,
+      "semantic_weight": 0.3
+    },
+    "browsing": {
+      "bm25_weight": 0.3,
+      "semantic_weight": 0.7
+    }
+  },
+
+  "ranking": {
+    "rerank_limit": 40,
+    "personalization_weight": 0.15
+  },
+
+  "clarification": {
+    "max_questions_per_session": 2,
+    "min_candidates_before_recommend": 5,
+    "ask_if_candidates_above": 60
+  },
+
+  "feature_flags": {
+    "enable_semantic_retrieval": false,
+    "enable_llm_reranker": false
+  }
+}
