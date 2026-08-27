@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from neeshops.config.settings import load_strategy
 
 # Parameters the research agent is allowed to touch. Anything not listed
-# here is rejected by Experiment.apply() — extend deliberately.
+# here is rejected in Experiment.__post_init__ — extend deliberately.
 SAFE_PARAMETERS = {
     "retrieval.buying.bm25_weight",
     "retrieval.buying.semantic_weight",

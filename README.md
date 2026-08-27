@@ -131,6 +131,12 @@ recommendation reasons, a soft personalisation signal, and a controlled
 research/experimentation framework for tuning retrieval weights against
 the evaluator's metrics. Full architecture: `docs/neeshops/ARCHITECTURE.md`.
 
+**Start here**: `docs/neeshops/PROJECT_OVERVIEW.md` (living status +
+architecture diagrams) → `docs/neeshops/TRACK4_REQUIREMENTS.md`
+(competition source of truth) → `docs/neeshops/FOLDER_GUIDE.md` (what
+every folder is for) → `docs/neeshops/TEAM_WORKSTREAMS.md` (the 5-person
+job split) → `docs/neeshops/INTEGRATION_CONTRACTS.md` (module boundaries).
+
 ## Repository layout (additions)
 
 ```text
