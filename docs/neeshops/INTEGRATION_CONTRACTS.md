@@ -4,6 +4,10 @@ The actual interfaces between modules, as implemented today — not
 aspirational. If you change a signature here, grep for every caller first
 (each boundary below lists them) and update this doc in the same PR.
 
+Beginner note: read only the boundary your workstream provides or consumes,
+as listed in `docs/neeshops/WORKSTREAM_QUICKSTARTS.md`. Ask P5 before changing
+a signature; most tasks should extend behavior behind the existing interface.
+
 ---
 
 ## Official starter ↔ NeeShops Agent

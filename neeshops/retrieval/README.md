@@ -74,8 +74,9 @@ pytest tests/test_retrieval.py tests/test_agent_smoke.py
 ## Known TODOs
 
 - Semantic retrieval unimplemented (primary P2 deliverable).
-- Retrieval has never been measured against the real 50k catalog in this
-  environment (catalog not installed) — only against fixture data and a
-  mechanical evaluator smoke test.
+- The official 50k catalog was checksum/row-count validated, indexed, and run
+  through the complete 200-session evaluator on 2026-08-28. Overall candidate
+  score is recorded in `docs/neeshops/PROJECT_OVERVIEW.md`; candidate recall
+  before ranking still needs a dedicated report.
 - Metadata filters for `size`/`style`/`feature`/`use_case` don't exist
   yet — extend `DEFAULT_FILTERS` in `filters.py`.

@@ -9,7 +9,7 @@ Keep entries short — one per accepted (or notably instructive rejected)
 experiment. Generate the table below from `ResultsStore.all()` /
 `ResultsStore.accepted()` rather than hand-maintaining metrics.
 
-## Baseline
+## Organizer weak-starter reference (all 200 public sessions)
 
 | Metric | Value |
 |---|---|
@@ -21,11 +21,31 @@ experiment. Generate the table below from `ResultsStore.all()` /
 (Organiser's weak BM25 starter agent, `docs/baseline_results.json` — see
 `docs/neeshops/COMPETITION_NOTES.md` for the reproduction steps.)
 
+This table is a competition reference, **not** the comparison baseline for a
+160-session development experiment. `scripts/run_experiment.py` first
+measures the unchanged default NeeShops strategy on the exact `--dataset`,
+then compares every candidate with that same-dataset result.
+
+## Current NeeShops initial candidate (all 200 public sessions)
+
+Measured 2026-08-28 with the official 50,000-product catalog, default
+strategy, semantic retrieval disabled, and LLM reranking disabled:
+
+| Metric | Value |
+|---|---|
+| Hit Rate@10 | 0.285 |
+| MRR | 0.188581 |
+| MTTC | 8.55 |
+| Technical Score | 0.248074 |
+
+This is evidence that the end-to-end candidate runs. It is not yet the
+development-split baseline for the experiment table below.
+
 ## Accepted experiments
 
-_None yet — Stage 1 is architecture only. First real experiments land once
-`evaluator/` is vendored and `scripts/setup_catalog.py` has been run
-against the real catalog._
+_None yet. The catalog, BM25 index, 160/40 split, and complete public-set run
+are now validated. The first experiment should record the automatically
+measured 160-session default-strategy baseline and one targeted candidate._
 
 | ID | Hypothesis | Config change | Baseline → Candidate | Δ | Accepted |
 |---|---|---|---|---|---|
@@ -48,4 +68,5 @@ against the real catalog._
   not something the optimizer does on its own.
 - An experiment is accepted only if it beats baseline on the primary
   metric (`technical_score`) by at least `ExperimentRunner.min_improvement`
-  — ties or noise-level gains should stay rejected.
+  — ties stay rejected even when the configured minimum is zero, and
+  noise-level gains should use a positive minimum.

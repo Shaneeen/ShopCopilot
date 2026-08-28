@@ -10,6 +10,12 @@ P2/P3 carry the heaviest new-implementation load (semantic retrieval, LLM
 reranking) since those are the two biggest unimplemented stubs in the
 current codebase.
 
+**Beginner route:** read `docs/neeshops/BEGINNER_START_HERE.md`, follow the
+shared checkpoints in `docs/neeshops/TWO_DAY_FULL_SCOPE_PLAN.md`, then work
+from your acceptance card in `docs/neeshops/WORKSTREAM_QUICKSTARTS.md`. This
+document remains the detailed ownership and backlog reference; the shorter
+guides do not remove any deliverable listed here.
+
 ---
 
 ## Person 1 — Conversation Intelligence & State
@@ -155,11 +161,9 @@ the real evaluator once the catalog is installed**, never estimated.
 merges both paths correctly; `neeshops/retrieval/README.md` updated.
 
 ### First action
-Install the real catalog locally (`data/README.md`) and run
-`python scripts/setup_catalog.py` to confirm the BM25 index actually
-builds cleanly against all 50,000 real rows (only ever tested against a
-3-row fixture in this environment so far) — then start on
-`SemanticRetriever`.
+The official catalog and BM25 index were validated against all 50,000 rows on
+2026-08-28. Inspect three real queries, record candidate recall for the
+initial run, then start on `SemanticRetriever`.
 
 ---
 
@@ -260,10 +264,11 @@ ever proposes different values for parameters already declared safe in
 - **P4-D1** — Reproduce the official weak baseline (`Hit Rate@10 0.125`,
   `MRR 0.068034`, `MTTC 9.81`, `TechnicalScore 0.10671`) on the real
   public set.
-  *Acceptance*: `python scripts/evaluate.py` output matches
-  `docs/baseline_results.json` within reasonable numerical tolerance.
-  **Not yet done in this environment — the real catalog isn't installed.
-  This is the actual first milestone (M1).**
+  *Acceptance*: a clean upstream weak-starter run matches
+  `docs/baseline_results.json` within reasonable numerical tolerance, while
+  the modified NeeShops initial candidate is recorded separately. The
+  NeeShops 200-session initial score is now recorded; clean upstream
+  reproduction remains open.
 - **P4-D2** — Deterministic internal dev/holdout split.
   *Acceptance*: `scripts/create_dev_split.py` — **already implemented**,
   not yet run against the real 200-session set here.
@@ -277,8 +282,8 @@ ever proposes different values for parameters already declared safe in
   captured yet — extend if needed.
 - **P4-D4** — Run controlled A/B experiments.
   *Acceptance*: `scripts/run_experiment.py --grid ...` /
-  `--random N` — **already implemented**, needs a real catalog to
-  actually execute meaningfully.
+  `--random N` — **already implemented**; now establish a comparable baseline
+  on the same 160-session development split before accepting any result.
 - **P4-D5** — Research optimisation proposes/selects safe configuration
   changes without modifying the evaluator.
   *Acceptance*: `propose_grid`/`propose_random` — done;
@@ -305,10 +310,9 @@ experiment cycle (propose → run → accept/reject) recorded in
 `docs/neeshops/EXPERIMENTS.md` with actual evaluator output.
 
 ### First action
-Install the real catalog (`data/README.md`) and run
-`python scripts/evaluate.py` to get the **first real baseline
-reproduction** — this unblocks every other workstream's "measure the
-actual delta" requirement.
+Reproduce the organizer's weak starter from a clean upstream checkout, then
+measure the default NeeShops strategy on `data/dev_split.jsonl`. Store both
+with unambiguous labels; only same-dataset comparisons may drive experiments.
 
 ---
 
@@ -452,7 +456,7 @@ together to avoid two people redesigning the same seam independently.
 ## M0 — Backbone Ready
 - [x] Official evaluator preserved, byte-identical to upstream
 - [x] Official `starter.agent.Agent` import works
-- [x] Tests execute (28/28 passing as of this audit)
+- [x] Tests execute (32/32 passing as of the 2026-08-28 beginner-readiness update)
 - [x] Folder ownership documented (this file + `docs/neeshops/FOLDER_GUIDE.md`)
 - [x] Five developers can branch independently (module boundaries + interfaces documented)
 
@@ -460,12 +464,13 @@ together to avoid two people redesigning the same seam independently.
 verdict and evidence.
 
 ## M1 — Baseline Reproduced
-- [ ] Official catalog installed (`data/catalog.jsonl`, 50k rows)
-- [ ] `python3 -m evaluator.local_evaluator` runs to completion on the
+- [x] Official catalog installed and validated locally (`data/catalog.jsonl`, 50k rows)
+- [x] `python3 -m evaluator.local_evaluator` runs to completion on the
       real public set
 - [ ] Baseline reproduced within reasonable numerical tolerance of
-      `docs/baseline_results.json`
-- [ ] Results recorded in `docs/neeshops/PROJECT_OVERVIEW.md`
+      `docs/baseline_results.json` using the clean upstream weak starter
+- [x] Current NeeShops initial results recorded separately in
+      `docs/neeshops/PROJECT_OVERVIEW.md`
 
 Owner: P4. **Blocking for every other milestone's "measured" claims.**
 
@@ -518,9 +523,9 @@ Owner: P5.
 
 Owner: P5, with input from all.
 
-No calendar dates are set here — the repository has no prior scheduling
-information to draw from; the team should timebox these against the
-actual submission deadline.
+The milestone definitions intentionally remain date-independent. For the
+team's two-day full-scope timebox and integration order, use
+`docs/neeshops/TWO_DAY_FULL_SCOPE_PLAN.md`.
 
 ---
 

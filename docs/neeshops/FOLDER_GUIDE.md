@@ -1,5 +1,10 @@
 # Folder Guide
 
+This is a reference map. Beginners should first read
+`docs/neeshops/BEGINNER_START_HERE.md`, then use their assigned section in
+`docs/neeshops/WORKSTREAM_QUICKSTARTS.md`. Return here when you need deeper
+module detail.
+
 Grounded in the actual code as of this migration. "Safe to modify?" means
 safe for any teammate to touch without cross-workstream coordination —
 shared interfaces still need a heads-up in PR description per

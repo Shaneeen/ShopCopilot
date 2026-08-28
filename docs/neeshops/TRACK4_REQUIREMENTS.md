@@ -4,12 +4,30 @@
 Search and Recommendations.** Official repo:
 `https://github.com/TechJam2026/techjam-conversational-search`.
 
+Official references verified for this repository:
+
+- Participant repository: `https://github.com/TechJam2026/techjam-conversational-search`
+- Participant Kit Release: `https://github.com/TechJam2026/techjam-conversational-search/releases/tag/participant-kit`
+- Original dataset documentation: `https://amazon-reviews-2023.github.io/`
+
 > **If any NeeShops idea, doc, or code conflicts with this document or
 > with the official participant repository, the official competition
 > requirements take priority.** This file is a summary for the team, not
 > a replacement for `docs/competition_specification.md`,
 > `docs/agent_api_contract.json`, `docs/evaluation_config.json`, or
 > `docs/baseline_results.json` (all official, unmodified, in this repo).
+
+## How beginners should interpret this document
+
+The official interface, scoring protocol, data restrictions, submission
+deliverables, and secret-handling rules are competition constraints. The
+retrieval, reranking, personalisation, clarification, and research techniques
+below are the complete NeeShops implementation scope chosen by the team. The
+organizer describes several of those techniques as allowed innovation
+directions rather than required response fields, but NeeShops is still keeping
+all of them in its full-scope build plan. See
+`docs/neeshops/BEGINNER_START_HERE.md` for the plain-language explanation and
+`docs/neeshops/TWO_DAY_FULL_SCOPE_PLAN.md` for execution order.
 
 ## Challenge objective
 

@@ -59,7 +59,10 @@ class ExperimentRunner:
 
         baseline_score = baseline_metrics.get(PRIMARY_METRIC, 0.0)
         candidate_score = candidate_metrics.get(PRIMARY_METRIC, 0.0)
-        accepted = (candidate_score - baseline_score) >= self.min_improvement
+        improvement = candidate_score - baseline_score
+        # A tie is never an improvement, including when min_improvement=0.
+        # Positive deltas exactly at an explicitly configured threshold count.
+        accepted = candidate_score > baseline_score and improvement >= self.min_improvement
 
         record = self.results_store.record(
             experiment_id=experiment.experiment_id,
