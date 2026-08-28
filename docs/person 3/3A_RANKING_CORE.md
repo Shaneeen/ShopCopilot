@@ -52,6 +52,180 @@ from 3B.
 MRR, Top-10 ordering quality, latency, token usage/cost if an LLM is used
 — all measured, never estimated.
 
+## Roadmap and current position
+
+The Person 3 ranking work is split into six phases. As of commit `0a4a972`,
+3A is at the end of **Phase 2**: the deterministic baseline and guarded LLM
+ranking policy are implemented and tested. Provider integration, official
+Agent wiring, real P2-candidate validation, and the measured 3B comparison
+remain.
+
+| Phase | Deliverable | Status |
+|---|---|---|
+| 1 | Deterministic ranking baseline | Complete |
+| 2 | Safe LLM reranking core | Complete |
+| 3 | Real model-provider adapter | Not started |
+| 4 | Official Agent integration with P5 | Not started |
+| 5 | P2 candidate integration and ranking-quality evaluation | Ready to start when P2 data is available |
+| 6 | 3A handoff to 3B and final measured comparison | Not started |
+
+This status means **the foundation is complete; integration and measured
+evaluation remain**. The current official public-set result proves that the
+integrated heuristic agent runs, but it does not prove that the new LLM path
+improves ranking because that path is not connected to `starter.Agent` yet.
+
+### Phase 1 — Deterministic baseline (complete)
+
+Goal: always produce a valid ordered top 10 without requiring a model or
+network connection.
+
+Completed evidence:
+
+- `HeuristicRanker` consumes P2's `Candidate(parent_asin, score, source)`
+  objects and returns ordered `Recommendation` objects.
+- The configured rerank limit and requested `top_k` are respected.
+- Empty catalog lookups and missing product fields degrade gracefully.
+- Soft personalisation does not override a much stronger retrieval match.
+- Reasons are human-readable and do not claim fabricated confidence.
+- The official adapter exposes only contract-safe recommendation fields.
+
+Verify with:
+
+```bash
+pytest -vv tests/test_ranking.py tests/test_agent_contract.py
+```
+
+### Phase 2 — Safe LLM reranking core (complete)
+
+Goal: enforce the ranking and failure-safety rules before connecting a paid or
+external model.
+
+Completed evidence:
+
+- Input is bounded by `ranking.rerank_limit` (40 by default).
+- Product titles and features are truncated before building the payload.
+- Only known, unique candidate IDs are accepted from model output.
+- Omitted IDs are filled deterministically using heuristic order.
+- Disabled, malformed, timeout, and provider-error paths fall back to
+  `HeuristicRanker` instead of raising or returning an empty result.
+- Per-call `last_usage`, `last_latency_ms`, and `last_fallback_reason` are
+  available for integration and reporting.
+
+Verify with:
+
+```bash
+pytest -vv tests/test_llm_reranker.py
+```
+
+### Phase 3 — Real model-provider adapter (next implementation phase)
+
+Goal: connect the guarded core to the selected provider without changing the
+public `Ranker.rank(...)` contract.
+
+Tasks:
+
+- [ ] Select and document the provider and model.
+- [ ] Implement an adapter that accepts the bounded payload and returns
+      `{"ordered_ids": [...], "usage": {...}}`.
+- [ ] Read credentials only from environment-backed settings; never commit a
+      key.
+- [ ] Enforce the configured five-second call timeout.
+- [ ] Parse real prompt/completion token counts.
+- [ ] Test authentication, timeout, network, malformed JSON, and provider
+      error paths.
+- [ ] Measure actual latency and approximate cost.
+- [ ] Document whether the provider requires network access during scoring.
+
+Exit check: a real call reorders only known candidates, while a missing key or
+failed call produces the same safe heuristic fallback proven in Phase 2.
+
+### Phase 4 — Official Agent integration with P5
+
+Goal: make the official entry point choose the configured ranker and expose
+real usage without violating `docs/agent_api_contract.json`.
+
+Current blocker: `neeshops/agent.py` still constructs `HeuristicRanker`
+unconditionally. P5 owns this seam, so coordinate rather than editing it in
+parallel.
+
+Tasks:
+
+- [ ] Choose `LLMReranker` only when enabled and available.
+- [ ] Preserve heuristic fallback when a live call fails.
+- [ ] Pass measured prompt/completion counts into the official `usage` object.
+- [ ] Keep internal `reason` and `source` out of the submitted recommendation
+      objects.
+- [ ] Continue returning at most ten ordered unique `parent_asin` values.
+- [ ] Prove the offline/disabled path still passes the full suite.
+
+Exit checks:
+
+```bash
+NEESHOPS_ENABLE_LLM_RERANKER=false pytest -q
+pytest -vv tests/test_agent_contract.py tests/test_agent_smoke.py
+```
+
+### Phase 5 — P2 integration and ranking-quality evaluation
+
+Goal: prove how 3A changes the order of Person 2's real candidate pool.
+
+Expected flow:
+
+```text
+P2 retrieves up to 200 candidates
+  -> 3A takes the configured top 40
+  -> heuristic or LLM reranking
+  -> 3A returns the top 10
+```
+
+Tasks:
+
+- [ ] Validate P2's real `parent_asin`, numeric `score`, and `source` values.
+- [ ] Confirm P2's merged score scale and mixed `bm25+semantic` source label.
+- [ ] Check that candidate IDs exist in the frozen catalog.
+- [ ] Record retrieval-only, heuristic, and (when enabled) LLM top-10 order.
+- [ ] Run repeated inputs to check deterministic fallback behavior.
+- [ ] Record measured latency, usage, fallback, config, and Git commit.
+- [ ] Generate `person_3a_ranking_handoff.json` using the canonical contract
+      below.
+
+Diagnosis rule: if the target is absent from P2's pool, report a retrieval
+recall issue to P2. If it is in the pool but outside 3A's top 10, investigate
+ranking.
+
+### Phase 6 — 3A handoff to 3B and final comparison
+
+Goal: give 3B stable inputs for an apples-to-apples measured comparison.
+
+Tasks:
+
+- [ ] Hand off retrieval-only, heuristic, and optional LLM top-10 arrays for
+      the same evaluator cases.
+- [ ] Include case ID, query/state, ranker/config, Git commit, latency, usage,
+      and fallback information.
+- [ ] Have 3B calculate retrieval, heuristic, and optional LLM MRR plus their
+      deltas.
+- [ ] Run the official evaluator and report HitRate@10, MRR, MTTC, efficiency,
+      technical score, scenario metrics, usage, latency, and cost.
+- [ ] Select the final strategy using measured results rather than assuming
+      the LLM is better.
+
+The final Person 3 workstream is complete only after 3A's ranking path and
+3B's personalisation/evaluation work are both integrated, measured, documented,
+and reproducible.
+
+### Recommended execution order from here
+
+1. Obtain Person 2's real candidate output.
+2. Produce a local P2 → heuristic top-10 demonstration.
+3. Generate the first canonical 3A handoff JSON for 3B.
+4. Add and test the real provider adapter.
+5. Compare heuristic and LLM ordering locally.
+6. Coordinate the official Agent seam with P5.
+7. Give baseline and ranked results to 3B.
+8. Run the official evaluator and select the best measured strategy.
+9. Document limitations, latency, tokens, and cost.
+
 ## Merge checklist
 
 - [ ] `pytest tests/test_ranking.py tests/test_agent_smoke.py` passes

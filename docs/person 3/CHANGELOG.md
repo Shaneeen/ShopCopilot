@@ -6,6 +6,9 @@ entries at the top.
 
 ## 2026-08-29
 
+- `[3A]` Added a six-phase ranking roadmap with current status, evidence,
+  remaining provider/P5/P2/3B work, phase exit checks, and recommended execution
+  order.
 - `[3A]` Implemented the guarded `LLMReranker` foundation: config-bounded
   candidate input, truncated product payloads, strict known-ID validation,
   usage/latency evidence, and deterministic `HeuristicRanker` fallback. Added
