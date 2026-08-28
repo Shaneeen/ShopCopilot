@@ -23,7 +23,8 @@ class Ranker(ABC):
 presented as a fabricated confidence), `reason` (human-readable), `source`.
 
 Implementations: `HeuristicRanker` (working, used by `neeshops/agent.py`
-unconditionally today), `LLMReranker` (stub).
+unconditionally today), `LLMReranker` (guarded ranking core implemented;
+provider adapter and P5-owned agent wiring remain).
 
 ## Current implementation
 
@@ -35,27 +36,38 @@ explicit request always dominates a soft profile signal — Track 4
 requirement 7), and assigns one of three fixed human-readable reasons by
 rank position.
 
-## How to extend
+## LLM reranking base
 
-`LLMReranker.rank()` currently raises `NotImplementedError`. To implement
-it: bound the candidate count sent to the LLM, track `usage` tokens (the
-official contract's `usage.prompt_tokens`/`completion_tokens` — see
-`neeshops/agent.py`'s response shape), read credentials only from
-`neeshops.config.settings.get_settings()` (never hardcode a key), and
-**never let it be the only ranker** — `neeshops/agent.py` should fall back
-to `HeuristicRanker` when `LLMReranker.is_available()` is false or a call
-fails. That fallback wiring doesn't exist yet — it's the actual
-integration task, not just the LLM call itself.
+`LLMReranker` accepts an injected provider adapter with this contract:
+
+```python
+def client(payload: dict, timeout_seconds: float) -> dict:
+    return {
+        "ordered_ids": ["B001", "B002"],
+        "usage": {"prompt_tokens": 12, "completion_tokens": 4},
+    }
+```
+
+It sends at most `ranking.rerank_limit` candidates (40 by default), truncates
+catalog text, accepts only known unique IDs, fills omitted IDs using the
+deterministic heuristic order, and falls back to `HeuristicRanker` on disabled,
+malformed, timeout, or provider-error paths. Per-call evidence is available as
+`last_usage`, `last_latency_ms`, and `last_fallback_reason`.
+
+The next integration step is a provider-specific adapter using credentials from
+`get_settings()` and P5-owned wiring in `neeshops/agent.py`. Do not put provider
+SDK imports or secrets in the ranking policy itself.
 
 ## How to test
 
 ```bash
 pytest tests/test_ranking.py tests/test_agent_smoke.py
+pytest -q tests/test_llm_reranker.py
 ```
 
 ## Known TODOs
 
-- `LLMReranker` unimplemented (primary P3 deliverable).
-- No fallback wiring in `neeshops/agent.py` yet between rankers.
+- No provider adapter or fallback wiring in `neeshops/agent.py` yet between
+  rankers (coordinate with P5).
 - Ranking has never been measured against the real catalog/evaluator in
   this environment.

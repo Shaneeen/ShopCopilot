@@ -6,6 +6,11 @@ entries at the top.
 
 ## 2026-08-29
 
+- `[3A]` Implemented the guarded `LLMReranker` foundation: config-bounded
+  candidate input, truncated product payloads, strict known-ID validation,
+  usage/latency evidence, and deterministic `HeuristicRanker` fallback. Added
+  focused tests for success, malformed output, duplicate/unknown IDs, provider
+  failure, and disabled mode.
 - `[3A]` Standardized `person_3a_ranking_handoff.json` schema version 1.0,
   including exact field types, baseline/ranked top-10 semantics, validation
   rules, and the message sent to 3B.
