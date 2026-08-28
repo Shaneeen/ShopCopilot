@@ -6,6 +6,12 @@ entries at the top.
 
 ## 2026-08-29
 
+- `[3A]` Standardized `person_3a_ranking_handoff.json` schema version 1.0,
+  including exact field types, baseline/ranked top-10 semantics, validation
+  rules, and the message sent to 3B.
+- `[3A]` Added the repeatable P2 candidate-input → 3A top-10 ranking → 3B
+  evaluation-handoff workflow, including validation gates, run-record schema,
+  tests, and a copy/paste handoff checklist.
 - `[setup]` Split the original Person 3 workstream
   (`docs/neeshops/TEAM_WORKSTREAMS.md`) into 3A (Ranking Core,
   `neeshops/ranking/`) and 3B (Personalisation & Evaluation,
