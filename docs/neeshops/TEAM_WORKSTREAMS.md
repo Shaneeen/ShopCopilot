@@ -367,14 +367,32 @@ below).
   *Acceptance*: root `README.md`'s NeeShops section — already documents
   setup/test/eval commands; verify a clean-checkout teammate can follow it
   without asking questions.
-- **P5-D6** — Demo flow: multi-turn Agent session, internal decisions/logs,
-  results, evaluator metrics.
-  *Acceptance*: not yet built — `neeshops/utils/logging.py`'s structured
-  JSON-line events (`agent.respond`, `retrieval.hybrid`, `state.apply_turn`,
-  `experiment.complete`, etc.) are the raw material; a simple script that
-  runs a session and pretty-prints the log trace + final evaluator metrics
-  would satisfy the "demo may show API interaction / evaluator / Agent
-  trace" deliverable requirement without any frontend work.
+- **P5-D6 — Agent Trace Viewer.** Demo flow: multi-turn Agent session,
+  internal decisions/logs, results, evaluator metrics — made *visible*,
+  not just logged.
+  *What it is*: run a real session through `starter.agent.Agent`, capture
+  the structured JSON-line events `neeshops/utils/logging.py` already
+  emits per stage (`state.reset`, `state.apply_turn`, `retrieval.hybrid`,
+  `agent.respond`, ...), and render them as a readable per-turn trace —
+  intent detected, constraints extracted, retrieval route + candidate
+  counts, clarification decision, final ranked recommendations with their
+  `reason`. This is the frontend's existing "Agent Run Inspector" mockup
+  (`frontend/Main.dc.html`, currently sample data only) wired to a real
+  session instead of fake data.
+  *Why it's worth doing*: it's read-only tooling over logs that already
+  exist — **zero risk to the scored Agent/evaluator path** — and it
+  directly answers "prove this isn't a black box," which is genuine
+  Innovation/Impact material and exactly what the demo video can show per
+  the official deliverables ("API interaction, evaluator, inference
+  results, developer dashboard, metrics, Agent trace" — no shopping
+  frontend required).
+  *Acceptance*: a script (e.g. `scripts/generate_trace_report.py`) that
+  runs a session and produces either a readable console trace or a static
+  HTML report reusing the frontend's visual design; committed and runnable
+  by any teammate; referenced from the README as part of the demo
+  instructions.
+  *Not required for*: M0–M6. This is a submission-polish item for M7 —
+  build it once core engineering is stable, not before.
 - **P5-D7** — Documentation records final team contributions.
   *Acceptance*: add a "Team Contributions" section to root `README.md`
   before submission.
@@ -536,8 +554,7 @@ feature/agent-integration             P5
 ## Remotes
 
 ```text
-origin      → your team's repository (not yet configured — add with
-              `git remote add origin <url>` once the team repo exists)
+origin      → https://github.com/Shaneeen/ShopCopilot.git (team repo — push here)
 upstream    → https://github.com/TechJam2026/techjam-conversational-search.git
               (fetch-only; never push here)
 ```
@@ -545,3 +562,31 @@ upstream    → https://github.com/TechJam2026/techjam-conversational-search.git
 Keep it this way: pull organiser updates with `git fetch upstream` and
 merge/cherry-pick deliberately (never `git push upstream`); push team work
 only to `origin`.
+
+---
+
+# Stretch Goals / Bonus Backlog
+
+**Not required for a working submission.** Nobody is assigned one of
+these by default — they exist for whoever finishes their core deliverables
+early and wants to grab something extra. Pick one, post in the group chat
+so two people don't build the same thing, do it in its own branch, and PR
+it like anything else. None of these should ever delay M0–M6 — if core
+work and a stretch goal both need attention, core work wins.
+
+| Idea | What it is | Roughly whose area | Why it's worth doing (if you have time) |
+|---|---|---|---|
+| **Agent Trace Viewer** | See P5-D6 above — this is the flagship stretch goal, already spec'd | P5, but anyone can build it | Best visible payoff for the demo video/judges relative to effort |
+| Reliability harness | A script that deliberately breaks things (no catalog, no LLM key, malformed `user_message`, empty candidate pool) and asserts the Agent always returns a valid contract-conformant response | P5 | Cheap proof of robustness — good Feasibility/Technical Execution talking point |
+| CI config | GitHub Actions running `pytest` on every PR | P5 | Catches a broken merge before it reaches `main`; not needed for a small team moving fast, but free credibility |
+| Scenario-targeted `next_experiments()` | Make `neeshops/research/optimizer.py::next_experiments()` actually read `scenario_metrics` and target the weakest scenario instead of random sampling | P4 | Turns the research loop from "random search" into something you can honestly call intelligent in the writeup |
+| Query rewriting for Browsing | Light rewriting of vague Browsing messages ("something nice for a casual weekend") into a richer retrieval query before hitting BM25/semantic | P2 or P3 | Directly targets Browsing Hit Rate@10, which the weak baseline is worst at |
+| Size/style/feature metadata filters | Extend `neeshops/retrieval/filters.py::DEFAULT_FILTERS` beyond budget/category/color/material/brand | P2 | Rounds out constraint coverage without new architecture |
+| Latency/cost report per turn | Extend the structured logs to summarize p50/p95 `agent.respond` latency and total token usage across a full evaluator run | P4 or P5 | Feasibility & Practicality judging criterion cares about this explicitly |
+| Frontend ↔ live Agent wiring | A tiny local API so `frontend/` can send a real message to a real `NeeShopsAgent` and show a real response, instead of static mock data | P5, only if everything else is done | Nice demo polish; explicitly optional per `docs/neeshops/PROJECT_OVERVIEW.md` — never a required deliverable |
+| Team-contributions writeup automation | A script that summarizes `git log --author` per person into the README's contributions section | Anyone | Saves 10 minutes at submission time, zero risk |
+
+If you think of something not on this list, the bar is: **does it improve
+a real, measurable thing (Hit Rate@10 / MRR / MTTC / reliability /
+judge-visible clarity), and can you build it without touching someone
+else's in-progress work?** If yes to both, go for it and post about it.

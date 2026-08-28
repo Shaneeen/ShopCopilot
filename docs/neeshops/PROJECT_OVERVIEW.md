@@ -152,6 +152,20 @@ entirely. No workstream is primarily responsible for it — P5 may wire a
 minimal developer/demo view *only if* core engineering (M1–M6) is ahead of
 schedule. See `frontend/README.md`.
 
+The one exception is the **Agent Trace Viewer** (P5-D6, see
+`docs/neeshops/TEAM_WORKSTREAMS.md`) — it reuses the frontend's existing
+"Agent Run Inspector" mockup wired to a real session's logs. It's a demo
+tool, not the frontend becoming a real workstream: it's read-only, has no
+effect on the scored Agent, and is a submission-polish (M7) item, not a
+prerequisite for M0–M6.
+
+## Stretch goals
+
+Optional, judge-visible extras anyone can pick up once their core
+deliverables are done — see "Stretch Goals / Bonus Backlog" at the end of
+`docs/neeshops/TEAM_WORKSTREAMS.md`. Nothing there is required for a
+working submission.
+
 ## Future / experimental (explicitly out of scope for Track 4)
 
 - **Visual product search** (image/video → identify characteristics →
