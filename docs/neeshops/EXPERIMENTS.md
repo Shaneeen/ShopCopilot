@@ -41,6 +41,25 @@ strategy, semantic retrieval disabled, and LLM reranking disabled:
 This is evidence that the end-to-end candidate runs. It is not yet the
 development-split baseline for the experiment table below.
 
+## P3-D5: Ranking A/B — HeuristicRanker vs. identity/pass-through (160-session dev split)
+
+Measured 2026-08-29 via `scripts/evaluate_ranking_ab.py` (`personalization_weight=0.15`,
+`rerank_limit=50`) — both arms share one retrieval pass per session, so the
+delta is attributable only to the ranking stage. Full per-sample_id
+comparison saved to `artifacts/experiments/ranking_ab_1787938953.json`
+(gitignored).
+
+| Metric | Baseline (identity, no reranking) | Ranked (HeuristicRanker) | Δ |
+|---|---|---|---|
+| MRR | 0.181796 | 0.188373 | +0.006577 |
+| Hit Rate@10 | 0.2625 | 0.2875 | +0.025 |
+
+Per-scenario MRR (baseline → ranked): boundary 0.285714 → 0.285714,
+browsing 0.144872 → 0.158333, buying 0.222282 → 0.224970,
+intent_override 0.136364 → 0.136364 (unchanged — Intent Override sessions
+are designed so the explicit-constraint override dominates regardless of
+personalization).
+
 ## Accepted experiments
 
 _None yet. The catalog, BM25 index, 160/40 split, and complete public-set run
