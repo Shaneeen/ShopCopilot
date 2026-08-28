@@ -15,6 +15,11 @@ STOPWORDS = {
     "in", "into", "is", "it", "no", "not", "of", "on", "or", "such",
     "that", "the", "their", "then", "there", "these", "they", "this",
     "to", "was", "will", "with", "i", "me", "my", "want", "need", "looking",
+    # Clarification/conversation boilerplate — frequent in user replies,
+    # carries no product signal, and used to pollute retrieval queries.
+    "matters", "preference", "preferences", "additional", "options",
+    "attribute", "specific", "quite", "yet", "judgment", "judgement",
+    "flexible", "something", "anything",
 }
 
 

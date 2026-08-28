@@ -27,6 +27,11 @@ class HybridRetriever(Retriever):
         self.bm25 = bm25 or BM25Retriever()
         self.semantic = semantic or SemanticRetriever()
         self._strategy = strategy or load_strategy()
+        # Sub-retrievers need the same strategy view (e.g. the per-token
+        # pooling flag) — inject it when the caller supplied an experiment
+        # config so config changes flow without reconstructing the index.
+        if strategy is not None and hasattr(self.bm25, "set_strategy"):
+            self.bm25.set_strategy(strategy)
 
     def weights_for_route(self, route: Optional[str]) -> dict[str, float]:
         route_key = route if route in ("buying", "browsing") else "browsing"

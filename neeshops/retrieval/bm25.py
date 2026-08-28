@@ -13,15 +13,20 @@ accidentally.
 from __future__ import annotations
 
 import sqlite3
+import threading
 from pathlib import Path
 from typing import Optional
 
-from neeshops.config.settings import get_settings
+from neeshops.config.settings import get_settings, load_strategy
 from neeshops.models.session import ConversationState
 from neeshops.retrieval.base import Candidate, Retriever
 from neeshops.utils.logging import log_event
 
 _SEARCH_FIELDS = ("title", "categories", "features", "details", "store", "description")
+
+# FTS5 column order of the index (parent_asin is UNINDEXED — its weight is
+# accepted but ignored by bm25()).
+_COLUMN_ORDER = ("parent_asin",) + _SEARCH_FIELDS
 
 
 def _flatten(value: object) -> str:
@@ -40,11 +45,31 @@ def _flatten(value: object) -> str:
 class BM25Retriever(Retriever):
     name = "bm25"
 
-    def __init__(self, index_path: Optional[Path] = None, catalog_path: Optional[Path] = None) -> None:
+    def __init__(
+        self,
+        index_path: Optional[Path] = None,
+        catalog_path: Optional[Path] = None,
+        strategy: Optional[dict] = None,
+    ) -> None:
         settings = get_settings()
         self.catalog_path = catalog_path or settings.catalog_path
         self.index_path = index_path or self.catalog_path.with_suffix(".fts.db")
+        # The connection is shared across sessions/threads (e.g. a threaded
+        # HTTP frontend), so serialize access and relax SQLite's per-thread
+        # check — all query execution goes through `_search_locked`.
+        self._conn_lock = threading.Lock()
         self._conn: Optional[sqlite3.Connection] = None
+        self._strategy = strategy  # lazy-loaded when unset; see set_strategy
+
+    def set_strategy(self, strategy: dict) -> None:
+        """Allow the hybrid router (or an experiment) to inject the active
+        strategy so config changes apply without reconstructing the index."""
+        self._strategy = strategy
+
+    def _strategy_cfg(self) -> dict:
+        if self._strategy is None:
+            self._strategy = load_strategy()
+        return self._strategy
 
     def is_available(self) -> bool:
         return self.catalog_path.exists()
@@ -54,8 +79,19 @@ class BM25Retriever(Retriever):
             return self._conn
         if not self.index_path.exists():
             self._build_index()
-        self._conn = sqlite3.connect(self.index_path)
+        self._conn = sqlite3.connect(self.index_path, check_same_thread=False)
         return self._conn
+
+    def _search_locked(self, terms: list[str], top_k: int) -> list[tuple]:
+        """Run the FTS query under the connection lock (thread-safe)."""
+        with self._conn_lock:
+            conn = self._ensure_index()
+            cur = conn.execute(
+                f"SELECT parent_asin, bm25(products{self._bm25_args()}) AS rank "
+                "FROM products WHERE products MATCH ? ORDER BY rank LIMIT ?",
+                (self._match_expression(terms), top_k),
+            )
+            return cur.fetchall()
 
     def _build_index(self) -> None:
         """Build the FTS5 index from data/catalog.jsonl. Run once, cached to
@@ -103,20 +139,31 @@ class BM25Retriever(Retriever):
     def search(self, query: str, state: ConversationState, top_k: int) -> list[Candidate]:
         if not query.strip():
             return []
-        conn = self._ensure_index()
         # FTS5 MATCH with a permissive OR of terms; bm25() returns a lower
         # score for a better match, so we negate it into an ascending score.
-        terms = " OR ".join(f'"{t}"' for t in query.split() if t)
+        # Config can boost fields (title/categories) so products whose
+        # title/category matches a query token outrank products that match
+        # only somewhere in a long description — the user's target usually
+        # shares its coarse category and title words with the conversation.
+        terms = [t for t in query.split() if t]
         if not terms:
             return []
         try:
-            cur = conn.execute(
-                "SELECT parent_asin, bm25(products) AS rank FROM products "
-                "WHERE products MATCH ? ORDER BY rank LIMIT ?",
-                (terms, top_k),
-            )
-            rows = cur.fetchall()
+            rows = self._search_locked(terms, top_k)
         except sqlite3.OperationalError:
             # Malformed FTS query (e.g. reserved characters) — fail soft.
             return []
         return [Candidate(parent_asin=r[0], score=-r[1], source=self.name) for r in rows]
+
+    def _match_expression(self, terms: list[str]) -> str:
+        """OR-of-terms MATCH string (organiser starter behaviour)."""
+        return " OR ".join(f'"{t}"' for t in terms)
+
+    def _bm25_args(self) -> str:
+        """Column-weight arguments for bm25() from
+        `retrieval.bm25_field_weights` config (empty string = vanilla)."""
+        weights = self._strategy_cfg().get("retrieval", {}).get("bm25_field_weights")
+        if not weights:
+            return ""
+        args = ", ".join(str(float(weights.get(col, 1.0))) for col in _COLUMN_ORDER)
+        return f", {args}"

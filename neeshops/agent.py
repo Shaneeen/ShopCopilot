@@ -44,13 +44,13 @@ class NeeShopsAgent:
         self.state_manager = state_manager or StateManager()
         self.retriever = retriever or HybridRetriever(strategy=self.strategy)
         self.ranker = ranker or HeuristicRanker(strategy=self.strategy)
-        self.clarification_engine = clarification_engine or ClarificationEngine(
-            strategy=self.strategy
-        )
         # parent_asin -> raw catalog row, for filtering/ranking/personalization.
         # Populate via load_catalog_lookup() (scripts/setup_catalog.py) —
         # an empty lookup degrades gracefully (filters/personalization no-op).
         self.catalog_lookup = catalog_lookup or {}
+        self.clarification_engine = clarification_engine or ClarificationEngine(
+            strategy=self.strategy, catalog_lookup=self.catalog_lookup
+        )
 
     def reset(self, session_id: str, user_profile: dict) -> None:
         self.state_manager.reset(session_id, user_profile)
@@ -65,10 +65,14 @@ class NeeShopsAgent:
         start = time.perf_counter()
         state = self.state_manager.get(session_id)
 
-        extracted = extract_constraints(user_message)
+        # If we asked a question last turn, this message is primarily the
+        # answer to it — let the extractor slot-fill that attribute first.
+        slot = state.history[-1].asked_attribute if state.history else None
+
+        extracted = extract_constraints(user_message, slot=slot)
         route = detect_route(user_message, state.route, len(state.constraints))
 
-        query = " ".join(keywords(user_message))
+        query = self._conversation_query(state, user_message)
 
         # Retrieve first (pre-clarification) so the clarification engine can
         # see how broad/narrow the candidate pool already is.
@@ -128,6 +132,27 @@ class NeeShopsAgent:
             # own logging/frontend use.
             "route": route,
         }
+
+    @staticmethod
+    def _conversation_query(state: Any, user_message: str) -> str:
+        """Retrieval query for this turn: the keywords of EVERYTHING the
+        user has said so far, not just the latest message.
+
+        Clarification replies are short and often boilerplate ("I don't
+        have an additional preference for budget") — rebuilding the query
+        from the latest message alone let the target drop out of the
+        candidate pool entirely on every non-informative turn. Accumulating
+        keeps the opening intent permanently in the query while new answers
+        add discriminating tokens.
+        """
+        tokens: list[str] = []
+        seen: set[str] = set()
+        for msg in [t.user_message for t in state.history] + [user_message]:
+            for token in keywords(msg):
+                if token not in seen:
+                    seen.add(token)
+                    tokens.append(token)
+        return " ".join(tokens)
 
     @staticmethod
     def _default_message(recommendations: list[Any]) -> str:
