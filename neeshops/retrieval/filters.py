@@ -45,8 +45,13 @@ def budget_filter(product_row: dict[str, Any], state: ConversationState) -> bool
     budget = state.constraint_value("budget")
     if budget is None or state.has_no_preference("budget"):
         return True
-    price = product_row.get("price")
-    return price is None or price <= float(budget)
+    try:
+        price = product_row.get("price")
+        return price is None or float(price) <= float(budget)
+    except (TypeError, ValueError):
+        # Unparseable price (the real catalog has a few junk string values) —
+        # fail open, same as missing data.
+        return True
 
 
 def category_filter(product_row: dict[str, Any], state: ConversationState) -> bool:
@@ -83,6 +88,10 @@ DEFAULT_FILTERS: list[FilterFn] = [
     text_contains_filter("color"),
     text_contains_filter("material"),
     text_contains_filter("brand"),
+    text_contains_filter("size"),
+    text_contains_filter("style"),
+    text_contains_filter("feature"),
+    text_contains_filter("use_case"),
 ]
 
 

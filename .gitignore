@@ -29,3 +29,12 @@ artifacts/
 *.egg-info/
 .vscode/
 .idea/
+data/semantic*
+data/embeddings/
+*.npy
+*.pkl
+*.faiss
+*.index
+*.pptx
+*.pdf
+pptx_dump.txt
