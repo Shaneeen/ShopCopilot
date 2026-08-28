@@ -108,7 +108,7 @@ in the focused command.
 - failure falls back to BM25;
 - candidate recall and latency are recorded.
 
-## P3 — Ranking, Query Intelligence, and Personalisation
+## P3A — Ranking Core
 
 ### Your goal
 
@@ -121,8 +121,7 @@ deterministic path when an LLM is unavailable.
 2. `neeshops/ranking/base.py`
 3. `neeshops/ranking/heuristic.py`
 4. `neeshops/ranking/llm_reranker.py`
-5. `neeshops/personalization/profile.py`
-6. `tests/test_ranking.py`
+5. `tests/test_ranking.py`
 
 ### Shared seam
 
@@ -131,16 +130,12 @@ token-usage, and fallback behavior before both people edit that seam.
 
 ### Build in this order
 
-1. Add an identity/pass-through comparison so heuristic ranking has a measured
-   MRR delta.
-2. Define a small structured LLM output containing known candidate IDs only.
-3. Limit the number and text length of candidates sent to the model.
-4. Add the selected provider SDK and document its environment variables.
-5. Implement timeout, parsing, unknown-ID rejection, duplicate removal, and
+1. Define a small structured LLM output containing known candidate IDs only.
+2. Limit the number and text length of candidates sent to the model.
+3. Add the selected provider SDK and document its environment variables.
+4. Implement timeout, parsing, unknown-ID rejection, duplicate removal, and
    token accounting.
-6. Return unranked candidates through `HeuristicRanker` after any failure.
-7. Test that explicit user constraints remain stronger than profile tags.
-8. Give P4 model name, latency, token totals, and estimated cost.
+5. Return unranked candidates through `HeuristicRanker` after any failure.
 
 Create `tests/test_llm_reranker.py` for enabled, disabled, malformed-output,
 timeout, and fallback behavior.
@@ -157,8 +152,45 @@ pytest -q tests/test_ranking.py tests/test_agent_smoke.py
 - LLM path works when enabled;
 - missing key, timeout, malformed JSON, duplicate IDs, and unknown IDs all
   fall back safely;
-- token use is returned through the official `usage` field;
-- MRR comparison and cost are recorded.
+- token use is returned through the official `usage` field.
+
+---
+
+## P3B — Personalisation and Evaluation
+
+### Your goal
+
+Convert aggregate user profiles into soft ranking boosts while keeping explicit constraints stronger, and compare ranking strategies against retrieval-only order.
+
+### Read these files first
+
+1. `neeshops/personalization/profile.py`
+2. `tests/test_ranking.py`
+3. `scripts/evaluate.py`
+
+### Shared seam
+
+You own personalization boost logic, but P3A owns the ranker. Agree on hook signatures and how weights are configured.
+
+### Build in this order
+
+1. Add an identity/pass-through comparison so heuristic ranking has a measured
+   MRR delta (coordinate with P4).
+2. Implement `personalization_boost` in `profile.py`.
+3. Test that explicit user constraints remain stronger than profile tags (`test_personalization_never_overrides_explicit_low_retrieval_score`).
+4. Work with P4 to establish the Identity Ranker evaluation baseline and log MRR.
+
+### Focused command
+
+```bash
+pytest -q tests/test_ranking.py
+```
+
+### Done evidence
+
+- personalization conversion works and aggregates profiles safely;
+- user constraints override profile tags;
+- MRR comparison is recorded.
 
 ## P4 — Research, Evaluation, and Experimentation
 

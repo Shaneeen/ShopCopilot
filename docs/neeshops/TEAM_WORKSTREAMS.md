@@ -167,36 +167,26 @@ initial run, then start on `SemanticRetriever`.
 
 ---
 
-## Person 3 — Ranking, Query Intelligence & Personalisation
+## Person 3A — Ranking Core
 
 ### Owned folders
-`neeshops/ranking/`, `neeshops/personalization/`.
+`neeshops/ranking/`.
 
 ### Allowed/shared interfaces
-Provides: `Ranker` (ABC), `HeuristicRanker`, `personalization_boost` (see
-`docs/neeshops/INTEGRATION_CONTRACTS.md` → "Retrieval ↔ Ranking", "Profile
-↔ Ranking"). Consumes: `list[Candidate]` from P2, `ConversationState.user_profile`.
+Provides: `Ranker` (ABC), `HeuristicRanker`, `LLMReranker` (see
+`docs/neeshops/INTEGRATION_CONTRACTS.md` → "Retrieval ↔ Ranking"). Consumes: `list[Candidate]` from P2, `personalization_boost` from 3B.
 
 ### Files to avoid modifying
-`neeshops/retrieval/`, `neeshops/conversation/`, `starter/agent.py`,
-`evaluator/`.
+`neeshops/retrieval/`, `neeshops/conversation/`, `neeshops/personalization/`, `starter/agent.py`, `evaluator/`.
 
 ### Responsibilities
-Candidate reranking, semantic ranking, optional LLM reranking, query
-rewriting where appropriate, soft user-profile signals, ranking
-explanation strings, ranking latency/token cost, fallback ranking when an
-external model is unavailable.
+Candidate reranking, semantic ranking core, optional LLM reranking, fallback ranking when an external model is unavailable, ranking explanation strings, ranking latency/token cost tracking.
 
 ### Deliverables
 
 - **P3-D1** — Deterministic baseline reranker exists.
   *Acceptance*: `HeuristicRanker` — **already done and tested**
   (`tests/test_ranking.py`).
-- **P3-D2** — Personalisation converts the official aggregate profile into
-  **soft** ranking features; explicit constraints take priority.
-  *Acceptance*: `personalization_boost()` + `ranking.personalization_weight`
-  (default 0.15) — **already done**; verified by
-  `tests/test_ranking.py::test_personalization_never_overrides_explicit_low_retrieval_score`.
 - **P3-D3** — If an LLM reranker is used: bounded candidate count in,
   token usage tracked, secrets from environment variables only, and a
   working fallback when unavailable.
@@ -206,15 +196,9 @@ external model is unavailable.
   unconditionally; this is the actual integration gap).
 - **P3-D4** — Ranker output is a valid, ordered `parent_asin` list.
   *Acceptance*: **already done** for `HeuristicRanker`.
-- **P3-D5** — Compare ranking strategy against retrieval-only output.
-  *Acceptance*: a script or experiment (coordinate with P4) that runs the
-  evaluator with `HeuristicRanker` vs. an identity ranker (pass-through
-  retrieval order) and reports the MRR delta.
 
 ### Success metrics
-MRR, Top-10 ordering quality, latency, token usage/cost if an LLM is used
-— all measured, never estimated. Report actual deltas against
-retrieval-only ordering.
+MRR, Top-10 ordering quality, latency, token usage/cost if an LLM is used.
 
 ### Merge checklist
 - [ ] `pytest tests/test_ranking.py tests/test_agent_smoke.py` passes
@@ -229,8 +213,50 @@ between rankers based on availability rather than hardcoding
 ### First action
 Wire a config-driven ranker choice into `neeshops/agent.py`
 (`NeeShopsAgent.__init__` currently hardcodes `ranker or
-HeuristicRanker(...)`) so P3 has a real integration point to build
+HeuristicRanker(...)`) so P3A has a real integration point to build
 `LLMReranker` toward, before writing any LLM prompt code.
+
+---
+
+## Person 3B — Personalisation & Evaluation
+
+### Owned folders
+`neeshops/personalization/`.
+
+### Allowed/shared interfaces
+Provides: `personalization_boost` (see
+`docs/neeshops/INTEGRATION_CONTRACTS.md` → "Profile ↔ Ranking"). Consumes: `ConversationState.user_profile`.
+
+### Files to avoid modifying
+`neeshops/retrieval/`, `neeshops/conversation/`, `neeshops/ranking/` (except coordinates to hooks), `starter/agent.py`, `evaluator/`.
+
+### Responsibilities
+Soft user-profile signals conversion, maintaining personalisation weights, comparing ranking strategy against retrieval-only order, reporting MRR and Hit Rate deltas, tracking evaluation runs.
+
+### Deliverables
+
+- **P3-D2** — Personalisation converts the official aggregate profile into
+  **soft** ranking features; explicit constraints take priority.
+  *Acceptance*: `personalization_boost()` + `ranking.personalization_weight`
+  (default 0.15) — **already done**; verified by
+  `tests/test_ranking.py::test_personalization_never_overrides_explicit_low_retrieval_score`.
+- **P3-D5** — Compare ranking strategy against retrieval-only output.
+  *Acceptance*: a script or experiment (coordinate with P4) that runs the
+  evaluator with `HeuristicRanker` vs. an identity ranker (pass-through
+  retrieval order) and reports the MRR delta.
+
+### Success metrics
+Personalisation correctness (constraints override), MRR delta from ranking.
+
+### Merge checklist
+- [ ] `pytest tests/test_ranking.py` passes
+- [ ] Personalisation-never-overrides-explicit-constraints test remains green
+
+### Definition of Done
+`personalization_boost()` is functional and covered by tests; A/B MRR comparison script runs and logs results in `docs/neeshops/EXPERIMENTS.md`.
+
+### First action
+Ensure the personalization test matches current baseline parameters, then coordinate with P4 to establish the Identity Ranker evaluation baseline.
 
 ---
 
