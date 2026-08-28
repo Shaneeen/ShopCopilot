@@ -1,0 +1,6530 @@
+{
+  "dataset": "data\\dev_split.jsonl",
+  "rank_observation_note": "Ranks beyond top 10 are unavailable; movement uses 11 as a capped sentinel.",
+  "selection_note": "Highest dev MRR candidate; review preservation/regret before integration.",
+  "recommended_candidate_weight": 0.2,
+  "weight_sweep": [
+    {
+      "weight": 0.0,
+      "sample_count": 160,
+      "baseline_mrr": 0.181796,
+      "personalized_mrr": 0.181796,
+      "mrr_delta": 0.0,
+      "baseline_hit_at_10": 0.2625,
+      "personalized_hit_at_10": 0.2625,
+      "baseline_mttc": 8.73125,
+      "personalized_mttc": 8.73125,
+      "improved": 0,
+      "worsened": 0,
+      "unchanged": 160,
+      "mean_positive_movement": 0.0,
+      "median_positive_movement": 0.0,
+      "mean_harmful_movement": 0.0,
+      "median_harmful_movement": 0.0,
+      "largest_improvement": 0,
+      "largest_regression": 0,
+      "top_1_preservation_rate": 1.0,
+      "top_3_preservation_rate": 1.0,
+      "top_10_preservation_rate": 1.0,
+      "mrr_delta_bootstrap_95_ci": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "weight": 0.025,
+      "sample_count": 160,
+      "baseline_mrr": 0.181796,
+      "personalized_mrr": 0.183038,
+      "mrr_delta": 0.001242,
+      "baseline_hit_at_10": 0.2625,
+      "personalized_hit_at_10": 0.26875,
+      "baseline_mttc": 8.73125,
+      "personalized_mttc": 8.66875,
+      "improved": 2,
+      "worsened": 2,
+      "unchanged": 156,
+      "mean_positive_movement": 1.0,
+      "median_positive_movement": 1.0,
+      "mean_harmful_movement": 1.0,
+      "median_harmful_movement": 1.0,
+      "largest_improvement": 1,
+      "largest_regression": 1,
+      "top_1_preservation_rate": 1.0,
+      "top_3_preservation_rate": 1.0,
+      "top_10_preservation_rate": 1.0,
+      "mrr_delta_bootstrap_95_ci": [
+        -0.000737,
+        0.004152
+      ]
+    },
+    {
+      "weight": 0.05,
+      "sample_count": 160,
+      "baseline_mrr": 0.181796,
+      "personalized_mrr": 0.18315,
+      "mrr_delta": 0.001354,
+      "baseline_hit_at_10": 0.2625,
+      "personalized_hit_at_10": 0.26875,
+      "baseline_mttc": 8.73125,
+      "personalized_mttc": 8.66875,
+      "improved": 3,
+      "worsened": 2,
+      "unchanged": 155,
+      "mean_positive_movement": 1.0,
+      "median_positive_movement": 1,
+      "mean_harmful_movement": 1.0,
+      "median_harmful_movement": 1.0,
+      "largest_improvement": 1,
+      "largest_regression": 1,
+      "top_1_preservation_rate": 1.0,
+      "top_3_preservation_rate": 1.0,
+      "top_10_preservation_rate": 1.0,
+      "mrr_delta_bootstrap_95_ci": [
+        -0.000729,
+        0.004375
+      ]
+    },
+    {
+      "weight": 0.1,
+      "sample_count": 160,
+      "baseline_mrr": 0.181796,
+      "personalized_mrr": 0.182778,
+      "mrr_delta": 0.000982,
+      "baseline_hit_at_10": 0.2625,
+      "personalized_hit_at_10": 0.275,
+      "baseline_mttc": 8.73125,
+      "personalized_mttc": 8.63125,
+      "improved": 6,
+      "worsened": 5,
+      "unchanged": 149,
+      "mean_positive_movement": 1.333333,
+      "median_positive_movement": 1.0,
+      "mean_harmful_movement": 1.2,
+      "median_harmful_movement": 1,
+      "largest_improvement": 2,
+      "largest_regression": 2,
+      "top_1_preservation_rate": 1.0,
+      "top_3_preservation_rate": 0.96875,
+      "top_10_preservation_rate": 1.0,
+      "mrr_delta_bootstrap_95_ci": [
+        -0.003872,
+        0.00533
+      ]
+    },
+    {
+      "weight": 0.15,
+      "sample_count": 160,
+      "baseline_mrr": 0.181796,
+      "personalized_mrr": 0.186119,
+      "mrr_delta": 0.004323,
+      "baseline_hit_at_10": 0.2625,
+      "personalized_hit_at_10": 0.26875,
+      "baseline_mttc": 8.73125,
+      "personalized_mttc": 8.69375,
+      "improved": 9,
+      "worsened": 8,
+      "unchanged": 143,
+      "mean_positive_movement": 1.555556,
+      "median_positive_movement": 1,
+      "mean_harmful_movement": 1.625,
+      "median_harmful_movement": 1.0,
+      "largest_improvement": 3,
+      "largest_regression": 4,
+      "top_1_preservation_rate": 1.0,
+      "top_3_preservation_rate": 0.9375,
+      "top_10_preservation_rate": 0.97619,
+      "mrr_delta_bootstrap_95_ci": [
+        -0.004209,
+        0.014174
+      ]
+    },
+    {
+      "weight": 0.2,
+      "sample_count": 160,
+      "baseline_mrr": 0.181796,
+      "personalized_mrr": 0.193492,
+      "mrr_delta": 0.011696,
+      "baseline_hit_at_10": 0.2625,
+      "personalized_hit_at_10": 0.28125,
+      "baseline_mttc": 8.73125,
+      "personalized_mttc": 8.5875,
+      "improved": 12,
+      "worsened": 8,
+      "unchanged": 140,
+      "mean_positive_movement": 1.75,
+      "median_positive_movement": 1.0,
+      "mean_harmful_movement": 1.875,
+      "median_harmful_movement": 2.0,
+      "largest_improvement": 4,
+      "largest_regression": 4,
+      "top_1_preservation_rate": 1.0,
+      "top_3_preservation_rate": 0.9375,
+      "top_10_preservation_rate": 0.97619,
+      "mrr_delta_bootstrap_95_ci": [
+        -0.000228,
+        0.026081
+      ]
+    },
+    {
+      "weight": 0.3,
+      "sample_count": 160,
+      "baseline_mrr": 0.181796,
+      "personalized_mrr": 0.181143,
+      "mrr_delta": -0.000653,
+      "baseline_hit_at_10": 0.2625,
+      "personalized_hit_at_10": 0.2875,
+      "baseline_mttc": 8.73125,
+      "personalized_mttc": 8.525,
+      "improved": 14,
+      "worsened": 13,
+      "unchanged": 133,
+      "mean_positive_movement": 2.5,
+      "median_positive_movement": 2.0,
+      "mean_harmful_movement": 2.538462,
+      "median_harmful_movement": 2,
+      "largest_improvement": 9,
+      "largest_regression": 8,
+      "top_1_preservation_rate": 0.875,
+      "top_3_preservation_rate": 0.90625,
+      "top_10_preservation_rate": 0.928571,
+      "mrr_delta_bootstrap_95_ci": [
+        -0.019697,
+        0.017401
+      ]
+    },
+    {
+      "weight": 0.4,
+      "sample_count": 160,
+      "baseline_mrr": 0.181796,
+      "personalized_mrr": 0.153668,
+      "mrr_delta": -0.028128,
+      "baseline_hit_at_10": 0.2625,
+      "personalized_hit_at_10": 0.28125,
+      "baseline_mttc": 8.73125,
+      "personalized_mttc": 8.55625,
+      "improved": 10,
+      "worsened": 20,
+      "unchanged": 130,
+      "mean_positive_movement": 3.9,
+      "median_positive_movement": 3.0,
+      "mean_harmful_movement": 3.7,
+      "median_harmful_movement": 3.5,
+      "largest_improvement": 9,
+      "largest_regression": 8,
+      "top_1_preservation_rate": 0.708333,
+      "top_3_preservation_rate": 0.78125,
+      "top_10_preservation_rate": 0.928571,
+      "mrr_delta_bootstrap_95_ci": [
+        -0.055878,
+        -0.001468
+      ]
+    }
+  ],
+  "selected_weight_breakdowns": [
+    {
+      "cut": "profile_richness",
+      "group": "1",
+      "count": 5,
+      "baseline_mrr": 0.2,
+      "personalized_mrr": 0.228571,
+      "mrr_delta": 0.028571,
+      "baseline_hit_at_10": 0.2,
+      "personalized_hit_at_10": 0.4,
+      "improved": 1,
+      "worsened": 0
+    },
+    {
+      "cut": "profile_richness",
+      "group": "2-3",
+      "count": 59,
+      "baseline_mrr": 0.239144,
+      "personalized_mrr": 0.247242,
+      "mrr_delta": 0.008098,
+      "baseline_hit_at_10": 0.338983,
+      "personalized_hit_at_10": 0.338983,
+      "improved": 4,
+      "worsened": 5
+    },
+    {
+      "cut": "profile_richness",
+      "group": "4+",
+      "count": 96,
+      "baseline_mrr": 0.145602,
+      "personalized_mrr": 0.158631,
+      "mrr_delta": 0.013029,
+      "baseline_hit_at_10": 0.21875,
+      "personalized_hit_at_10": 0.239583,
+      "improved": 7,
+      "worsened": 3
+    },
+    {
+      "cut": "baseline_position",
+      "group": "1-3",
+      "count": 32,
+      "baseline_mrr": 0.848958,
+      "personalized_mrr": 0.896875,
+      "mrr_delta": 0.047917,
+      "baseline_hit_at_10": 1.0,
+      "personalized_hit_at_10": 1.0,
+      "improved": 5,
+      "worsened": 2
+    },
+    {
+      "cut": "baseline_position",
+      "group": "4-10",
+      "count": 10,
+      "baseline_mrr": 0.192063,
+      "personalized_mrr": 0.177302,
+      "mrr_delta": -0.014762,
+      "baseline_hit_at_10": 1.0,
+      "personalized_hit_at_10": 0.9,
+      "improved": 3,
+      "worsened": 6
+    },
+    {
+      "cut": "baseline_position",
+      "group": "not retrieved in top 10",
+      "count": 118,
+      "baseline_mrr": 0.0,
+      "personalized_mrr": 0.004116,
+      "mrr_delta": 0.004116,
+      "baseline_hit_at_10": 0.0,
+      "personalized_hit_at_10": 0.033898,
+      "improved": 4,
+      "worsened": 0
+    },
+    {
+      "cut": "constraint_richness",
+      "group": "2-3",
+      "count": 160,
+      "baseline_mrr": 0.181796,
+      "personalized_mrr": 0.193492,
+      "mrr_delta": 0.011696,
+      "baseline_hit_at_10": 0.2625,
+      "personalized_hit_at_10": 0.28125,
+      "improved": 12,
+      "worsened": 8
+    },
+    {
+      "cut": "category",
+      "group": "Athletic Walking",
+      "count": 6,
+      "baseline_mrr": 0.166667,
+      "personalized_mrr": 0.166667,
+      "mrr_delta": 0.0,
+      "baseline_hit_at_10": 0.166667,
+      "personalized_hit_at_10": 0.166667,
+      "improved": 0,
+      "worsened": 0
+    },
+    {
+      "cut": "category",
+      "group": "Shoes Fashion Sneakers",
+      "count": 5,
+      "baseline_mrr": 0.0,
+      "personalized_mrr": 0.0,
+      "mrr_delta": 0.0,
+      "baseline_hit_at_10": 0.0,
+      "personalized_hit_at_10": 0.0,
+      "improved": 0,
+      "worsened": 0
+    },
+    {
+      "cut": "category",
+      "group": "Shoes Slippers",
+      "count": 6,
+      "baseline_mrr": 0.0,
+      "personalized_mrr": 0.0,
+      "mrr_delta": 0.0,
+      "baseline_hit_at_10": 0.0,
+      "personalized_hit_at_10": 0.0,
+      "improved": 0,
+      "worsened": 0
+    }
+  ],
+  "selected_weight_sessions": [
+    {
+      "sample_id": "public_0067",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Lightweight Jackets Windbreakers. A key requirement is: polyester.",
+      "preference_tags": [
+        "comfort",
+        "style",
+        "material"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09G9BXJZM",
+      "target_title": "TLZC Men's Lightweight Bomber Jacket Windbreaker Slim Fit Active Coat Outerwear",
+      "target_category": "Lightweight Jackets Windbreakers",
+      "baseline_rank": 2,
+      "personalized_rank": 1,
+      "baseline_rr": 0.5,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 1,
+      "score": 0.07368421052631578,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "fashion",
+        "polyester",
+        "style",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0188",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Handbags & Wallets Crossbody Bags. A key requirement is: leather.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0B5ZS2J2W",
+      "target_title": "CLUCI Crossbody Purses for Women, Medium Size Zipper Pocket Adjustable Strap, Soft Leather Women's Shoulder Handbags",
+      "target_category": "Handbags & Wallets Crossbody Bags",
+      "baseline_rank": 4,
+      "personalized_rank": 3,
+      "baseline_rr": 0.25,
+      "personalized_rr": 0.3333333333333333,
+      "rank_movement_capped": 1,
+      "score": 0.4789473684210526,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "fabric",
+        "leather"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0102",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Bras Everyday Bras, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "style",
+        "fit",
+        "material"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07PWZXZVX",
+      "target_title": "FallSweet Padded Push Up Lace Bras for 34A to 44C Underwire",
+      "target_category": "Bras Everyday Bras",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.17105263157894737,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort"
+      ],
+      "matched_terms": [
+        "padded"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0194",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Tees & Blouses T-Shirts. A key requirement is: rayon.",
+      "preference_tags": [
+        "warmth",
+        "weather",
+        "comfort",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09WR1NZ48",
+      "target_title": "Graphic Tees for Women Short Sleeve Tshirts,Womens Summer Tops Crewneck Shirt Blouse",
+      "target_category": "Tees & Blouses T-Shirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfortable",
+        "soft",
+        "stretch"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0112",
+      "scenario_type": "boundary",
+      "user_message": "I'm looking for Athletic Walking, but I'm still exploring.",
+      "preference_tags": [
+        "warmth",
+        "weather",
+        "comfort",
+        "performance"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B086ZNJY8K",
+      "target_title": "Nautica Men's Casual Slip-On Fashion Sneakers-Walking Shoes-Lightweight Joggers",
+      "target_category": "Athletic Walking",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "performance"
+      ],
+      "matched_terms": [
+        "athletic",
+        "comfort",
+        "cushioned",
+        "performance",
+        "running"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0122",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Women Leggings, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "style",
+        "material"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B074KJ49F2",
+      "target_title": "Leggings Depot Premium Quality Women's Cotton Blend Stretch Pull-on Jeggings with Pockets",
+      "target_category": "Women Leggings",
+      "baseline_rank": 3,
+      "personalized_rank": 2,
+      "baseline_rr": 0.3333333333333333,
+      "personalized_rr": 0.5,
+      "rank_movement_capped": 1,
+      "score": 0.42105263157894735,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "casual",
+        "comfort",
+        "comfortable",
+        "cotton",
+        "fabric",
+        "polyester",
+        "soft",
+        "stretch",
+        "style"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0014",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Underwear Briefs, but I'm still exploring.",
+      "preference_tags": [
+        "warmth",
+        "comfort",
+        "style",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B088QF5G58",
+      "target_title": "Hanes Men's Underwear Briefs Pack, Mid-Rise, Moisture-Wicking, 6-Pack",
+      "target_category": "Underwear Briefs",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "matched_terms": [
+        "classic",
+        "comfort",
+        "soft",
+        "stretch",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0003",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Watches Wrist Watches. Stainless Steel Band",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09YMTWDXJ",
+      "target_title": "Casio Men's Wrist Watch AQ-800E-7A",
+      "target_category": "Watches Wrist Watches",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.0,
+      "confidence": 0.7,
+      "matched_tags": [],
+      "matched_terms": [],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": false
+      }
+    },
+    {
+      "sample_id": "public_0065",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Bibs & Pants Bibs. A key requirement is: polyester.",
+      "preference_tags": [
+        "material",
+        "fit",
+        "comfort"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BSQ9TCYC",
+      "target_title": "Arctix Women's Essential Insulated Bib Overalls",
+      "target_category": "Bibs & Pants Bibs",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "comfort",
+        "fabric",
+        "fit",
+        "polyester",
+        "relaxed fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0045",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Tees & Blouses Tunics. A key requirement is: polyester.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07Z8NTWVV",
+      "target_title": "HOCOSIT Women's Floral Print Short Ruffle Sleeve Pleated Front V Neck Button Tunic Tops",
+      "target_category": "Tees & Blouses Tunics",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "material",
+        "polyester"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0137",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Women Fashion Hoodies & Sweatshirts, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "weather",
+        "material",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B01N67CJGX",
+      "target_title": "DOUBLJU Lightweight Thin Zip-Up Hoodie Jacket for Women Girls Kids with Plus Size",
+      "target_category": "Women Fashion Hoodies & Sweatshirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "fabric",
+        "material",
+        "polyester",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0171",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Bikinis Sets. A key requirement is: nylon.",
+      "preference_tags": [
+        "fit",
+        "material",
+        "comfort",
+        "warmth"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BFVFFHKS",
+      "target_title": "ZAFUL Bikini Set for Women Solid V Neck Knot Front Push Up High Leg Thong Two Piece Swimsuit",
+      "target_category": "Bikinis Sets",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "warmth"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "fabric",
+        "lined",
+        "nylon",
+        "padded",
+        "soft",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0129",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Women Bodysuits. A key requirement is: fabric.",
+      "preference_tags": [
+        "fit",
+        "material"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0936ZJJ68",
+      "target_title": "MANGOPOP Women's Square Neck Short Sleeve Long Sleeve Tops Bodysuit Jumpsuit",
+      "target_category": "Women Bodysuits",
+      "baseline_rank": 7,
+      "personalized_rank": 9,
+      "baseline_rr": 0.14285714285714285,
+      "personalized_rr": 0.1111111111111111,
+      "rank_movement_capped": -2,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "fabric",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0077",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Sleep & Lounge Sleep Tops, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B077JDSZ27",
+      "target_title": "Ashford & Brooks Mens Flannel Long Sleeve Sleep Nightshirt",
+      "target_category": "Sleep & Lounge Sleep Tops",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "fabric",
+        "fit",
+        "polyester",
+        "relaxed fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0159",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Sleep & Lounge Sleep Bottoms. A key requirement is: cotton.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B00UHLFR32",
+      "target_title": "Fruit of the Loom Men's Extended Sizes Jersey Knit Sleep Pant (1 & 2 Packs)",
+      "target_category": "Sleep & Lounge Sleep Bottoms",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "classic",
+        "comfortable",
+        "cotton",
+        "fabric",
+        "fit",
+        "polyester",
+        "soft",
+        "stretch",
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0168",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Necklaces & Pendants Pendants. A key requirement is: Mother Daughter Bracelets - Heart bracelet on card meaning \u201cNever Truly Part,Maybe in Distance,But Never in Heart\u201d. All daughters love their mom, but sometimes we just forget to sa.",
+      "preference_tags": [
+        "comfort",
+        "warmth",
+        "durability",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08YYHDJD1",
+      "target_title": "Desimtion Mothers Day Gifts,Mother Daughter Bracelets Set for 2,3,4,5,6.Matching Heart Back to School Bracelets for Mommy and Me Easter Gifts for Girl",
+      "target_category": "Necklaces & Pendants Pendants",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "durability",
+        "fit"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "resistant"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0046",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Socks & Hosiery Leg Warmers. No Closure closure",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "warmth"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0B42PVX1F",
+      "target_title": "Wool Plus Size Thigh High Socks For Thick Thighs- Extra Long Womens Warm Cable Knit Over Knee Stockings Leg Warmers",
+      "target_category": "Socks & Hosiery Leg Warmers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.42105263157894735,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "warmth"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "cotton",
+        "polyester",
+        "soft",
+        "stretch",
+        "warm",
+        "warmth",
+        "wool"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0131",
+      "scenario_type": "boundary",
+      "user_message": "I'm looking for Socks & Hosiery Leg Warmers, but I'm still exploring.",
+      "preference_tags": [
+        "weather",
+        "comfort",
+        "style"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07PQQQ8ZL",
+      "target_title": "Women Thigh High Socks Extra Long Cotton Knit Warm Thick Tall Long Boot Stockings Leg Warmers",
+      "target_category": "Socks & Hosiery Leg Warmers",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "style",
+        "weather"
+      ],
+      "matched_terms": [
+        "breathable",
+        "classic",
+        "comfortable",
+        "fashion",
+        "soft",
+        "stylish",
+        "weather"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0031",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Women Jeans. A key requirement is: cotton.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BQDTGHMZ",
+      "target_title": "Signature by Levi Strauss & Co. Gold Label Women's Modern Skinny Jeans (Standard and Plus)",
+      "target_category": "Women Jeans",
+      "baseline_rank": null,
+      "personalized_rank": 7,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.14285714285714285,
+      "rank_movement_capped": 4,
+      "score": 0.2894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "comfort",
+        "cotton",
+        "fit",
+        "modern",
+        "polyester",
+        "stretch",
+        "stretchy",
+        "style",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0004",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Tops & Tees Tanks & Camis. Long torso camisole for extra coverage with spagetti adjustable strap for perfect fit",
+      "preference_tags": [
+        "weather",
+        "warmth",
+        "material",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07C2XPZ6D",
+      "target_title": "Emmalise Women's Basic Casual Long Camisole Adjustable Strap Cami Layering Top",
+      "target_category": "Tops & Tees Tanks & Camis",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "cotton",
+        "fabric",
+        "nylon",
+        "polyester",
+        "silk",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0160",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Travel Accessories Packing Organizers. A key requirement is: fabric.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B01AAANF2Y",
+      "target_title": "Amazon Basics 4 Piece Packing Travel Organizer Cubes Set - Slim, Black",
+      "target_category": "Travel Accessories Packing Organizers",
+      "baseline_rank": 5,
+      "personalized_rank": 7,
+      "baseline_rr": 0.2,
+      "personalized_rr": 0.14285714285714285,
+      "rank_movement_capped": -2,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "fabric",
+        "material",
+        "polyester"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0016",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Boots Mid-Calf, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "fit",
+        "durability",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07PH3X7QK",
+      "target_title": "Amazon Essentials Women's Lace-Up Combat Boot",
+      "target_category": "Boots Mid-Calf",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "classic",
+        "comfort",
+        "long lasting",
+        "memory foam",
+        "modern"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0043",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Women Jeans, but I'm still exploring.",
+      "preference_tags": [
+        "style",
+        "fit",
+        "material",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0C1KNGLPX",
+      "target_title": "Levi's Women's Classic Bootcut Jeans",
+      "target_category": "Women Jeans",
+      "baseline_rank": 3,
+      "personalized_rank": 1,
+      "baseline_rr": 0.3333333333333333,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 2,
+      "score": 0.25,
+      "confidence": 1.0,
+      "matched_tags": [
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "classic",
+        "cotton",
+        "leather",
+        "polyester",
+        "stretch",
+        "style"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0127",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Gloves & Mittens Cold Weather Gloves, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit",
+        "comfort",
+        "warmth"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0B8DX189T",
+      "target_title": "Under Armour Storm Fleece Gloves",
+      "target_category": "Gloves & Mittens Cold Weather Gloves",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.25,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "warmth"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "fabric",
+        "fleece",
+        "material",
+        "polyester",
+        "soft",
+        "warm"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0187",
+      "scenario_type": "boundary",
+      "user_message": "I'm looking for Shoes Loafers & Slip-Ons, but I'm still exploring.",
+      "preference_tags": [
+        "weather",
+        "comfort",
+        "style"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B000GQ1F3O",
+      "target_title": "Eastland Men's Newport Slip-On Shoe",
+      "target_category": "Shoes Loafers & Slip-Ons",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07368421052631578,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "comfort",
+        "comfortable",
+        "cushion",
+        "padded",
+        "soft",
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0163",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Athletic Walking. A key requirement is: fabric.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "performance"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0834T68X3",
+      "target_title": "DOUSSPRT Womens Walking Shoes Slip on Sock Sneakers Lady Girls Nurse Mesh Air Cushion Platform Loafers Fashion Casual",
+      "target_category": "Athletic Walking",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.32894736842105265,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "performance"
+      ],
+      "matched_terms": [
+        "athletic",
+        "cushion",
+        "fabric",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0048",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Athletic Soccer, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "durability",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B00VQBMJUQ",
+      "target_title": "Vizari Infinity FG Soccer Cleat (Toddler/Little Kid/Big Kid)",
+      "target_category": "Athletic Soccer",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "fit",
+        "style"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "comfort",
+        "comfortable",
+        "durable",
+        "padded",
+        "resistant",
+        "rugged",
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0111",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Sweaters Pullovers. A key requirement is: polyester.",
+      "preference_tags": [
+        "style",
+        "durability",
+        "material"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07H7BWMQF",
+      "target_title": "Lacozy Women's Off Shoulder Long Sleeve Oversized Pullover Sweater Knit Jumper Loose Tunic Tops",
+      "target_category": "Sweaters Pullovers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07368421052631578,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "cotton",
+        "material",
+        "polyester",
+        "style",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0006",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Basketball Men, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "fit",
+        "durability",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B071F2Z7JG",
+      "target_title": "Pro Club Men's Heavyweight Mesh Basketball Shorts",
+      "target_category": "Basketball Men",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.039473684210526314,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort"
+      ],
+      "matched_terms": [
+        "comfortable"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0195",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Tees & Blouses Blouses & Button-Down Shirts, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B072M4K5LF",
+      "target_title": "Floerns Women's Ruffle Off Shoulder Rose Embroidery Loose Blouse Top",
+      "target_category": "Tees & Blouses Blouses & Button-Down Shirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit"
+      ],
+      "matched_terms": [
+        "fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0038",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Shoes Fashion Sneakers. Lace Slip On Sneaker",
+      "preference_tags": [
+        "style",
+        "fit",
+        "material",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07B5RGY2N",
+      "target_title": "Blowfish Malibu Women's Fruit Sneaker",
+      "target_category": "Shoes Fashion Sneakers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "style"
+      ],
+      "matched_terms": [
+        "fashion"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": true,
+        "description": false
+      }
+    },
+    {
+      "sample_id": "public_0123",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Hats & Caps Fedoras. Buckle closure",
+      "preference_tags": [
+        "style",
+        "fit",
+        "material",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07CZ84YFJ",
+      "target_title": "Lanzom Womens Classic Wide Brim Floppy Panama Hat Belt Buckle Wool Fedora Hat",
+      "target_category": "Hats & Caps Fedoras",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.42105263157894735,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "classic",
+        "comfortable",
+        "fashion",
+        "fit",
+        "material",
+        "polyester",
+        "soft",
+        "wool"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0013",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Shoes Slippers. YOUR NEW FAVORITE SLIPPERS: Slip into divine comfort with Gemma, a plush mule-style spa slipper with an adjustable hook-and-loop closure across the vamp",
+      "preference_tags": [
+        "comfort",
+        "material"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0C65TFM9F",
+      "target_title": "Vionic Women's Gemma",
+      "target_category": "Shoes Slippers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "soft",
+        "supportive"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0037",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Boys Pants, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08KKBBMMD",
+      "target_title": "The Children's Place Boys' Pull on Cargo Pants",
+      "target_category": "Boys Pants",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "cotton",
+        "fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0154",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Bras Everyday Bras. A key requirement is: cotton.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B00CYNKSTE",
+      "target_title": "Bestform Women's Wire Free Bra",
+      "target_category": "Bras Everyday Bras",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0070",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Travel Accessories Travel Wallets, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "style",
+        "fit",
+        "performance"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B010LVBVKA",
+      "target_title": "Travel Neck Wallet with RFID Blocking \u2013 Passport Holder Neck Pouch to Keep Your Cash And Documents Safe \u2013 Get Peace Of Mind When Traveling",
+      "target_category": "Travel Accessories Travel Wallets",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "comfortable",
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0062",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Skirts Casual, but I'm still exploring.",
+      "preference_tags": [
+        "style"
+      ],
+      "profile_richness": "1",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B015K51VPM",
+      "target_title": "chouyatou Women's Casual Stretch Waist Washed Denim A-line Maxi Skirt",
+      "target_category": "Skirts Casual",
+      "baseline_rank": null,
+      "personalized_rank": 7,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.14285714285714285,
+      "rank_movement_capped": 4,
+      "score": 0.35000000000000003,
+      "confidence": 0.35,
+      "matched_tags": [
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "classic",
+        "style"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0196",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Shoes Flats, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit",
+        "comfort",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B073T364MM",
+      "target_title": "DREAM PAIRS Women's Sole-Simple Ballerina Walking Flats Shoes",
+      "target_category": "Shoes Flats",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.039473684210526314,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort"
+      ],
+      "matched_terms": [
+        "comfort",
+        "cushioned",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0033",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Athletic Walking, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "style",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08134XNNB",
+      "target_title": "Women's Walking Shoes Sock Sneakers - Mesh Slip On Air Cushion Lady Girls Modern Jazz Dance Easy Shoes Platform Loafers",
+      "target_category": "Athletic Walking",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.42105263157894735,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "casual",
+        "classic",
+        "comfortable",
+        "cushion",
+        "fabric",
+        "modern",
+        "resistant",
+        "style"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0173",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Athletic Water Shoes, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "durability",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07THT4G8N",
+      "target_title": "Aqua Socks Beach Water Shoes Barefoot Yoga Socks Quick-Dry Surf Pool Swim Shoes for Women Men",
+      "target_category": "Athletic Water Shoes",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "fit"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfortable",
+        "durable",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0172",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Shoes Fashion Sneakers, but I'm still exploring.",
+      "preference_tags": [
+        "style",
+        "fit",
+        "material",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0829PZGBB",
+      "target_title": "Skechers Women's Sneaker",
+      "target_category": "Shoes Fashion Sneakers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "cotton",
+        "fashion",
+        "memory foam"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0061",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Piercing Jewelry Rings. A key requirement is: Snap closure.",
+      "preference_tags": [
+        "material",
+        "comfort"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08HCP9YTV",
+      "target_title": "1pc Surgical Steel Piercing Ring for Nose Septum Cartilage Helix Tragus Conch Rook Daith Lobe 20g-18g-16g-14g-12g-10g 5mm-6mm-7mm-8mm-9mm-10mm-11mm-12mm-14mm-16mm Silver/Gold/Rose Gold/Black/Rainbow",
+      "target_category": "Piercing Jewelry Rings",
+      "baseline_rank": null,
+      "personalized_rank": 10,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.1,
+      "rank_movement_capped": 1,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "material"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0011",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Underwear Undershirts, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BXP6MG3X",
+      "target_title": "Hanes Men's Tagless Cotton V-Neck Undershirt \u2013 Multiple Packs and Colors",
+      "target_category": "Underwear Undershirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.29473684210526313,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "fabric",
+        "fit",
+        "relaxed fit"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0145",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Active Athletic Socks. A key requirement is: cotton.",
+      "preference_tags": [
+        "style",
+        "comfort",
+        "durability"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B00IJZZWGA",
+      "target_title": "BRIGHT STAR Low Cut Ankle Socks For Women - 30 Pairs of Athletic Socks For Running, Workout, Sports",
+      "target_category": "Active Athletic Socks",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfort",
+        "comfortable",
+        "durability",
+        "durable",
+        "style",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0161",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Tees & Blouses T-Shirts. A key requirement is: cotton.",
+      "preference_tags": [
+        "style",
+        "fit",
+        "comfort",
+        "material"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0B6N6TJ6V",
+      "target_title": "Thankful Grateful Blessed Shirt for Women Plaid Pumpkin Long Sleeve Tshirts Leopard Stripe Striped Thanksgiving Fall Tee Tops",
+      "target_category": "Tees & Blouses T-Shirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "classic",
+        "cotton",
+        "material",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0053",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Travel Accessories Passport Covers. A key requirement is: leather.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07TZK3GZK",
+      "target_title": "Passport Holder Cover Travel RFID Blocking Passport Cover Rose Gold Cute Flowers Passport Wallet with Elastic Band for Women",
+      "target_category": "Travel Accessories Passport Covers",
+      "baseline_rank": 10,
+      "personalized_rank": null,
+      "baseline_rr": 0.1,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": -1,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "leather",
+        "material"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0126",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Tees & Blouses Blouses & Button-Down Shirts, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09M84R91V",
+      "target_title": "Asvivid Womens Casual Boho Floral Print 3/4 Flare Sleeve Blouses Summer Off The Shoulder Tops Tie Knot Shirts",
+      "target_category": "Tees & Blouses Blouses & Button-Down Shirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "fit",
+        "polyester"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0107",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Rain & Anoraks Anoraks. A key requirement is: cotton.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B01KPFK9ZA",
+      "target_title": "FASHION BOOMY Women's Zip Up Safari Military Anorak Jacket with Hood Drawstring - Regular and Plus Sizes",
+      "target_category": "Rain & Anoraks Anoraks",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "cotton",
+        "fabric",
+        "fit",
+        "polyester",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0074",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Athletic Walking, but I'm still exploring.",
+      "preference_tags": [
+        "style"
+      ],
+      "profile_richness": "1",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07N15QTKC",
+      "target_title": "Skechers Women's Go Walk 5-Lucky Sneaker",
+      "target_category": "Athletic Walking",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.0,
+      "confidence": 0.35,
+      "matched_tags": [],
+      "matched_terms": [],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": false
+      }
+    },
+    {
+      "sample_id": "public_0114",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Shoes Fashion Sneakers. A key requirement is: Rubber sole.",
+      "preference_tags": [
+        "fit",
+        "style",
+        "comfort",
+        "material"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07H34Z5V6",
+      "target_title": "Athlefit Women's Wedge Sneakers Hidden Heel Platform Wedge Booties Hidden Wedgie Sneakers",
+      "target_category": "Shoes Fashion Sneakers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "casual",
+        "comfort",
+        "cushioned",
+        "fashion",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0106",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Socks Calf Socks. A key requirement is: cotton.",
+      "preference_tags": [
+        "material",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0776SVXW9",
+      "target_title": "Mens Socks Dress Cotton Socks Fashion Patterned Argyle Socks &Formal Business Socks Classic Cotton Dress Casual Socks for Men",
+      "target_category": "Socks Calf Socks",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.356140350877193,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "classic",
+        "cotton",
+        "fashion",
+        "fit",
+        "formal",
+        "material",
+        "polyester",
+        "style",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0096",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Tees & Blouses T-Shirts. Pull On closure",
+      "preference_tags": [
+        "comfort",
+        "material",
+        "fit",
+        "performance"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B074K2QX3M",
+      "target_title": "Zeagoo Women's Polka Dots Shirt Striped 3/4 Sleeve Casual Scoop Neck Tops Tee S-XXXL",
+      "target_category": "Tees & Blouses T-Shirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "fabric",
+        "fit",
+        "material",
+        "polyester",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0104",
+      "scenario_type": "boundary",
+      "user_message": "I'm looking for Hats & Caps Headbands, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "durability",
+        "fit",
+        "material"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B00QSAICLU",
+      "target_title": "Black 1 Inch Wide Leather Like Headband Solid Hair band for Women and Girls",
+      "target_category": "Hats & Caps Headbands",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.21052631578947367,
+      "confidence": 1.0,
+      "matched_tags": [
+        "durability",
+        "material"
+      ],
+      "matched_terms": [
+        "durable",
+        "fabric",
+        "leather",
+        "material"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0146",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Women Dresses. A key requirement is: rayon.",
+      "preference_tags": [
+        "style",
+        "comfort",
+        "material",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BCQWYQLQ",
+      "target_title": "Sarin Mathews Womens One Shoulder Ruched Bodycon Dress Sexy Sleeveless Slit Midi Party Cocktail Wedding Guest Dresses",
+      "target_category": "Women Dresses",
+      "baseline_rank": 4,
+      "personalized_rank": 5,
+      "baseline_rr": 0.25,
+      "personalized_rr": 0.2,
+      "rank_movement_capped": -1,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "fit",
+        "fitted",
+        "formal",
+        "material",
+        "polyester",
+        "slim fit",
+        "soft",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0044",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Men Jammers. A key requirement is: fabric.",
+      "preference_tags": [
+        "style",
+        "comfort",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09BQ4G5BD",
+      "target_title": "K898 Men's Square Leg Swimming Jammer Shorts UPF50+,Men Swimsuit Swim Jammers Fabric Shape Retention",
+      "target_category": "Men Jammers",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.07368421052631578,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "fit"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "fit",
+        "soft",
+        "stretch"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0001",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Jewelry Necklaces. A key requirement is: Material:alloy.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "durability"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09PYB7B6Z",
+      "target_title": "QIAN0813 Celttic Knot Triple Moon Pentagram Pentacle Star Wicca Pendant Necklace Round Pagan Jewelry",
+      "target_category": "Jewelry Necklaces",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.03684210526315789,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort"
+      ],
+      "matched_terms": [
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0162",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Women Dresses, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0B71JNMQY",
+      "target_title": "Satin Silk Slip Maxi Dress for Wedding Guest Women- Cowl Neck Pleated Bust Split Wedding Guest Cocktail Midi Dresses",
+      "target_category": "Women Dresses",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2394736842105263,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "fabric",
+        "material",
+        "silk"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0193",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Scarves & Wraps Fashion Scarves. A key requirement is: fabric.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07YM55NLW",
+      "target_title": "Shimmer Anna Shine USA American Flag Patriotic Scarf",
+      "target_category": "Scarves & Wraps Fashion Scarves",
+      "baseline_rank": 3,
+      "personalized_rank": 5,
+      "baseline_rr": 0.3333333333333333,
+      "personalized_rr": 0.2,
+      "rank_movement_capped": -2,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "fabric"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0017",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Card Cases & Money Organizers Wallets. A key requirement is: leather.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B089RXP8K2",
+      "target_title": "Travelambo Womens Wallet RFID Blocking Bifold Multi Card Case Wallet with Zipper Pocket",
+      "target_category": "Card Cases & Money Organizers Wallets",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.03684210526315789,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "leather",
+        "material"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0081",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Underwear Undershirts, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "material",
+        "style",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BSS36XCS",
+      "target_title": "Fruit of the Loom Men's Eversoft Cotton Stay Tucked V-Neck T-Shirt",
+      "target_category": "Underwear Undershirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.17105263157894737,
+      "confidence": 1.0,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "cotton"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0103",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Underwear Undershirts. Imported",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BT8T2FQ3",
+      "target_title": "Fruit of the Loom Men's Eversoft Cotton Stay Tucked Crew T-Shirt",
+      "target_category": "Underwear Undershirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "classic",
+        "comfortable",
+        "cotton",
+        "fit",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0039",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Women Jerseys, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "performance",
+        "durability",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07TZCJW9X",
+      "target_title": "Women's Pro Series Cycling Short Sleeve Jersey, Cargo Bib Shorts, or Kit Bundle",
+      "target_category": "Women Jerseys",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "performance"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfort",
+        "sport"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0157",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Outdoor & Work Snow & Cold Weather. A key requirement is: nylon.",
+      "preference_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "warmth"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B00BCHDM14",
+      "target_title": "Kamik Women's Momentum Snow Boot",
+      "target_category": "Outdoor & Work Snow & Cold Weather",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "comfort",
+        "nylon"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0177",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Tops Tees & Blouses. Button closure",
+      "preference_tags": [
+        "style",
+        "fit",
+        "comfort",
+        "material"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07HV9WW6Q",
+      "target_title": "ANIXAY Women's Short/Long Sleeve Henley Button up T Shirt Casual Basic Tops Blouse",
+      "target_category": "Tops Tees & Blouses",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "classic",
+        "comfortable",
+        "cotton",
+        "fabric",
+        "fitted",
+        "material",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0136",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Active Active Shorts. A key requirement is: spandex.",
+      "preference_tags": [
+        "comfort",
+        "style",
+        "material"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B091F54MWM",
+      "target_title": "CAMPSNAIL 4 Pack Biker Shorts for Women High Waist - 5\" Soft Summer Womens Shorts Spandex Workout Shorts for Running Athletic",
+      "target_category": "Active Active Shorts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.1964912280701754,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfortable",
+        "material",
+        "polyester",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0079",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Socks & Hosiery Slipper Socks, but I'm still exploring.",
+      "preference_tags": [
+        "style",
+        "fit",
+        "comfort",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BFRMX3JG",
+      "target_title": "Jeasona Women\u2019s Fuzzy Slipper Socks With Grippers Cozy Warm Cute Animal Gifts",
+      "target_category": "Socks & Hosiery Slipper Socks",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "durability"
+      ],
+      "matched_terms": [
+        "breathable",
+        "durable",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0116",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Shoes Fashion Sneakers. A key requirement is: 100% Canvas.",
+      "preference_tags": [
+        "material",
+        "comfort"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07S2Y3THP",
+      "target_title": "Lugz Men's Clipper Sneaker",
+      "target_category": "Shoes Fashion Sneakers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfort",
+        "comfortable",
+        "cushioned",
+        "padded"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0020",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Novelty Women. A key requirement is: cotton.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08P4SSFX4",
+      "target_title": "Funny Saying Novelty Gift ideas - My Favorite People Call Me Grandma Long Sleeve T-Shirt",
+      "target_category": "Novelty Women",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "fit",
+        "polyester"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0015",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Shoes Mules & Clogs, but I'm still exploring.",
+      "preference_tags": [
+        "material"
+      ],
+      "profile_richness": "1",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08513YB2T",
+      "target_title": "Crocs Unisex-Adult Classic Clog",
+      "target_category": "Shoes Mules & Clogs",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.35,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "fabric",
+        "material"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0178",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Shirts T-Shirts. A key requirement is: cotton.",
+      "preference_tags": [
+        "comfort",
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B01FWQ8NH8",
+      "target_title": "Red Hot Chili Peppers Distressed Men's T-Shirt Black",
+      "target_category": "Shirts T-Shirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.03684210526315789,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "cotton"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0147",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Sleep & Lounge Lingerie, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B077276QGC",
+      "target_title": "wirarpa Women's High Waisted Cotton Underwear Ladies Soft Full Briefs Panties Multipack",
+      "target_category": "Sleep & Lounge Lingerie",
+      "baseline_rank": 2,
+      "personalized_rank": 1,
+      "baseline_rr": 0.5,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 1,
+      "score": 0.3815789473684211,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfortable",
+        "cotton",
+        "fabric",
+        "soft",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0180",
+      "scenario_type": "boundary",
+      "user_message": "I'm looking for Shoes Fashion Sneakers, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B01HSMYV8E",
+      "target_title": "Saucony Women's Cohesion 10 Running Shoe",
+      "target_category": "Shoes Fashion Sneakers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "matched_terms": [
+        "comfort",
+        "fashion",
+        "fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0066",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Dresses Formal. A key requirement is: polyester.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "performance"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BFLFSB2Y",
+      "target_title": "GRAPENT Women's Plus Size Sequin 3/4 Sleeves Evening Gown Party Long Maxi Dress",
+      "target_category": "Dresses Formal",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.039473684210526314,
+      "confidence": 1.0,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "polyester"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0085",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Sandals Slides, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0C3YJMRRD",
+      "target_title": "welltree Slides for Women Men Pillow Slippers Non-Slip Bathroom Shower Sandals Soft Thick Sole Indoor and Outdoor Slides",
+      "target_category": "Sandals Slides",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.17105263157894737,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "ergonomic",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0166",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Boots Rain. Women's-specific last is designed to match the contours of women's feet",
+      "preference_tags": [
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B00IHW88W0",
+      "target_title": "Muck Boots Hale Multi-Season Women's Rubber Boot",
+      "target_category": "Boots Rain",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.07368421052631578,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfort",
+        "comfortable",
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0047",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Accessories Bandanas, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "performance"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BYZX7B1L",
+      "target_title": "Lunarable Multicolor Unisex Bandana",
+      "target_category": "Accessories Bandanas",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "breathable",
+        "comfortable",
+        "fabric",
+        "polyester",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0105",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Women Leggings, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "weather",
+        "material",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07Q46M2J2",
+      "target_title": "IUGA High Waisted Yoga Pants for Women with Pockets Capri Leggings for Women Workout Leggings for Women Yoga Capris",
+      "target_category": "Women Leggings",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "comfort",
+        "fabric",
+        "material",
+        "polyester",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0080",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Shirts Polos. Button closure",
+      "preference_tags": [
+        "durability",
+        "material",
+        "comfort",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BPRQY4CF",
+      "target_title": "IZOD Men's Advantage Performance Short Sleeve Polo Shirt",
+      "target_category": "Shirts Polos",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfort",
+        "cotton",
+        "fabric",
+        "material",
+        "polyester",
+        "resistant",
+        "stretch"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0055",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Shoes Mules & Clogs, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0C1TDJ9HZ",
+      "target_title": "Crocs Unisex-Adult Baya Clogs, Neo Mint, 7 Women/5 Men",
+      "target_category": "Shoes Mules & Clogs",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "matched_terms": [
+        "classic",
+        "comfort",
+        "fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0197",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Watch Accessories Repair Tools & Kits. VALUE KIT FOR MONEY SAVING - This watch band link remover is great for removing and inserting spring bars straps, and widely used in up to 30mm wide watch band replace, watch repai",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07FDNP55K",
+      "target_title": "Watch Band Strap Link Pins Remover Repair Tool,24 in 1 Kit with 6 Extra Tips Replacement,20PCS Cotter Pin,Spring Bar Tool Set,1PCS Head Hammer",
+      "target_category": "Watch Accessories Repair Tools & Kits",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0086",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Shoes Slippers, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "material",
+        "fit",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07WN8N9Q7",
+      "target_title": "LongBay Women's Chenille Knit Bootie Slippers Cute Plush Fleece Memory Foam House Shoes",
+      "target_category": "Shoes Slippers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.25,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "fit"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "cushion",
+        "durable",
+        "ergonomic",
+        "fit",
+        "long lasting",
+        "memory foam",
+        "soft",
+        "sturdy",
+        "supportive"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0119",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Handbags & Wallets Top-Handle Bags. A key requirement is: Pvc,Resin.",
+      "preference_tags": [
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BBLR3QB2",
+      "target_title": "MIFORINES Ladies Summer Jelly Pillow-shaped Top Handle Handbag Candy Color Transparent Crystal Purse",
+      "target_category": "Handbags & Wallets Top-Handle Bags",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.03684210526315789,
+      "confidence": 0.7,
+      "matched_tags": [
+        "style"
+      ],
+      "matched_terms": [
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0110",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Active Athletic Socks, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "style"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0C277G9FW",
+      "target_title": "Loritta 5 Pairs Womens Wool Socks Thick Knit Vintage Winter Warm Cozy Crew Socks Gifts",
+      "target_category": "Active Athletic Socks",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.07368421052631578,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "classic",
+        "comfort",
+        "soft",
+        "style",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0134",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Piercing Jewelry Tunnels, but I'm still exploring.",
+      "preference_tags": [
+        "style",
+        "fit",
+        "comfort"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B081SF3QRL",
+      "target_title": "YOFANST 2pcs-12pcs Double Flare Stainless Steel Tunnels Gauges Screwed Gem Rhinestones Tunnels Plugs Stretcher Jewelry",
+      "target_category": "Piercing Jewelry Tunnels",
+      "baseline_rank": 3,
+      "personalized_rank": 2,
+      "baseline_rr": 0.3333333333333333,
+      "personalized_rr": 0.5,
+      "rank_movement_capped": 1,
+      "score": 0.07368421052631578,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "style"
+      ],
+      "matched_terms": [
+        "fashion",
+        "fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0143",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Dresses Work. A key requirement is: rayon.",
+      "preference_tags": [
+        "material",
+        "style",
+        "fit",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B01H54X6CM",
+      "target_title": "MUXXN Women's Retro 1950s Style Sleeveless Slim Business Pencil Dress",
+      "target_category": "Dresses Work",
+      "baseline_rank": 3,
+      "personalized_rank": 3,
+      "baseline_rr": 0.3333333333333333,
+      "personalized_rr": 0.3333333333333333,
+      "rank_movement_capped": 0,
+      "score": 0.21052631578947367,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "cotton",
+        "style"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0034",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Shoes Loafers & Slip-Ons. Leather Loafers Women:can be bend and curled in 360\u00b0,soft and comfortable",
+      "preference_tags": [
+        "style",
+        "material",
+        "fit",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07Q9PNNB5",
+      "target_title": "DUOYANGJIASHA Loafers for Women Casual Slip on Dress Loafers Womens Comfortable Leather Driving Shoes Outdoor Walking Flats Shoes",
+      "target_category": "Shoes Loafers & Slip-Ons",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.4736842105263158,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "comfortable",
+        "leather",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0019",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Outdoor & Work Rain, but I'm still exploring.",
+      "preference_tags": [
+        "weather",
+        "comfort",
+        "durability",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B076VQQ962",
+      "target_title": "Asgard Women's Ankle Rain Boots Waterproof Chelsea Boots",
+      "target_category": "Outdoor & Work Rain",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "style",
+        "weather"
+      ],
+      "matched_terms": [
+        "casual",
+        "classic",
+        "comfortable",
+        "rain",
+        "waterproof"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0141",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Piercing Jewelry Screws, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BLH7JHG8",
+      "target_title": "Fzroezz 6Pcs Nose Studs L Shaped 20 Gauge Nose Piercings Nose Rings Studs Nose Piercing Jewelry Nose Piercing Stud Surgical Steel Nose Ring Nose Rings Studs Jewelry for Women Men 20G 2mm 2.5mm 3mm CZ Gold Silver Rose Gold",
+      "target_category": "Piercing Jewelry Screws",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.0,
+      "confidence": 0.7,
+      "matched_tags": [],
+      "matched_terms": [],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": false
+      }
+    },
+    {
+      "sample_id": "public_0124",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Hats & Caps Baseball Caps. A key requirement is: polyester.",
+      "preference_tags": [
+        "fit",
+        "weather",
+        "durability",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07TN1845M",
+      "target_title": "Arctic Air Adjustable Sports Cap, Beige, Hat",
+      "target_category": "Hats & Caps Baseball Caps",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.21052631578947367,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "breathable",
+        "comfortable"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0176",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Luggage & Travel Gear Waist Packs, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "style",
+        "material",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0C3MKNZJN",
+      "target_title": "adidas Originals Originals Sport Waist Pack",
+      "target_category": "Luggage & Travel Gear Waist Packs",
+      "baseline_rank": 2,
+      "personalized_rank": 6,
+      "baseline_rr": 0.5,
+      "personalized_rr": 0.16666666666666666,
+      "rank_movement_capped": -4,
+      "score": 0.039473684210526314,
+      "confidence": 1.0,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "nylon",
+        "polyester"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0064",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Dresses Club & Night Out. Hand Wash Only",
+      "preference_tags": [
+        "comfort",
+        "performance",
+        "durability",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B019DU687Q",
+      "target_title": "Memorose Womens Sexy Long Sleeve Cut-Out Bandage Bodycon Clubwear Midi Dress",
+      "target_category": "Dresses Club & Night Out",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.039473684210526314,
+      "confidence": 1.0,
+      "matched_tags": [
+        "style"
+      ],
+      "matched_terms": [
+        "casual"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0084",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Accessories Belts. Hand Wash Only",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "performance"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08WKZNFG2",
+      "target_title": "BeltBro Titan No Buckle Elastic Belt For Men \u2014 Fits 1.5 Inch Belt Loops, Comfortable and Easy To Use",
+      "target_category": "Accessories Belts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.25,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "fit",
+        "nylon",
+        "polyester",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0149",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Backpacks Casual Daypacks. A key requirement is: leather.",
+      "preference_tags": [
+        "fit",
+        "performance",
+        "material"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07CBYYHTL",
+      "target_title": "SDIYABOLO Small Black Sling Crossbody Backpack Shoulder Bag for Men Women Vintage PU Leather Sling Backpack Cycling",
+      "target_category": "Backpacks Casual Daypacks",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15964912280701754,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "leather",
+        "material"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0101",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Medical Scrub Bottoms. A key requirement is: polyester.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07QMS8TX8",
+      "target_title": "Medical Cargo Pants for Men Workwear Originals, Zipper Fly Scrubs for Men 4000",
+      "target_category": "Medical Scrub Bottoms",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "cotton",
+        "durability",
+        "durable",
+        "fabric",
+        "fit",
+        "polyester",
+        "resistant"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0156",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Gym Bags Drawstring Bags. A key requirement is: Easy cinch opening with durable cording.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "style"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0C3KZXV4B",
+      "target_title": "adidas Alliance II Sackpack, Shadow Navy/Snowglobe/Dash Grey, One Size",
+      "target_category": "Gym Bags Drawstring Bags",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.03684210526315789,
+      "confidence": 0.7,
+      "matched_tags": [
+        "style"
+      ],
+      "matched_terms": [
+        "classic"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0073",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Dresses Casual, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "material",
+        "comfort",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07QPM54V7",
+      "target_title": "WNEEDU Women's Summer Casual T Shirt Dresses Short Sleeve Swing Dress with Pockets",
+      "target_category": "Dresses Casual",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.368421052631579,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "comfortable",
+        "fabric",
+        "polyester",
+        "soft",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0028",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Card Cases & Money Organizers Wallets. A key requirement is: leather.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0B9ZYDDZ1",
+      "target_title": "Buffway Slim Minimalist Front Pocket RFID Blocking Leather Wallets for Men Women",
+      "target_category": "Card Cases & Money Organizers Wallets",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2394736842105263,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "leather",
+        "material",
+        "polyester"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0185",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Panties Boy Shorts. A key requirement is: cotton.",
+      "preference_tags": [
+        "comfort",
+        "style",
+        "material",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BCW4QKV5",
+      "target_title": "MIOTAN Boy Shorts Underwear for Women High Waisted Panties Cotton Boxer Briefs 4 Pack",
+      "target_category": "Panties Boy Shorts",
+      "baseline_rank": 4,
+      "personalized_rank": 4,
+      "baseline_rr": 0.25,
+      "personalized_rr": 0.25,
+      "rank_movement_capped": 0,
+      "score": 0.25,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfortable",
+        "cotton",
+        "fabric",
+        "fit",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0113",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Shoes Slippers, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08CTFPBN5",
+      "target_title": "RockDove Women's Nomad Slipper with Memory Foam",
+      "target_category": "Shoes Slippers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "material"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0052",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Tees & Blouses Tunics. Hand Wash Only",
+      "preference_tags": [
+        "comfort",
+        "style",
+        "material"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09G2ZNZY4",
+      "target_title": "Grlasen Women's Zipper Summer Pleated Button Short Sleeve T-Shirt Summer V-Neck Solid Color Casual top",
+      "target_category": "Tees & Blouses Tunics",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2333333333333333,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "casual",
+        "material",
+        "polyester",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0175",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Men Jeans, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "style",
+        "material",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07D5M61T2",
+      "target_title": "Ariat Men\u2019s M2 Relaxed Boot Cut Jean",
+      "target_category": "Men Jeans",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "fabric",
+        "stretch"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0005",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Outdoor & Work Snow & Cold Weather. A key requirement is: leather.",
+      "preference_tags": [
+        "comfort",
+        "fit",
+        "style",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B074G1JP8Z",
+      "target_title": "GLOBALWIN Women's Waterproof Winter Boots Snow Boots For Women",
+      "target_category": "Outdoor & Work Snow & Cold Weather",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "fit"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "fit",
+        "resistant",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0030",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Sleep & Lounge Sleep Bottoms. A key requirement is: polyester.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09V5RTXG9",
+      "target_title": "#followme Microfleece Men\u2019s Buffalo Plaid Pajama Pants with Pockets",
+      "target_category": "Sleep & Lounge Sleep Bottoms",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "classic",
+        "comfort",
+        "comfortable",
+        "fabric",
+        "fit",
+        "fitted",
+        "polyester",
+        "soft",
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0184",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Sunglasses & Eyewear Accessories Sunglasses, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "material",
+        "comfort",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BWLFCTTF",
+      "target_title": "Ray-Ban Woman Sunglasses Black Frame, Green Classic G-15 Lenses, 57MM",
+      "target_category": "Sunglasses & Eyewear Accessories Sunglasses",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.21052631578947367,
+      "confidence": 1.0,
+      "matched_tags": [
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "classic",
+        "fashion",
+        "nylon",
+        "style"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0100",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Shoes Loafers & Slip-Ons, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "performance"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B002OHE4D6",
+      "target_title": "Dockers Proposal - Genuine Full-Grain Leather Slip-On Loafer Dress Shoes for Men Featuring All Motion Comfort Technology, EVA Sock Lining, and Durable Rubber Outsole",
+      "target_category": "Shoes Loafers & Slip-Ons",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.34210526315789475,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "comfort",
+        "cushion",
+        "leather"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0099",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Active Pants Sweatpants, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0971YMPCR",
+      "target_title": "Core 10 Women's Super Soft Fleece Straight Leg Jogger Sweatpant",
+      "target_category": "Active Pants Sweatpants",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.25,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "polyester",
+        "soft",
+        "stretch"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0132",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Shoes Slippers. A key requirement is: cotton.",
+      "preference_tags": [
+        "comfort",
+        "warmth",
+        "style"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08X2X83DW",
+      "target_title": "isotoner Women's Terry\u00a0Slip on Clog Slipper with Memory Foam for Indoor/Outdoor Comfort",
+      "target_category": "Shoes Slippers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2333333333333333,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "style",
+        "warmth"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "cushioned",
+        "memory foam",
+        "soft",
+        "style",
+        "supportive",
+        "warmth"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0125",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Hats & Caps Baseball Caps. HOOK & LOOP CLOSURE: Our hats for women and men feature a strap closure in the back letting you easily adjust the size for a perfect fit",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07VCYFB5D",
+      "target_title": "Baseball Cap Custom Personalized Text Dad Hats for Men & Women Strap Closure",
+      "target_category": "Hats & Caps Baseball Caps",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit"
+      ],
+      "matched_terms": [
+        "fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0199",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Underwear Briefs. A key requirement is: cotton.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B089M57PSQ",
+      "target_title": "Boboking 100% Cotton Little Boys Briefs Soft Dinosaur Truck Toddler Underwear",
+      "target_category": "Underwear Briefs",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.2394736842105263,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "material"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0135",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Shoes Slippers. A key requirement is: polyester.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0C6BL4RNN",
+      "target_title": "Dearfoams Women's Rebecca Lightweight Cozy Memory Foam Closed Back Slipper with Wide Widths",
+      "target_category": "Shoes Slippers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2333333333333333,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "comfort",
+        "cushioned",
+        "fitted",
+        "material",
+        "memory foam",
+        "polyester"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0179",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Tees & Blouses Tunics. A key requirement is: spandex.",
+      "preference_tags": [
+        "warmth",
+        "comfort",
+        "material",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08JK818ZD",
+      "target_title": "Azules Women's Long Sleeve Flowy Tunic",
+      "target_category": "Tees & Blouses Tunics",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "breathable",
+        "fitted",
+        "material",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0121",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Bras Everyday Bras, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08HS712ZB",
+      "target_title": "Duufin 5 Pcs Lace Bralettes for Women Bralette Padded Lace Bandeau Bra",
+      "target_category": "Bras Everyday Bras",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "material",
+        "nylon",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0035",
+      "scenario_type": "boundary",
+      "user_message": "I'm looking for Athletic Walking, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "performance",
+        "durability"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BN6CCHB7",
+      "target_title": "Skechers Men's Go Max-Athletic Air Mesh Slip on Walking Shoe Sneaker",
+      "target_category": "Athletic Walking",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.30701754385964913,
+      "confidence": 0.7,
+      "matched_tags": [
+        "durability",
+        "material",
+        "performance"
+      ],
+      "matched_terms": [
+        "athletic",
+        "durability",
+        "fabric",
+        "performance",
+        "resistant",
+        "sport"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0049",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Shoes Loafers & Slip-Ons, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "material",
+        "style",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08G4WVYLJ",
+      "target_title": "Dacomfy Mens Slip On Shoes, Men's Loafers & Slip-ons Leather Walking Shoes for Men, Hand Stitching Comfortable Breathable Brown Black Khaki",
+      "target_category": "Shoes Loafers & Slip-Ons",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.3815789473684211,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "casual",
+        "comfortable",
+        "leather",
+        "material",
+        "soft",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0170",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Fashion Combat, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08LRQX5RH",
+      "target_title": "UGG Women's Harrison Lace Fashion Boot",
+      "target_category": "Fashion Combat",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "leather"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0139",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Tees & Blouses T-Shirts, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit",
+        "comfort",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09SGYPW3M",
+      "target_title": "OFEEFAN Womens Tops Ruffle Short Sleeve V Neck T-Shirts Casual Loose Fit",
+      "target_category": "Tees & Blouses T-Shirts",
+      "baseline_rank": 6,
+      "personalized_rank": 4,
+      "baseline_rr": 0.16666666666666666,
+      "personalized_rr": 0.25,
+      "rank_movement_capped": 2,
+      "score": 0.25,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "fabric",
+        "fit",
+        "polyester",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0150",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Medical Scrub Jackets, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07P6MPQY5",
+      "target_title": "Sivvan Scrubs for Men - Zippered Short Sleeve Jacket",
+      "target_category": "Medical Scrub Jackets",
+      "baseline_rank": 4,
+      "personalized_rank": 5,
+      "baseline_rr": 0.25,
+      "personalized_rr": 0.2,
+      "rank_movement_capped": -1,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "fit",
+        "material",
+        "polyester"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0133",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Sunglasses & Eyewear Accessories Sunglasses. A key requirement is: Imported.",
+      "preference_tags": [
+        "material",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B01KILT64Q",
+      "target_title": "Flying Fisherman womens 7719cs sunglasses, Camo Frames/Smoke Lenses, Medium US",
+      "target_category": "Sunglasses & Eyewear Accessories Sunglasses",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07368421052631578,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "style"
+      ],
+      "matched_terms": [
+        "fit",
+        "style",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0128",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Earrings Hoop, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BNP1RZ2W",
+      "target_title": "PAVOI 14K Gold Plated Lightweight Chunky Open Hoops | Gold Hoop Earrings for Women",
+      "target_category": "Earrings Hoop",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.7,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "material"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0022",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Dresses Casual. A key requirement is: fabric.",
+      "preference_tags": [
+        "comfort",
+        "fit",
+        "style",
+        "material"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08F5G843H",
+      "target_title": "YESNO Summer Dresses for Women Casual Loose Bohemian Floral Dress with Pockets Spaghetti Strap Maxi Dress E75",
+      "target_category": "Dresses Casual",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.368421052631579,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "breathable",
+        "casual",
+        "comfortable",
+        "cotton",
+        "fabric",
+        "fitted",
+        "soft",
+        "style"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0082",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Bracelets Strand. A key requirement is: 21 Styles: the package contains 21 pieces beach bracelet anklets in different styles as shown in the picture, coming with various elements, enough quantity to use and share with fa.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09BPZCWDP",
+      "target_title": "Hicarer 21 Pieces Surfer Wave Bracelet Ocean Wave Adjustable Waterproof Handmade Friendship Bracelet Summer Sunflower Bracelets Anklets Jewelry for Women Teen Girls",
+      "target_category": "Bracelets Strand",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.2394736842105263,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "fit"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0078",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Socks No Show & Liner Socks. Pull On closure",
+      "preference_tags": [
+        "material",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0C5RLJDSF",
+      "target_title": "Hanes Women's Value, Crew Soft Moisture-Wicking Socks, Available in 10 and 14-Packs",
+      "target_category": "Socks No Show & Liner Socks",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07368421052631578,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "fabric",
+        "fit",
+        "polyester",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0010",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Women Bodysuits. A key requirement is: fabric.",
+      "preference_tags": [
+        "material",
+        "fit",
+        "performance",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0929KL5W7",
+      "target_title": "MANGOPOP Women's Mock Turtle Neck Long Sleeve Tops Bodysuit Jumpsuit",
+      "target_category": "Women Bodysuits",
+      "baseline_rank": 5,
+      "personalized_rank": 7,
+      "baseline_rr": 0.2,
+      "personalized_rr": 0.14285714285714285,
+      "rank_movement_capped": -2,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "fabric",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0083",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Tees & Blouses Blouses & Button-Down Shirts. A key requirement is: polyester.",
+      "preference_tags": [
+        "fit",
+        "material",
+        "comfort",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BPMCJ1RD",
+      "target_title": "CHICZONE Plaid Shacket Jacket Womens Long Flannel Jacket Casual Lapel Button Down Tartan Trench Coats",
+      "target_category": "Tees & Blouses Blouses & Button-Down Shirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "fabric",
+        "fit",
+        "polyester",
+        "soft",
+        "style",
+        "wool"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0165",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Watches Watch Bands. A key requirement is: leather.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09XHSLX4X",
+      "target_title": "WOCCI Leather Watch Band, Vintage Replacement Strap, Stainless Steel Buckle, Choice of Width 14mm 16mm 18mm 19mm 20mm 21mm 22mm 23mm 24mm",
+      "target_category": "Watches Watch Bands",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.2894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "classic",
+        "comfortable",
+        "fit",
+        "leather",
+        "material"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0120",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Card Cases & Money Organizers Wallets, but I'm still exploring.",
+      "preference_tags": [
+        "comfort"
+      ],
+      "profile_richness": "1",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08GPGX2QG",
+      "target_title": "SENDEFN Wallets for Women Genuine Leather Credit Card Holder with RFID Blocking Large Capacity Wristlet",
+      "target_category": "Card Cases & Money Organizers Wallets",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.055263157894736833,
+      "confidence": 0.35,
+      "matched_tags": [
+        "comfort"
+      ],
+      "matched_terms": [
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0090",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Women Accessories. A key requirement is: Decorative lightweight scarf: 2 wearing ways of this mardi gras scarf, wrap the scarf around your neck, or wearing it as a shawl, just change the orientation of the scarf, you can.",
+      "preference_tags": [
+        "material"
+      ],
+      "profile_richness": "1",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07MGR6D5M",
+      "target_title": "Mardi Gras Costume Accessory Mardi Gras Mesh Shimmering Scarf Purple Green Gold Scarf Masquerade Costume Mardi Gras Party Favor (Style 2)",
+      "target_category": "Women Accessories",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.0,
+      "confidence": 0.35,
+      "matched_tags": [],
+      "matched_terms": [],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": false
+      }
+    },
+    {
+      "sample_id": "public_0069",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Earrings Drop & Dangle, but I'm still exploring.",
+      "preference_tags": [
+        "warmth",
+        "material",
+        "comfort",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07ZFBQ76H",
+      "target_title": "Acrylic Earrings For Women Girls Statement Geometric Earrings Resin Acetate Drop Dangle Earrings Mottled Hoop Earrings Fashion Jewelry",
+      "target_category": "Earrings Drop & Dangle",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "warmth"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "soft",
+        "warm"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0054",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Women Fashion Hoodies & Sweatshirts. A key requirement is: fabric.",
+      "preference_tags": [
+        "weather",
+        "comfort",
+        "durability",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08PP1ZJQ5",
+      "target_title": "Verdusa Women's Basic Casual Long Sleeve Round Neck Crop Top Pullover Sweatshirt",
+      "target_category": "Women Fashion Hoodies & Sweatshirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2894736842105264,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "fashion",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0091",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Jewelry Earrings, but I'm still exploring.",
+      "preference_tags": [
+        "performance",
+        "comfort",
+        "fit",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0C5XB43GG",
+      "target_title": "925 Sterling Silver Small Hoop Earrings Cubic Zirconia Huggie Hoop Earrings, 3 Pairs 14K White Gold Plated Cartilage Piercing Earrings Ear Cuff Tiny Hoop Earrings for Women Men",
+      "target_category": "Jewelry Earrings",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.039473684210526314,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort"
+      ],
+      "matched_terms": [
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0095",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Women Leggings. A key requirement is: polyester.",
+      "preference_tags": [
+        "warmth",
+        "weather",
+        "comfort",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09N78FT2W",
+      "target_title": "Free Leaper High Waisted Yoga Pants with Pockets for Women-Comfortable Running Seamless Leggings",
+      "target_category": "Women Leggings",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.21052631578947367,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "fit",
+        "soft",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0042",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Watches Wrist Watches. A key requirement is: Imported.",
+      "preference_tags": [
+        "fit",
+        "material",
+        "performance",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B01LWOGORL",
+      "target_title": "Timex Men's Classic Digital Watch",
+      "target_category": "Watches Wrist Watches",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.17105263157894737,
+      "confidence": 1.0,
+      "matched_tags": [
+        "style"
+      ],
+      "matched_terms": [
+        "classic",
+        "style"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0094",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Boots Mid-Calf. A key requirement is: leather.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "performance"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B01L99SW78",
+      "target_title": "Ariat Fatbaby Western Boot \u2013 Women\u2019s Leather Western Boots",
+      "target_category": "Boots Mid-Calf",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.21052631578947367,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "performance"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "cushioned",
+        "leather",
+        "performance",
+        "running",
+        "supportive"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0117",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Shoes Slippers. A key requirement is: Synthetic Rubber sole.",
+      "preference_tags": [
+        "style",
+        "comfort",
+        "durability"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07HJ18QRQ",
+      "target_title": "Vionic Sadie Women's Adjustable Strap Orthotic Slippers",
+      "target_category": "Shoes Slippers",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "style"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "durable",
+        "soft",
+        "sturdy",
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0200",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Shoes & Jewelry Men. A key requirement is: Ethylene Vinyl Acetate sole.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07VFZ2FC2",
+      "target_title": "FUNKYMONKEY Mens Bathroom Shower Slippers Indoor Home Beach Non Slip Sandal",
+      "target_category": "Shoes & Jewelry Men",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "casual",
+        "comfort",
+        "material",
+        "soft",
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0158",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Men Masks, but I'm still exploring.",
+      "preference_tags": [
+        "warmth",
+        "comfort",
+        "material",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B012ZM6RGQ",
+      "target_title": "CreepyParty Novelty Halloween Costume Party Animal Head Mask - King Lion",
+      "target_category": "Men Masks",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.039473684210526314,
+      "confidence": 1.0,
+      "matched_tags": [
+        "fit"
+      ],
+      "matched_terms": [
+        "fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0026",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Running Trail Running. A key requirement is: 100% Synthetic.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B093R14VP1",
+      "target_title": "ASICS Men's Gel-Venture 6 MX Running Shoes",
+      "target_category": "Running Trail Running",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "fit",
+        "material"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0181",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Sets Tracksuits, but I'm still exploring.",
+      "preference_tags": [
+        "warmth",
+        "comfort",
+        "material",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08M3WKDFJ",
+      "target_title": "Fixmatti Women's 2 Piece Outfits Long Sleeve Pullover Sweatshirt Jogger Pants Sweatsuit",
+      "target_category": "Sets Tracksuits",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "polyester",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0148",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Panties Bikinis. A key requirement is: cotton.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "performance"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BQC2NRG2",
+      "target_title": "Fruit of the Loom Women's Eversoft Cotton Bikini Underwear, Tag Free & Breathable",
+      "target_category": "Panties Bikinis",
+      "baseline_rank": 9,
+      "personalized_rank": 7,
+      "baseline_rr": 0.1111111111111111,
+      "personalized_rr": 0.14285714285714285,
+      "rank_movement_capped": 2,
+      "score": 0.34210526315789475,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfort",
+        "cotton",
+        "polyester",
+        "soft"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0075",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Accessories Belts, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08L13LJ5M",
+      "target_title": "BULLIANT Men's Belt, Slide Ratchet Belt For Men Dress Pant Shirt Oxfords,trim To Fit",
+      "target_category": "Accessories Belts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.25,
+      "confidence": 1.0,
+      "matched_tags": [
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "fashion",
+        "fit",
+        "leather",
+        "style"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0059",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Shapewear Bodysuits, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "style",
+        "material",
+        "comfort"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B01H6DGA16",
+      "target_title": "Supplim Women's Body Shaper Waist Cincher Underbust Corset Bodysuit Shapewear",
+      "target_category": "Shapewear Bodysuits",
+      "baseline_rank": null,
+      "personalized_rank": 10,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.1,
+      "rank_movement_capped": 1,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "breathable",
+        "comfortable",
+        "formal",
+        "nylon"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0153",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Boots Ankle & Bootie, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "fit",
+        "style",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07BMJ77FR",
+      "target_title": "Susanny High Heel Boots for Women,Womens Platform Boot Heels Sexy Round Toe Lace UP High Heels Mid Calf Boots",
+      "target_category": "Boots Ankle & Bootie",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.0,
+      "confidence": 1.0,
+      "matched_tags": [],
+      "matched_terms": [],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": false
+      }
+    },
+    {
+      "sample_id": "public_0018",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Shirts Tanks Tops. A key requirement is: polyester.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07H3T5YGH",
+      "target_title": "O2TEE Men's Workout Gym Tank Tops Men - Custom Tank Top - Customized & Personalized Tanktops Text",
+      "target_category": "Shirts Tanks Tops",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "cotton",
+        "fit",
+        "material",
+        "polyester"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0050",
+      "scenario_type": "boundary",
+      "user_message": "I'm looking for Work & Utility Industrial & Construction Boots, but I'm still exploring.",
+      "preference_tags": [
+        "comfort",
+        "fit",
+        "durability",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07BYR6T7W",
+      "target_title": "EverBoots Mens Work Boots for Men, Leather EverFit Lightweight Comfort Boot, Anti Slip & Shock Absorption, Soft Oil Grain, Goodyear Welt, Industrial Construction, Roofing, Electrician Moc Toe Wedge",
+      "target_category": "Work & Utility Industrial & Construction Boots",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.2894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "durability",
+        "fit",
+        "style"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "durability",
+        "durable",
+        "fit",
+        "resistant",
+        "soft",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0093",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Panties Briefs. A key requirement is: cotton.",
+      "preference_tags": [
+        "performance",
+        "fit",
+        "comfort",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07PYB8F1G",
+      "target_title": "Hanes Women's Signature Breathe Cotton Brief Underwear 6-Pack",
+      "target_category": "Panties Briefs",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "performance"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfort",
+        "comfortable",
+        "fit",
+        "moisture wicking",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0076",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Women Hoodies, but I'm still exploring.",
+      "preference_tags": [
+        "style",
+        "comfort",
+        "performance",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07XT6PLTB",
+      "target_title": "Proud Army Girlfriend US Flag Dog Tags Pride Military Lovers Zip Hoodie",
+      "target_category": "Women Hoodies",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "fit",
+        "style"
+      ],
+      "matched_terms": [
+        "classic",
+        "fit"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0142",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Bracelets Link. Bracelet Size: Length-8.34 inch, width-0.4 inch, weight: 54g. smooth chain, lightweight and comfortable to wear, perfect for bike enthusiasts etc",
+      "preference_tags": [
+        "warmth",
+        "performance",
+        "material",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07YRGC1Q1",
+      "target_title": "Feraco Mens Bikers Bracelet Stainless Steel Motorcycle Bike Chain Bracelets 8.4 Inch",
+      "target_category": "Bracelets Link",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "material",
+        "performance"
+      ],
+      "matched_terms": [
+        "material",
+        "sport"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0021",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Men Pants, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07K4FX4WZ",
+      "target_title": "Amazon Essentials Men's Slim-Fit Stretch Golf Pant",
+      "target_category": "Men Pants",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.29473684210526313,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "fit",
+        "fitted",
+        "polyester",
+        "slim fit",
+        "stretch"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0097",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Women Leggings. A key requirement is: polyester.",
+      "preference_tags": [
+        "fit",
+        "comfort",
+        "material",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0785RCKBT",
+      "target_title": "Leggings Depot Women's Flared Casual, Work, Lounge Palazzo Pants-Wide Leg",
+      "target_category": "Women Leggings",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11842105263157894,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "polyester",
+        "soft",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0032",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Sleep & Lounge Nightgowns & Sleepshirts. A key requirement is: cotton.",
+      "preference_tags": [
+        "material",
+        "performance",
+        "style",
+        "warmth"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0834HZQZF",
+      "target_title": "IZZY + TOBY 100% Cotton Nightgowns for Women Soft Ladies Gowns Sleepwear Long Sleeveless Nightgown",
+      "target_category": "Sleep & Lounge Nightgowns & Sleepshirts",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.17105263157894737,
+      "confidence": 1.0,
+      "matched_tags": [
+        "material"
+      ],
+      "matched_terms": [
+        "cotton"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0138",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Tees & Blouses Tunics, but I'm still exploring.",
+      "preference_tags": [
+        "performance",
+        "comfort",
+        "material",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0B4BRW7JT",
+      "target_title": "KORSIS Summer Dresses For Women Casual T Shirt Dresses Swing Flowy Beach Vacation Sundress with Pockets",
+      "target_category": "Tees & Blouses Tunics",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "material",
+        "soft"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0118",
+      "scenario_type": "buying",
+      "user_message": "I'm looking for Bikinis Sets. A key requirement is: nylon.",
+      "preference_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B09M72C8PG",
+      "target_title": "Angerella Women Vintage Polka Dot High Waisted Bathing Suits Bikini Set",
+      "target_category": "Bikinis Sets",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.15789473684210525,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "adjustable",
+        "comfortable",
+        "fabric",
+        "fashion",
+        "nylon",
+        "soft",
+        "stretchy",
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0012",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Women Dresses, but I'm still exploring.",
+      "preference_tags": [
+        "fit",
+        "material"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08FFGQF72",
+      "target_title": "GUBERRY Womens Wrap V Neck Long Sleeve Velvet Bodycon Ruched Cocktail Party Dress",
+      "target_category": "Women Dresses",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "fabric",
+        "polyester",
+        "stretch"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0068",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Athletic Walking. Lightweight and responsive Ultra Go midsole cushioning",
+      "preference_tags": [
+        "fit",
+        "material",
+        "comfort",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08SH8GF6K",
+      "target_title": "Skechers Women's Go Walk 6-Big Splash Sneaker",
+      "target_category": "Athletic Walking",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.039473684210526314,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort"
+      ],
+      "matched_terms": [
+        "breathable",
+        "comfort"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0089",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Panties Briefs. Elastic closure",
+      "preference_tags": [
+        "comfort",
+        "style",
+        "fit",
+        "durability"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BXMCZLZV",
+      "target_title": "Vanity Fair Women's Perfectly Yours High Waisted Brief Panties",
+      "target_category": "Panties Briefs",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "style"
+      ],
+      "matched_terms": [
+        "comfort",
+        "comfortable",
+        "style"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0092",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Sleep & Lounge Sets, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "comfort",
+        "fit",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07FKNZC43",
+      "target_title": "COSOSA Womens Satin Striped Pajamas Long Sleeve V-neck Tops and Pants 2-piece Pj Set",
+      "target_category": "Sleep & Lounge Sets",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.07894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material"
+      ],
+      "matched_terms": [
+        "comfortable",
+        "fabric",
+        "polyester"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0025",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Rompers & Overalls Rompers, but I'm still exploring.",
+      "preference_tags": [
+        "material",
+        "fit",
+        "comfort",
+        "style"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B0BRS1DHVQ",
+      "target_title": "PRETTYGARDEN Women's Loose Solid Off Shoulder Elastic Waist Stretchy Long Romper Jumpsuit",
+      "target_category": "Rompers & Overalls Rompers",
+      "baseline_rank": 1,
+      "personalized_rank": 1,
+      "baseline_rr": 1.0,
+      "personalized_rr": 1.0,
+      "rank_movement_capped": 0,
+      "score": 0.2894736842105263,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "fit",
+        "material",
+        "style"
+      ],
+      "matched_terms": [
+        "breathable",
+        "casual",
+        "classic",
+        "fabric",
+        "fashion",
+        "soft",
+        "stretchy",
+        "style",
+        "stylish"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0098",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Running Road Running, but I'm still exploring.",
+      "preference_tags": [
+        "performance",
+        "comfort",
+        "style",
+        "material"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B08CZ34D75",
+      "target_title": "adidas Men's Lite Racer Adapt 4.0 Running Shoe",
+      "target_category": "Running Road Running",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.368421052631579,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "material",
+        "performance",
+        "style"
+      ],
+      "matched_terms": [
+        "athletic",
+        "comfort",
+        "comfortable",
+        "cushioned",
+        "performance",
+        "polyester",
+        "running",
+        "style"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": true,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0183",
+      "scenario_type": "intent_override",
+      "user_message": "I'm looking for Jackets & Vests Vests. Hand Wash Only",
+      "preference_tags": [
+        "material",
+        "fit"
+      ],
+      "profile_richness": "2-3",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B07Z2KSZR3",
+      "target_title": "SheIn Women's Double Breasted Long Vest Jacket Casual Sleeveless Pocket Outerwear Longline",
+      "target_category": "Jackets & Vests Vests",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.11052631578947367,
+      "confidence": 0.7,
+      "matched_tags": [
+        "fit",
+        "material"
+      ],
+      "matched_terms": [
+        "fit",
+        "polyester",
+        "stretchy"
+      ],
+      "field_matches": {
+        "title": false,
+        "category": false,
+        "description": true
+      }
+    },
+    {
+      "sample_id": "public_0191",
+      "scenario_type": "browsing",
+      "user_message": "I'm looking for Men Active, but I'm still exploring.",
+      "preference_tags": [
+        "performance",
+        "comfort",
+        "material",
+        "fit"
+      ],
+      "profile_richness": "4+",
+      "constraint_richness": "2-3",
+      "category": "clothing",
+      "target_asin": "B083TB1NDK",
+      "target_title": "CS CELERSPORT 3 Pairs Compression Socks for Men and Women 20-30 mmHg Running Support Socks",
+      "target_category": "Men Active",
+      "baseline_rank": null,
+      "personalized_rank": null,
+      "baseline_rr": 0.0,
+      "personalized_rr": 0.0,
+      "rank_movement_capped": 0,
+      "score": 0.21052631578947367,
+      "confidence": 1.0,
+      "matched_tags": [
+        "comfort",
+        "performance"
+      ],
+      "matched_terms": [
+        "breathable",
+        "cushion",
+        "moisture wicking",
+        "performance",
+        "running"
+      ],
+      "field_matches": {
+        "title": true,
+        "category": false,
+        "description": true
+      }
+    }
+  ]
+}

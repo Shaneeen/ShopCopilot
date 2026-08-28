@@ -39,7 +39,9 @@ folder), `starter/agent.py`, `evaluator/`.
 - **P3-D5** — Compare ranking strategy against retrieval-only output.
   *Acceptance*: a script or experiment (coordinate with P4) that runs the
   evaluator with `HeuristicRanker` vs. an identity ranker (pass-through
-  retrieval order) and reports the MRR delta.
+  retrieval order) and reports the MRR delta — **done**, see
+  `scripts/evaluate_ranking_ab.py` and the results under
+  `evaluation/results/`.
 
 ## Success metrics
 
@@ -70,3 +72,54 @@ retrieval-only "identity ranker" used as the P3-D5 baseline.
 pipeline. 3A owns the ranker-selection logic in the same file — see
 [HOW_A_AND_B_WORK_TOGETHER.md](./HOW_A_AND_B_WORK_TOGETHER.md) for how to
 avoid collisions.
+
+---
+
+## Technical guide
+
+### How personalisation works
+
+Personalisation is applied per candidate row via
+`neeshops.personalization.profile.personalization_boost()`:
+
+```python
+def personalization_boost(product_row: dict[str, Any], profile: UserProfile) -> float:
+    # Matches tags in user_profile against product_row categories or details
+    # Returns a float boost in [0.0, 1.0]
+```
+
+The boost is scaled by `ranking.personalization_weight` (default `0.15`,
+configured in [`neeshops/config/default_strategy.json`](../../neeshops/config/default_strategy.json))
+and added to the candidate's score inside `HeuristicRanker`.
+
+### How to run evaluation
+
+Local baseline check:
+
+```bash
+python scripts/run_baseline.py
+```
+
+Sweep personalization weights:
+
+```bash
+python scripts/evaluate_personalization_weights.py
+```
+
+Ranked vs. identity (retrieval-only) A/B comparison for P3-D5:
+
+```bash
+python scripts/evaluate_ranking_ab.py
+```
+
+Check results and MRR deltas in the console output, and in
+`evaluation/results/personalization_weight_sweep.md` /
+`evaluation/results/personalization_case_analysis.md`; record accepted
+configurations in `docs/neeshops/EXPERIMENTS.md`.
+
+### Key files
+
+- Personalisation logic: [`neeshops/personalization/profile.py`](../../neeshops/personalization/profile.py)
+- Tuning config: `ranking.personalization_weight` in [`neeshops/config/default_strategy.json`](../../neeshops/config/default_strategy.json)
+- Personalisation unit tests: [`tests/test_ranking.py`](../../tests/test_ranking.py) (constraint-override behavior) and [`tests/personalization/`](../../tests/personalization/)
+- Evaluation entrypoints: [`scripts/evaluate.py`](../../scripts/evaluate.py), [`scripts/evaluate_ranking_ab.py`](../../scripts/evaluate_ranking_ab.py), [`scripts/evaluate_personalization_weights.py`](../../scripts/evaluate_personalization_weights.py)
