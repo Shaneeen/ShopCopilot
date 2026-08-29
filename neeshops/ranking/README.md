@@ -42,10 +42,9 @@ it: bound the candidate count sent to the LLM, track `usage` tokens (the
 official contract's `usage.prompt_tokens`/`completion_tokens` — see
 `neeshops/agent.py`'s response shape), read credentials only from
 `neeshops.config.settings.get_settings()` (never hardcode a key), and
-**never let it be the only ranker** — `neeshops/agent.py` should fall back
-to `HeuristicRanker` when `LLMReranker.is_available()` is false or a call
-fails. That fallback wiring doesn't exist yet — it's the actual
-integration task, not just the LLM call itself.
+**never let it be the only ranker** — `neeshops/agent.py` automatically falls
+back to `HeuristicRanker` when `LLMReranker.is_available()` is false or a call
+fails.
 
 ## How to test
 
@@ -55,7 +54,7 @@ pytest tests/test_ranking.py tests/test_agent_smoke.py
 
 ## Known TODOs
 
-- `LLMReranker` unimplemented (primary P3 deliverable).
-- No fallback wiring in `neeshops/agent.py` yet between rankers.
+- `LLMReranker` implementation of prompt/calling logic (primary P3 deliverable).
 - Ranking has never been measured against the real catalog/evaluator in
   this environment.
+

@@ -15,6 +15,14 @@ from neeshops.retrieval.base import Candidate
 class Ranker(ABC):
     name: str = "ranker"
 
+    def is_available(self) -> bool:
+        """Return True if this ranker is configured and ready to run."""
+        return True
+
+    def get_usage(self) -> dict[str, int]:
+        """Return token usage for the last ranking call."""
+        return {"prompt_tokens": 0, "completion_tokens": 0}
+
     @abstractmethod
     def rank(
         self,

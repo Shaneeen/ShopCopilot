@@ -76,7 +76,7 @@ class BM25Retriever(Retriever):
             "parent_asin UNINDEXED, title, categories, features, details, store, description, "
             "tokenize='unicode61 remove_diacritics 2')"
         )
-        with open(self.catalog_path) as f:
+        with open(self.catalog_path, encoding="utf-8") as f:
             rows = []
             for line in f:
                 line = line.strip()

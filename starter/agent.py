@@ -71,7 +71,9 @@ class Agent:
             "ask_attribute": result.get("ask_attribute"),
             "recommendations": [
                 {"parent_asin": rec["parent_asin"], "score": rec["score"]}
-                for rec in result["recommendations"]
+                if "score" in rec and rec["score"] is not None
+                else {"parent_asin": rec["parent_asin"]}
+                for rec in result.get("recommendations", [])
             ],
             "usage": result.get("usage", {"prompt_tokens": 0, "completion_tokens": 0}),
         }

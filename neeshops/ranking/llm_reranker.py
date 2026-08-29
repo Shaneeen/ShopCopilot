@@ -21,10 +21,14 @@ class LLMReranker(Ranker):
 
     def __init__(self, top_n_to_rerank: int = 40) -> None:
         self.top_n_to_rerank = top_n_to_rerank
+        self.last_usage: dict[str, int] = {"prompt_tokens": 0, "completion_tokens": 0}
 
     def is_available(self) -> bool:
         settings = get_settings()
-        return settings.enable_llm_reranker and bool(settings.llm_api_key)
+        return bool(settings.enable_llm_reranker and settings.llm_api_key)
+
+    def get_usage(self) -> dict[str, int]:
+        return dict(self.last_usage)
 
     def rank(
         self,
@@ -41,5 +45,6 @@ class LLMReranker(Ranker):
             )
         # TODO(Workstream 3): prompt the configured LLM_PROVIDER with the
         # top `self.top_n_to_rerank` candidates + user constraints/history,
-        # ask for a reordering + short human-readable reason per item.
+        # ask for a reordering + short human-readable reason per item,
+        # and record token usage in self.last_usage.
         raise NotImplementedError("LLM reranking prompt/parsing not yet implemented.")

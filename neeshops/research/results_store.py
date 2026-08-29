@@ -41,14 +41,14 @@ class ResultsStore:
             "accepted": accepted,
             "timestamp": time.time(),
         }
-        with open(self.path, "a") as f:
+        with open(self.path, "a", encoding="utf-8") as f:
             f.write(json.dumps(record, default=str) + "\n")
         return record
 
     def all(self) -> list[dict[str, Any]]:
         if not self.path.exists():
             return []
-        with open(self.path) as f:
+        with open(self.path, encoding="utf-8") as f:
             return [json.loads(line) for line in f if line.strip()]
 
     def accepted(self) -> list[dict[str, Any]]:

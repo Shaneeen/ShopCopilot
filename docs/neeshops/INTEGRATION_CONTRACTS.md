@@ -70,8 +70,10 @@ override semantics live in exactly one place (`StateManager.apply_turn`).
 |---|---|
 | Input | `Ranker.rank(candidates: list[Candidate], catalog_lookup: dict[str, dict], state: ConversationState, top_k: int)` |
 | Output | `list[Recommendation]` (`neeshops.models.recommendation.Recommendation`: `parent_asin`, `score`, `reason`, `source`), length ≤ `top_k`, ordered best-first |
+| Token usage | `Ranker.get_usage() -> dict[str, int]` returns `{"prompt_tokens": int, "completion_tokens": int}` for LLM token reporting; passthrough to official turn response `usage` |
+| Availability | `Ranker.is_available() -> bool` returns `True` when ranker is ready and configured |
 | Expected types | `catalog_lookup` may be `{}` (catalog not installed) — a ranker must degrade gracefully, not raise |
-| Failure behaviour | `reason` must always be a human-readable string, never a fabricated numeric confidence (`docs/neeshops/COMPETITION_NOTES.md`) |
+| Failure behaviour | `reason` must always be a human-readable string, never a fabricated numeric confidence (`docs/neeshops/COMPETITION_NOTES.md`). If an LLM or alternative ranker fails or `is_available()` is `False`, `neeshops/agent.py` falls back seamlessly to `HeuristicRanker` (P3-D3 / P5-D3) |
 | Owner | P3 |
 | Example | see `tests/test_ranking.py` |
 

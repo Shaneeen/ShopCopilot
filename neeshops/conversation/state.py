@@ -89,6 +89,15 @@ class StateManager:
         )
         return state
 
+    def record_asked_attribute(self, session_id: str, attribute: Optional[str]) -> None:
+        if not attribute:
+            return
+        state = self.get(session_id)
+        if attribute not in state.asked_attributes:
+            state.asked_attributes.append(attribute)
+        if state.history:
+            state.history[-1].asked_attribute = attribute
+
     def record_recommendations(self, session_id: str, asins: list[str]) -> None:
         state = self.get(session_id)
         for asin in asins:
