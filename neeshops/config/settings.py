@@ -40,9 +40,15 @@ class Settings:
         )
         self.log_level = os.getenv("NEESHOPS_LOG_LEVEL", "INFO")
 
-        self.llm_provider = os.getenv("LLM_PROVIDER", "none")
-        self.llm_api_key = os.getenv("LLM_API_KEY", "")
-        self.llm_model = os.getenv("LLM_MODEL", "")
+        # Gemini's SDK discovers GEMINI_API_KEY itself. These values configure
+        # selection only; the credential is never copied into strategy data.
+        self.llm_provider = os.getenv(
+            "NEESHOPS_LLM_PROVIDER", os.getenv("LLM_PROVIDER", "gemini")
+        ).strip().lower()
+        self.llm_model = os.getenv(
+            "NEESHOPS_LLM_MODEL", os.getenv("LLM_MODEL", "gemini-3.7-flash")
+        ).strip()
+        self.gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
 
         self.enable_llm_reranker = _bool_env("NEESHOPS_ENABLE_LLM_RERANKER", False)
         self.enable_semantic_retrieval = _bool_env(

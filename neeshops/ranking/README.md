@@ -22,8 +22,10 @@ class Ranker(ABC):
 `Recommendation`: `parent_asin`, `score` (internal ordering score — never
 presented as a fabricated confidence), `reason` (human-readable), `source`.
 
-Implementations: `HeuristicRanker` (working, used by `neeshops/agent.py`
-unconditionally today), `LLMReranker` (stub).
+Implementations: `RetrievalOrderRanker` (R0), preserved `HeuristicRanker`
+(R1), `ConstraintAwareRanker` (R2), `FusionAwareRanker` (R3), and
+`LLMReranker` (R5 experiment with Gemini and offline fake provider). R4
+CrossEncoder and R6 Hybrid remain planned.
 
 ## Current implementation
 
@@ -35,27 +37,60 @@ explicit request always dominates a soft profile signal — Track 4
 requirement 7), and assigns one of three fixed human-readable reasons by
 rank position.
 
-## How to extend
+R2/R3 extract deterministic `RankingFeatures` separately from aggregation.
+They prioritize the count of explicit hard-constraint mismatches, then a
+configuration-weighted relevance score, then original retrieval rank. Missing
+catalog metadata is unknown, not a mismatch. Internal diagnostics expose
+feature values, constraint statuses, and final relevance without changing the
+public recommendation contract.
 
-`LLMReranker.rank()` currently raises `NotImplementedError`. To implement
-it: bound the candidate count sent to the LLM, track `usage` tokens (the
-official contract's `usage.prompt_tokens`/`completion_tokens` — see
-`neeshops/agent.py`'s response shape), read credentials only from
-`neeshops.config.settings.get_settings()` (never hardcode a key), and
-**never let it be the only ranker** — `neeshops/agent.py` should fall back
-to `HeuristicRanker` when `LLMReranker.is_available()` is false or a call
-fails. That fallback wiring doesn't exist yet — it's the actual
-integration task, not just the LLM call itself.
+All R2/R3 weights and ablation switches are in `ranking.deterministic`.
+Normalization supports raw, min-max, and rank signals. RRF is implemented for
+genuine independent source rankings, but current P2 candidates contain only a
+merged score and source label, so real P2 RRF evaluation is pending.
+
+`RankingExperimentHarness` can register any ranker and records synthetic flag,
+configuration, retrieval/ranked top tens, measured latency, fallback/error,
+and target rank when a target is defined. A newer strategy is not assumed to
+be better; use the same case and pool for comparison.
+
+## Optional semantic reranking
+
+`LLMReranker` accepts a narrow `RankingProvider`:
+
+```python
+provider.rerank(request, timeout_seconds) -> ProviderResult(
+    ordered_ids=["B001", "B002"],
+    prompt_tokens=12,
+    completion_tokens=4,
+)
+```
+
+It first obtains deterministic heuristic order, then sends at most
+`ranking.llm.rerank_limit` candidates (30 by default) only when at least two
+explicit shopper constraints are meaningful. It truncates catalog text,
+accepts only known unique IDs, fills omissions in heuristic order, and falls
+back safely on every provider failure. Per-call evidence is available as
+`last_usage`, `last_latency_ms`, and `last_fallback_reason`.
+
+`GeminiRankingProvider` uses `google-genai`, `GEMINI_API_KEY`, Pydantic
+structured output, and the configured real HTTP timeout. `FakeRankingProvider`
+requires no credential, network, or SDK call. LLM reranking is disabled by
+default, so ordinary operation and tests remain offline.
 
 ## How to test
 
 ```bash
 pytest tests/test_ranking.py tests/test_agent_smoke.py
+pytest -q tests/test_deterministic_ranking.py tests/test_ranking_experiments.py
+pytest -q tests/test_llm_reranker.py tests/test_gemini_provider.py
 ```
 
 ## Known TODOs
 
-- `LLMReranker` unimplemented (primary P3 deliverable).
-- No fallback wiring in `neeshops/agent.py` yet between rankers.
+- No fallback wiring in `neeshops/agent.py` yet between rankers (coordinate
+  with P5 in Phase 4).
 - Ranking has never been measured against the real catalog/evaluator in
   this environment.
+- P2 does not expose independent BM25/semantic ranks, so live RRF cannot yet
+  be reconstructed from `Candidate`.

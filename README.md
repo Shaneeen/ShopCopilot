@@ -176,9 +176,9 @@ python scripts/run_experiment.py --random 3
 
 ## Team workstreams
 
-Five streams, each owning its own module folder to minimise merge
+Six streams (with Person 3 split into 3A Ranking Core and 3B Personalisation & Evaluation), each owning its own module folder to minimise merge
 conflicts: conversation & agent intelligence, retrieval & search, ranking
-& personalisation, research agent & evaluation, and integration/demo/DX.
+core, personalisation & evaluation, research agent & evaluation, and integration/demo/DX.
 Full breakdown: `docs/neeshops/TEAM_WORKSTREAMS.md`.
 
 ## Status

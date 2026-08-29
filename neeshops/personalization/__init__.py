@@ -1,3 +1,3 @@
-from neeshops.personalization.profile import personalization_boost
+from neeshops.personalization.profile import explain_personalization, personalization_boost
 
-__all__ = ["personalization_boost"]
+__all__ = ["explain_personalization", "personalization_boost"]
