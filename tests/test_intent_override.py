@@ -42,3 +42,32 @@ def test_no_preference_is_recorded_and_not_reasked():
 def test_extract_constraints_detects_no_preference_phrase():
     updates = extract_constraints("I have no preference on color")
     assert updates.get("color") == NO_PREFERENCE
+
+def test_override_material():
+    previous = {"material": "leather"}
+    updates = {"material": "cotton"}
+
+    merged = override_intent(previous, updates)
+
+    assert merged["material"] == "cotton"
+    assert merged["material"] != "leather + cotton"
+
+
+def test_override_brand():
+    previous = {"brand": "nike"}
+    updates = {"brand": "adidas"}
+
+    merged = override_intent(previous, updates)
+
+    assert merged["brand"] == "adidas"
+    assert merged["brand"] != "nike + adidas"
+
+
+def test_override_budget():
+    previous = {"budget": 120.0}
+    updates = {"budget": 80.0}
+
+    merged = override_intent(previous, updates)
+
+    assert merged["budget"] == 80.0
+    assert merged["budget"] != 120.0
