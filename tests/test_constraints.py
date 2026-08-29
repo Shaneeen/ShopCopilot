@@ -27,3 +27,14 @@ def test_extract_constraints():
 
         for field, value in expected.items():
             assert result.get(field) == value
+
+def test_extract_no_preference_edge_wording():
+    cases = [
+        ("any color is fine", "color"),
+        ("I don't mind which color", "color"),
+        ("color doesn't matter to me", "color"),
+    ]
+
+    for message, field in cases:
+        result = extract_constraints(message)
+        assert result.get(field) == NO_PREFERENCE
