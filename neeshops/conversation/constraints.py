@@ -45,6 +45,16 @@ _MATERIAL_WORDS = {
     "polyester",
     "suede",
 }
+_STYLE_WORDS = {
+    "casual",
+    "formal",
+    "sporty",
+    "elegant",
+    "vintage",
+    "classic",
+    "modern",
+    "minimalist",
+}
 _PRICE_RE = re.compile(r"\$?\s?(\d+(?:\.\d+)?)\s*(?:dollars)?")
 _UNDER_RE = re.compile(r"under|below|less than|cheaper than|max(?:imum)?")
 _SIZE_RE = re.compile(r"\bsize\s*([0-9]+(?:\.[0-9]+)?|[xsml]{1,3})\b", re.IGNORECASE)
@@ -86,6 +96,10 @@ def extract_constraints(message: str, known_fields: list[str] | None = None) -> 
     material_hit = tokens & _MATERIAL_WORDS
     if material_hit and "material" not in out:
         out["material"] = sorted(material_hit)[0]
+    # Style: simple vocabulary match
+    style_hit = tokens & _STYLE_WORDS
+    if style_hit and "style" not in out:
+        out["style"] = sorted(style_hit)[0]
         # Size: match explicit "size X" phrases
     size_match = _SIZE_RE.search(text)
     if size_match and "size" not in out:
