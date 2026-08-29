@@ -71,3 +71,39 @@ def test_override_budget():
 
     assert merged["budget"] == 80.0
     assert merged["budget"] != 120.0
+
+def test_multiple_overrides_preserve_unrelated_constraints():
+    sm = StateManager()
+    sm.reset("s1", {})
+
+    sm.apply_turn(
+        "s1",
+        turn=1,
+        user_message="I want blue leather Nike shoes under $120",
+        extracted_constraints={
+            "color": "blue",
+            "material": "leather",
+            "brand": "nike",
+            "budget": 120.0,
+        },
+        route="buying",
+    )
+
+    state = sm.apply_turn(
+        "s1",
+        turn=2,
+        user_message="Actually, make that black Adidas shoes under $80",
+        extracted_constraints={
+            "color": "black",
+            "brand": "adidas",
+            "budget": 80.0,
+        },
+        route="buying",
+    )
+
+    assert state.constraint_value("color") == "black"
+    assert state.constraint_value("brand") == "adidas"
+    assert state.constraint_value("budget") == 80.0
+
+    # Material wasn't changed, so it should remain.
+    assert state.constraint_value("material") == "leather"
