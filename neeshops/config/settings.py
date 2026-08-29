@@ -11,6 +11,7 @@ Two layers, on purpose:
 
 Both are intentionally simple (JSON + os.environ) — no config framework.
 """
+
 from __future__ import annotations
 
 import copy
@@ -40,13 +41,23 @@ class Settings:
         )
         self.log_level = os.getenv("NEESHOPS_LOG_LEVEL", "INFO")
 
-        # Gemini's SDK discovers GEMINI_API_KEY itself. These values configure
-        # selection only; the credential is never copied into strategy data.
-        self.llm_provider = os.getenv(
-            "NEESHOPS_LLM_PROVIDER", os.getenv("LLM_PROVIDER", "gemini")
-        ).strip().lower()
+        self.llm_provider = (
+            os.getenv("NEESHOPS_LLM_PROVIDER", os.getenv("LLM_PROVIDER", "openrouter"))
+            .strip()
+            .lower()
+        )
         self.llm_model = os.getenv(
-            "NEESHOPS_LLM_MODEL", os.getenv("LLM_MODEL", "gemini-3.7-flash")
+            "NEESHOPS_LLM_MODEL", os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
+        ).strip()
+        self.llm_secondary_provider = (
+            os.getenv("NEESHOPS_LLM_SECONDARY_PROVIDER", "gemini").strip().lower()
+        )
+        self.llm_secondary_model = os.getenv(
+            "NEESHOPS_LLM_SECONDARY_MODEL", "gemini-3.7-flash"
+        ).strip()
+        self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+        self.openrouter_base = os.getenv(
+            "OPENROUTER_API_BASE", "https://openrouter.ai/api/v1/chat/completions"
         ).strip()
         self.gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
 

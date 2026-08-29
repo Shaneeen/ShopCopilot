@@ -8,6 +8,7 @@ and neeshops/{conversation,retrieval,ranking}/ for the actual logic.
 This is what starter/agent.py adapts to the organiser's required
 `starter.agent.Agent` contract.
 """
+
 from __future__ import annotations
 
 import time
@@ -76,7 +77,9 @@ class NeeShopsAgent:
 
         # Retrieve first (pre-clarification) so the clarification engine can
         # see how broad/narrow the candidate pool already is.
-        candidates = self.retriever.search(query, state, top_k=self.strategy["retrieval"]["candidate_limit"])
+        candidates = self.retriever.search(
+            query, state, top_k=self.strategy["retrieval"]["candidate_limit"]
+        )
 
         if self.catalog_lookup:
             from neeshops.retrieval.filters import apply_filters
@@ -95,6 +98,10 @@ class NeeShopsAgent:
         )
 
         recommendations = []
+        usage = {"prompt_tokens": 0, "completion_tokens": 0}
+        llm_latency_ms: float | None = None
+        llm_fallback: str | None = None
+        llm_used = False
         if decision["should_recommend"] and candidates:
             recommendations = self.ranker.rank(
                 candidates, self.catalog_lookup, state, top_k=top_k
@@ -102,6 +109,19 @@ class NeeShopsAgent:
             self.state_manager.record_recommendations(
                 session_id, [r.parent_asin for r in recommendations]
             )
+            llm_latency_ms = getattr(self.ranker, "last_latency_ms", None)
+            llm_fallback = getattr(self.ranker, "last_fallback_reason", None)
+            raw_usage = getattr(self.ranker, "last_usage", None)
+            if isinstance(raw_usage, dict):
+                pt = raw_usage.get("prompt_tokens")
+                ct = raw_usage.get("completion_tokens")
+                if isinstance(pt, int):
+                    usage["prompt_tokens"] = pt
+                if isinstance(ct, int):
+                    usage["completion_tokens"] = ct
+                llm_used = pt is not None or ct is not None
+            if llm_latency_ms and llm_latency_ms > 0:
+                llm_used = True
 
         message = decision["question"] or self._default_message(recommendations)
 
@@ -115,6 +135,13 @@ class NeeShopsAgent:
             recommendation_count=len(recommendations),
             asked_attribute=decision["ask_attribute"],
             latency_ms=round(latency_ms, 2),
+            llm_latency_ms=round(llm_latency_ms, 2)
+            if isinstance(llm_latency_ms, (int, float))
+            else None,
+            llm_fallback=llm_fallback,
+            llm_used=llm_used,
+            prompt_tokens=usage["prompt_tokens"],
+            completion_tokens=usage["completion_tokens"],
         )
 
         return {
@@ -124,7 +151,7 @@ class NeeShopsAgent:
                 {"parent_asin": r.parent_asin, "score": r.score, "reason": r.reason}
                 for r in recommendations
             ],
-            "usage": {"prompt_tokens": 0, "completion_tokens": 0},
+            "usage": usage,
             # Extra internal-only field (route) is stripped by
             # starter/agent.py before returning to the official evaluator,
             # whose docs/agent_api_contract.json forbids additional

@@ -73,10 +73,14 @@ accepts only known unique IDs, fills omissions in heuristic order, and falls
 back safely on every provider failure. Per-call evidence is available as
 `last_usage`, `last_latency_ms`, and `last_fallback_reason`.
 
-`GeminiRankingProvider` uses `google-genai`, `GEMINI_API_KEY`, Pydantic
-structured output, and the configured real HTTP timeout. `FakeRankingProvider`
-requires no credential, network, or SDK call. LLM reranking is disabled by
-default, so ordinary operation and tests remain offline.
+`OpenRouterRankingProvider` (default, text model — e.g. `openai/gpt-4o-mini`)
+calls `https://openrouter.ai/api/v1/chat/completions` with `OPENROUTER_API_KEY`
+(OpenAI-compatible JSON `ordered_ids`, `response_format: json_object`) and
+validates strictly. `GeminiRankingProvider` (`google-genai`, `GEMINI_API_KEY`)
+is the secondary fallback. The `LLMReranker` tries primary then secondary
+(text model only, no vision) before falling back to the deterministic heuristic.
+`FakeRankingProvider` requires no credential/network. LLM reranking is disabled
+by default so ordinary operation and tests remain offline.
 
 ## How to test
 

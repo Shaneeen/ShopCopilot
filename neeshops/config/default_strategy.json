@@ -60,8 +60,10 @@
       }
     },
     "llm": {
-      "provider": "gemini",
-      "model": "gemini-3.7-flash",
+      "provider": "openrouter",
+      "model": "openai/gpt-4o-mini",
+      "secondary_provider": "gemini",
+      "secondary_model": "gemini-3.7-flash",
       "rerank_limit": 30,
       "minimum_constraints": 2,
       "timeout_seconds": 5
