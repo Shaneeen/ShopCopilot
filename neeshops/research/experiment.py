@@ -58,4 +58,8 @@ def _set_dotted(d: dict, dotted_path: str, value) -> None:
     node = d
     for key in keys[:-1]:
         node = node.setdefault(key, {})
-    node[keys[-1]] = value
+    last_key = keys[-1]
+    if last_key in node and isinstance(node[last_key], int) and isinstance(value, (int, float)):
+        node[last_key] = int(value)
+    else:
+        node[last_key] = value

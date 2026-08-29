@@ -129,19 +129,19 @@ def next_experiments(scenario_metrics: Optional[dict[str, Any]] = None) -> list[
     elif weakest_name == "intent_override":
         experiments.extend([
             Experiment(
-                name="targeted::intent_override::personalization_weight=0.05",
-                hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Reducing personalization weight prevents past tags from fighting new intent.",
-                parameters={"ranking.personalization_weight": 0.05},
+                name="targeted::intent_override::personalization_weight=0.0",
+                hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Zeroing personalization completely eliminates historical profile bias against newly pivoted constraints.",
+                parameters={"ranking.personalization_weight": 0.0},
             ),
             Experiment(
-                name="targeted::intent_override::max_questions=3",
-                hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Allowing 3 questions gives the agent headroom to clarify shifted intent.",
-                parameters={"clarification.max_questions_per_session": 3.0},
+                name="targeted::intent_override::candidate_limit=300",
+                hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Expanding candidate limit to 300 ensures pivoted keywords retrieve products despite early turn noise.",
+                parameters={"retrieval.candidate_limit": 300},
             ),
             Experiment(
-                name="targeted::intent_override::ask_above=40",
-                hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Triggering clarification earlier when candidate pool is above 40.",
-                parameters={"clarification.ask_if_candidates_above": 40.0},
+                name="targeted::intent_override::min_candidates=3",
+                hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Lowering candidate threshold before recommendation to 3 allows faster conversion on focused pivot constraints.",
+                parameters={"clarification.min_candidates_before_recommend": 3},
             ),
         ])
     elif weakest_name == "boundary":

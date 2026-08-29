@@ -2,7 +2,7 @@
   "_comment": "Starting defaults only — see docs/EXPERIMENTS.md. The research agent (neeshops/research/) proposes and evaluates changes to these values; nothing here is tuned yet beyond a sane starting point.",
 
   "retrieval": {
-    "candidate_limit": 200,
+    "candidate_limit": 300,
     "buying": {
       "bm25_weight": 0.7,
       "semantic_weight": 0.3
@@ -19,7 +19,7 @@
   },
 
   "clarification": {
-    "max_questions_per_session": 3,
+    "max_questions_per_session": 5,
     "min_candidates_before_recommend": 5,
     "ask_if_candidates_above": 60
   },
