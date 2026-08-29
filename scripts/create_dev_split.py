@@ -37,7 +37,7 @@ def main() -> int:
         )
         return 1
 
-    with open(settings.public_set_path) as f:
+    with open(settings.public_set_path, encoding="utf-8") as f:
         sessions = [json.loads(line) for line in f if line.strip()]
 
     rng = random.Random(args.seed)
@@ -63,7 +63,7 @@ def main() -> int:
 
 
 def _write_jsonl(path: Path, rows: list[dict]) -> None:
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         for row in rows:
             f.write(json.dumps(row) + "\n")
 

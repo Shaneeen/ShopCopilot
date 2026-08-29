@@ -59,7 +59,7 @@ def main() -> int:
 
     ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
     out_path = ARTIFACTS_DIR / f"{args.label}_{int(time.time())}.json"
-    with open(out_path, "w") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2)
     print(f"\nSaved full results to {out_path}")
     return 0

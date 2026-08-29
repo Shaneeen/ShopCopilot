@@ -66,6 +66,6 @@ def load_strategy(path: Path | None = None) -> dict[str, Any]:
     """Load the strategy config as a plain dict (deep-copied so callers —
     e.g. an experiment — can mutate their own copy safely)."""
     strategy_path = path or DEFAULT_STRATEGY_PATH
-    with open(strategy_path) as f:
+    with open(strategy_path, encoding="utf-8") as f:
         strategy = json.load(f)
     return copy.deepcopy(strategy)

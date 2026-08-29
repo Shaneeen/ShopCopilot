@@ -97,13 +97,12 @@ without a cited test or run.
 | Research/experiment framework | **FUNCTIONAL** | `tests/test_research.py` (5, added this audit) — safe-parameter enforcement, strategy building, accept/reject wiring, results persistence, all pass without a real catalog | Run a real experiment cycle once M1 is done | P4 |
 | Dev/holdout split tooling | **SCAFFOLDED** | `scripts/create_dev_split.py` implemented, never executed against the real 200-session set in this environment | Run once catalog + public set are both installed | P4 |
 | Official evaluator integration (mechanical) | **VALIDATED** | A full 10-turn session was run through the real `evaluator.local_evaluator.evaluate()` against a schema-accurate fixture catalog — completed with zero exceptions and a valid `results.json` (see Current score below) | Run against the real catalog for real scores (M1) | P5 |
-| Official evaluator integration (scored) | **NOT VALIDATED** | Real 50k catalog + 200 public sessions not installed in this environment | Install catalog, run `python scripts/evaluate.py` | P4 |
+| Official evaluator integration (scored) | **VALIDATED** | Real 50k catalog + 200 public sessions executed and scored against both baseline and candidate | Begin iterative experiments (M2-M5) | P4 |
 | Frontend prototype | **SCAFFOLDED / OPTIONAL** | Static clickable HTML demo, fully decoupled from the Agent | Not a scored deliverable — see "Frontend classification" below | P5 (only if ahead of schedule) |
 
 ## Current score
 
-- **Organiser baseline** (official, `docs/baseline_results.json`,
-  measured by the organiser on the public set):
+- **Organiser weak baseline** (`baseline_weak_starter`, reproduced via `scripts/eval_weak_starter.py` on real 50k catalog + 200 public sessions):
   ```text
   Hit Rate@10:    0.125
   MRR:            0.068034
@@ -111,20 +110,17 @@ without a cited test or run.
   Efficiency:     0.119
   TechnicalScore: 0.10671
   ```
-- **Current NeeShops score**: **not yet measured.** The real
-  `data/catalog.jsonl` (50,000 products, downloaded from the organiser's
-  GitHub Release) is not installed in this development environment, so
-  `python3 -m evaluator.local_evaluator` / `python scripts/evaluate.py`
-  have not been run against real data. **Do not treat any number in this
-  repository as a current score until P4 records one here with a date and
-  configuration, per M1.**
-- What *has* been verified (mechanical integration, not a score): a
-  synthetic 3-product, schema-accurate fixture catalog was built, and one
-  full 10-turn session was driven through the real, unmodified
-  `evaluator.local_evaluator.evaluate()` via `starter.agent.Agent` — it
-  completed with no exceptions and wrote a schema-valid `results.json`.
-  This proves the pipeline is wired correctly end-to-end; it says nothing
-  about retrieval/ranking quality on real data.
+- **NeeShops initial candidate** (`candidate_initial`, recorded via `scripts/evaluate.py --label candidate_initial` on real 50k catalog + 200 public sessions):
+  ```text
+  Hit Rate@10:    0.285     (+16.0% / 2.28x vs baseline)
+  MRR:            0.188581  (+0.120581 / 2.77x vs baseline)
+  MTTC:           8.55      (-1.26 turns faster)
+  Efficiency:     0.245     (+105.8% vs baseline)
+  TechnicalScore: 0.248074  (+132.5% vs baseline)
+  ```
+- **Artifacts**:
+  - `artifacts/experiments/baseline_weak_starter.json`
+  - `artifacts/experiments/candidate_initial_1787969131.json`
 
 ## Immediate milestone
 

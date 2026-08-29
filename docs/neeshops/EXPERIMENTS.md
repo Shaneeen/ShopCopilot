@@ -29,7 +29,7 @@ against the real catalog._
 
 | ID | Hypothesis | Config change | Baseline → Candidate | Δ | Accepted |
 |---|---|---|---|---|---|
-| — | — | — | — | — | — |
+| `candidate_initial` | Foundational NeeShops architecture (State, Clarification, BM25, Filters, Heuristic Ranking) outperforms stateless weak starter. | Full NeeShops pipeline over `default_strategy.json` | 0.10671 → 0.248074 | +0.141364 (+132.5%) | YES |
 
 ## Rejected experiments (instructive ones only)
 

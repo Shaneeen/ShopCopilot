@@ -27,4 +27,4 @@ def test_respond_recommendation_shape():
     result = agent.respond("s2", "black running shoes", turn=1, top_k=5)
     for rec in result["recommendations"]:
         assert "parent_asin" in rec
-        assert "reason" in rec
+        assert "score" in rec

@@ -47,6 +47,8 @@ class ExperimentRunner:
         `min_improvement` (absolute). Rejecting is a normal, expected
         outcome — most hypotheses should fail.
         """
+        import time
+
         strategy = experiment.build_strategy(base=base_strategy)
 
         log_event(
@@ -54,20 +56,33 @@ class ExperimentRunner:
             experiment_id=experiment.experiment_id,
             name=experiment.name,
             parameters=experiment.parameters,
+            dataset_path=dataset_path,
         )
+        start_time = time.perf_counter()
         candidate_metrics = self.evaluate_fn(strategy, dataset_path)
+        latency_seconds = round(time.perf_counter() - start_time, 3)
 
         baseline_score = baseline_metrics.get(PRIMARY_METRIC, 0.0)
         candidate_score = candidate_metrics.get(PRIMARY_METRIC, 0.0)
-        accepted = (candidate_score - baseline_score) >= self.min_improvement
+        delta = candidate_score - baseline_score
+        # Require strictly positive improvement; ties (delta <= 0) and sub-threshold gains are rejected
+        accepted = delta > self.min_improvement if self.min_improvement > 0 else delta > 0.0
+
+        tokens = candidate_metrics.get("reported_token_usage", {})
+        scenario_metrics = candidate_metrics.get("scenario_metrics", {})
 
         record = self.results_store.record(
             experiment_id=experiment.experiment_id,
             name=experiment.name,
             hypothesis=experiment.hypothesis,
+            dataset_path=dataset_path,
+            strategy=strategy,
+            latency_seconds=latency_seconds,
             parameters=experiment.parameters,
             metrics=candidate_metrics,
             baseline_metrics=baseline_metrics,
+            tokens=tokens,
+            scenario_metrics=scenario_metrics,
             accepted=accepted,
         )
         log_event(
@@ -76,5 +91,6 @@ class ExperimentRunner:
             accepted=accepted,
             baseline_score=baseline_score,
             candidate_score=candidate_score,
+            latency_seconds=latency_seconds,
         )
         return record

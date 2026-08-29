@@ -64,12 +64,105 @@ def propose_random(
     return experiments
 
 
-def next_experiments(scenario_metrics: dict[str, Any]) -> list[Experiment]:
-    """TODO(Workstream 4): given per-scenario eval breakdowns (e.g. weak
-    Hit Rate@10 on 'browsing' scenarios), pick the parameter most likely to
-    help and propose a targeted experiment instead of a random one.
-
-    Stage-1 falls back to a small random batch so the pipeline is runnable
-    end-to-end without this analysis being implemented yet.
+def next_experiments(scenario_metrics: Optional[dict[str, Any]] = None) -> list[Experiment]:
+    """Analyze scenario evaluation metrics, identify the weakest scenario,
+    and generate targeted experiments with actionable hypotheses designed
+    to fix that specific weakness.
     """
-    return propose_random(n=3)
+    if not scenario_metrics:
+        return propose_random(n=3)
+
+    # Filter only valid scenario dictionaries with metric data
+    valid_scenarios = {
+        name: metrics
+        for name, metrics in scenario_metrics.items()
+        if isinstance(metrics, dict) and "hit_rate_at_10" in metrics
+    }
+    if not valid_scenarios:
+        return propose_random(n=3)
+
+    # Sort scenarios to find the weakest by hit_rate_at_10, using MRR as secondary tiebreaker
+    weakest_name, weakest_stats = min(
+        valid_scenarios.items(),
+        key=lambda item: (item[1].get("hit_rate_at_10", 0.0), item[1].get("mrr", 0.0)),
+    )
+
+    hit_rate = weakest_stats.get("hit_rate_at_10", 0.0)
+    experiments: list[Experiment] = []
+
+    if weakest_name == "browsing":
+        experiments.extend([
+            Experiment(
+                name="targeted::browsing::semantic_weight=0.5",
+                hypothesis=f"Browsing weak (HitRate: {hit_rate:.1%}): Lowering semantic weight to balance keyword match for exploratory queries.",
+                parameters={"retrieval.browsing.semantic_weight": 0.5},
+            ),
+            Experiment(
+                name="targeted::browsing::semantic_weight=0.85",
+                hypothesis=f"Browsing weak (HitRate: {hit_rate:.1%}): Increasing semantic weight to discover broader exploratory items.",
+                parameters={"retrieval.browsing.semantic_weight": 0.85},
+            ),
+            Experiment(
+                name="targeted::browsing::min_candidates=8",
+                hypothesis=f"Browsing weak (HitRate: {hit_rate:.1%}): Requiring 8 candidates before recommending avoids premature narrow guesses.",
+                parameters={"clarification.min_candidates_before_recommend": 8.0},
+            ),
+        ])
+    elif weakest_name == "buying":
+        experiments.extend([
+            Experiment(
+                name="targeted::buying::bm25_weight=0.85",
+                hypothesis=f"Buying weak (HitRate: {hit_rate:.1%}): Increasing BM25 weight to sharpen exact constraint matching.",
+                parameters={"retrieval.buying.bm25_weight": 0.85},
+            ),
+            Experiment(
+                name="targeted::buying::candidate_limit=300",
+                hypothesis=f"Buying weak (HitRate: {hit_rate:.1%}): Expanding candidate pool to 300 to retain strict-constraint products.",
+                parameters={"retrieval.candidate_limit": 300.0},
+            ),
+            Experiment(
+                name="targeted::buying::rerank_limit=60",
+                hypothesis=f"Buying weak (HitRate: {hit_rate:.1%}): Reranking top 60 items improves precision on budget/spec filters.",
+                parameters={"ranking.rerank_limit": 60.0},
+            ),
+        ])
+    elif weakest_name == "intent_override":
+        experiments.extend([
+            Experiment(
+                name="targeted::intent_override::personalization_weight=0.05",
+                hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Reducing personalization weight prevents past tags from fighting new intent.",
+                parameters={"ranking.personalization_weight": 0.05},
+            ),
+            Experiment(
+                name="targeted::intent_override::max_questions=3",
+                hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Allowing 3 questions gives the agent headroom to clarify shifted intent.",
+                parameters={"clarification.max_questions_per_session": 3.0},
+            ),
+            Experiment(
+                name="targeted::intent_override::ask_above=40",
+                hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Triggering clarification earlier when candidate pool is above 40.",
+                parameters={"clarification.ask_if_candidates_above": 40.0},
+            ),
+        ])
+    elif weakest_name == "boundary":
+        experiments.extend([
+            Experiment(
+                name="targeted::boundary::ask_above=80",
+                hypothesis=f"Boundary weak (HitRate: {hit_rate:.1%}): Raising ask threshold to 80 avoids redundant questions on no-preference replies.",
+                parameters={"clarification.ask_if_candidates_above": 80.0},
+            ),
+            Experiment(
+                name="targeted::boundary::min_candidates=3",
+                hypothesis=f"Boundary weak (HitRate: {hit_rate:.1%}): Recommending earlier from available items when customer has no preference.",
+                parameters={"clarification.min_candidates_before_recommend": 3.0},
+            ),
+            Experiment(
+                name="targeted::boundary::personalization_weight=0.25",
+                hypothesis=f"Boundary weak (HitRate: {hit_rate:.1%}): Increasing profile boost when in-dialogue constraints are disclaimed.",
+                parameters={"ranking.personalization_weight": 0.25},
+            ),
+        ])
+    else:
+        return propose_random(n=3)
+
+    return experiments

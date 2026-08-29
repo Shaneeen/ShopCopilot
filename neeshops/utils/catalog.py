@@ -32,7 +32,7 @@ def load_catalog_lookup(path: Optional[Path] = None) -> dict[str, dict[str, Any]
         return {}
 
     lookup: dict[str, dict[str, Any]] = {}
-    with open(catalog_path) as f:
+    with open(catalog_path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
