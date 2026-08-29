@@ -6,6 +6,16 @@ entries at the top.
 
 ## 2026-08-29
 
+- `[3A]` Completed Phase 2.5 R2/R3 engineering: preserved R1, added explicit
+  deterministic feature/constraint diagnostics, hard mismatch vs unknown
+  handling, configurable aggregation and ablations, score normalization,
+  synthetic-only RRF support, a strategy-agnostic experiment harness, and
+  focused offline tests. CrossEncoder remains deliberately unimplemented.
+- `[3A]` Completed Phase 3 with the official `google-genai` dependency,
+  configurable Gemini provider and hard SDK timeout, Pydantic structured
+  output, deterministic eligibility and validation, offline fake provider,
+  nullable usage/latency observability, comprehensive offline tests, optional
+  real smoke test, environment placeholders, and security-safe fallbacks.
 - `[3A]` Added a six-phase ranking roadmap with current status, evidence,
   remaining provider/P5/P2/3B work, phase exit checks, and recommended execution
   order.
