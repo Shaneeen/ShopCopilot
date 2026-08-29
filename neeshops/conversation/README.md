@@ -60,12 +60,53 @@ Called only by `neeshops/agent.py`.
   overrides, state persistence, clarification boundaries, no-preference
   handling, repeated-question prevention, and question-budget behaviour.
 
-## How to extend
+## **How to extend**
 
-Add more extraction patterns to `extract_constraints()` — it already
-returns override-ready `{field: value}` updates, and `StateManager`
-already applies them correctly. Don't touch `apply_turn`'s override
-semantics without re-running `tests/test_intent_override.py`.
+### Adding or improving constraint extraction
+
+Add or refine extraction patterns in `extract_constraints()` in
+`neeshops/conversation/constraints.py`.
+
+The extractor currently supports:
+- `category`
+- `material`
+- `color`
+- `size`
+- `style`
+- `brand`
+- `budget`
+- `feature`
+- `use_case`
+- `NO_PREFERENCE` values
+
+New extraction logic should return `{field: value}` updates. Do not merge
+new values with previous values inside the extractor — `StateManager.apply_turn`
+handles the field-by-field override semantics.
+
+### Adding new constraint fields
+
+If a new constraint field is required:
+1. Add the field to `CONSTRAINT_FIELDS` in
+   `neeshops/models/session.py`.
+2. Add extraction logic in `constraints.py`.
+3. Add a corresponding clarification question in
+   `clarification.py`.
+4. Add extraction, state, override, and clarification tests as appropriate.
+
+### Modifying intent routing
+
+Routing logic lives in `neeshops/conversation/intent.py`. Keep Buying and
+Browsing routing logic separate from retrieval and ranking implementations.
+
+### Modifying clarification behaviour
+
+Clarification logic lives in `neeshops/conversation/clarification.py`.
+Changes should preserve the following behaviours:
+- answered attributes are not asked again;
+- previously asked attributes are not repeated;
+- `NO_PREFERENCE` attributes are never asked again;
+- the configured question budget is respected.
+
 
 ## **How to test**
 
