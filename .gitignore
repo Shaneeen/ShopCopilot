@@ -20,6 +20,7 @@ tests/test_organizer_pipeline.py
 *.log
 
 # --- NeeShops additions (development environment / generated output) ---
+evaluation/results/bench_*.json
 .venv/
 venv/
 data/*.fts.db
