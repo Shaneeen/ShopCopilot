@@ -71,45 +71,48 @@ ANCHOR_BENCH: list[Case] = [
         "easy",
         "B07KCFS4VC",
         [
-            "I'm looking for a Columbia men's Thistletown Park crew t-shirt",
-            "The Thistletown Park Crew in men's, Columbia brand",
-            "Yes, Columbia, crew neck, size M would be great",
+            "I need a t-shirt for everyday wear",
+            "Something from Columbia, crew neck style",
+            "The Thistletown Park Crew, men's, size M",
         ],
-        "Strong title+brand+category tokens; pool@200 should hit without clarification.",
+        "Mimics public easy (buying): starts vague category, then brand+product, then size — 2 clarifications.",
     ),
     Case(
         "medium-1",
         "medium",
         "B095PZG4SR",
         [
-            "I need athletic running socks for women, cushioned and moisture wicking",
-            "Low cut athletic socks, Lycra, for running — Hylaea style",
-            "Budget under $30, preferably Hylaea",
+            "I'm looking for socks for running",
+            "Women's athletic, cushioned and moisture wicking, low cut",
+            "Lycra material, Hylaea brand preferred, under $30",
         ],
-        "Category + feature overlap + budget brand filter.",
+        "Mimics public medium (browsing): vague → feature → brand+budget.",
     ),
     Case(
         "hard-1",
         "hard",
         "B08VDM4G8B",
         [
-            "Looking for a pink satin jacket for women, 1950s style with scarf, Halloween costume",
-            "It is a satin jacket, women's costume, pink — not a regular jacket",
-            "Under $25, for a Halloween fancy dress, but I don't have a preference for material",
+            "I need something for a Halloween party",
+            "Actually a costume, jackets section — but I'm still browsing",
+            "Pink, 1950s style with scarf, women's",
+            "Under $25, but I don't have a preference for material",
         ],
-        "Sparse catalog row, vague query, NO_PREFERENCE boundary.",
+        "Mimics public hard (intent-override + boundary): vague → override browsing→buying → NO_PREFERENCE.",
     ),
     Case(
         "insane-1",
         "insane",
         "B07K34RX5J",
         [
-            "I want artsy fabric earrings, Kandinsky statement hoops, lightweight drop and dangle",
-            "Actually make it fabric, not metal — and I don't have a preference for size",
-            "The fabric hoops by Spirit Hoops, Kandinsky design, 2 inches, for a gift — budget $40 but NO_PREFERENCE on brand",
-            "Yes fabric, artsy, stainless steel hooks is fine, hypoallergenic",
+            "gift for someone maybe",
+            "maybe earrings artsy lightweight",
+            "fabric not metal please",
+            "NO_PREFERENCE size brand",
+            "hypoallergenic stainless hooks",
+            "birthday gift artsy style",
         ],
-        "Intent-override, boundary, gift phrasing, hardest path.",
+        "Harder than public: 6 turns, 5-word max, vague → intent-override → NO_PREFERENCE, sparse catalog.",
     ),
 ]
 
@@ -201,40 +204,47 @@ def build_bench_cases(
         used.add(c.target)
         counts[c.difficulty] -= 1
 
-    # Templates per difficulty — turns are intentionally more vague with harder levels
     def turns_for(row: dict, diff: str, idx: int) -> list[str]:
         title = str(row.get("title", ""))[:80]
         kws = _keywords_from_row(row)
+        cats = [str(c) for c in (row.get("categories") or []) if str(c).strip()]
+        cat = cats[0].lower() if cats else "item"
+        feats = [str(c) for c in (row.get("features") or []) if str(c).strip()]
         price = row.get("price")
         brand = str(row.get("store", ""))[:20] if row.get("store") else ""
         if diff == "easy":
             return [
-                f"I'm looking for {title}",
-                f"The {kws[0] if kws else title[:30]} by {brand}"
+                f"I need a {cat} for everyday wear",
+                f"Something like {title[:50]}"
+                if len(title) > 20
+                else f"Maybe {kws[0] if kws else cat}",
+                f"{brand + ', ' if brand else ''}{kws[0] if kws else title[:40]}, size M"
                 if brand
-                else f"Yes, the {title[:50]}",
-                "Size M, crew neck if available",
+                else f"{title[:60]}, size M",
             ]
         if diff == "medium":
             return [
-                f"I need {' '.join(kws[:4])}",
-                f"Prefer {kws[1] if len(kws) > 1 else 'that style'} — {' '.join(kws[2:4])}",
-                f"Budget under ${int(price) + 5 if isinstance(price, (int, float)) else 40}, {brand} if possible"
-                if brand
-                else f"Under $40",
+                f"I'm looking for a {cat}, something comfortable",
+                f"{' '.join(kws[:3])} — {feats[0][:40] if feats else 'good quality'}",
+                f"Prefer {brand + ' ' if brand else ''}{kws[1] if len(kws) > 1 else cat}, under ${int(price) + 5 if isinstance(price, (int, float)) else 40}",
             ]
         if diff == "hard":
             return [
-                f"Looking for {' '.join(kws[:3])} — but I'm still exploring",
-                f"It should be {kws[2] if len(kws) > 2 else 'that'} style, not the other variants",
-                "I don't have a preference for material, but under $30 would be nice",
+                f"I need something for a party, not sure what yet",
+                f"Actually {cat} section, {kws[0] if kws else cat} style — still browsing",
+                f"{' '.join(kws[:3])} in {cat}, {kws[2] if len(kws) > 2 else cat}",
+                "Under $30, but I don't have a preference for material",
             ]
-        # insane: vague + intent-override + NO_PREFERENCE + gift/boundary
+        # insane: 6 turns, 5 words max each — less context, way harder than public set
+        w2 = (kws[1] if len(kws) > 1 else "nice").split()[0][:12]
+        cat_word = cat.split(",")[0].split()[0][:12]
         return [
-            f"I want something like {' '.join(kws[:3])} — artsy style, lightweight",
-            f"Actually make it {kws[1] if len(kws) > 1 else 'fabric'} not the other material — and I don't have a preference for size",
-            f"The {title[:50]} for a gift — budget ${int(price) + 10 if isinstance(price, (int, float)) else 40} but NO_PREFERENCE on brand",
-            "Hypoallergenic is fine, gift packaging would be nice",
+            "gift for someone maybe",
+            f"maybe {cat_word} {w2}",
+            f"{w2} not other material",
+            "NO_PREFERENCE size brand",
+            "hypoallergenic stainless hooks",
+            "birthday gift artsy style",
         ]
 
     for diff in ["easy", "medium", "hard", "insane"]:

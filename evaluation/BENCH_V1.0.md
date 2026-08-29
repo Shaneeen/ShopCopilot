@@ -34,7 +34,7 @@ by feature-sparsity / rating — easy = feature-rich+high-rated, insane = sparse
 | `easy-1..10` | **easy** (10) | `B07KCFS4VC` Columbia Men's Thistletown Park Crew + 9 auto | 1. "I'm looking for {title}" — 2. brand repeat — 3. size M | Strong title+brand BM25; pool@200 hits without clarification. Baseline recall. |
 | `medium-1..10` | **medium** (10) | `B095PZG4SR` Hylaea Socks + 9 auto | 1. "{categories+features 4 keywords}" — 2. feature detail — 3. budget+brand | Category+feature overlap + budget filter; needs turn-accumulated query. |
 | `hard-1..30` | **hard** (30) | `B08VDM4G8B` Pink Satin Jacket + 29 auto | 1. vague "{kws[:3]} — still exploring" — 2. sparse clarify — 3. "NO_PREFERENCE material, under $30" | Sparse rows, vague early query, `NO_PREFERENCE` boundary; tests fail-open. |
-| `insane-1..50` | **insane** (50) | `B07K34RX5J` Kandinsky Earrings + 49 auto | 1. vague artsy — 2. intent-override + `NO_PREFERENCE` size — 3. gift+budget NO_PREFERENCE — 4. hypoallergenic | Intent-override, boundary, gift, hardest retrieval+ranking. |
+| `insane-1..50` | **insane** (50) | `B07K34RX5J` Kandinsky Earrings + 49 auto | 1. `gift for someone maybe` — 2. `maybe {cat_word} {w2}` — 3. `{w2} not other material` — 4. `NO_PREFERENCE size brand` — 5. `hypoallergenic stainless hooks` — 6. `birthday gift artsy style` (**all 5-word max**) | 5-word max, less context → way harder than public set; hardest retrieval+ranking. |
 
 Each case runs its turns sequentially (`agent.reset` → `agent.respond` per turn, `top_k=10`). **Hit** = target in final Top-10 (any turn); `MRR = 1/rank`. Per-difficulty `hit/mrr` is reported in the summary.
 
@@ -68,45 +68,43 @@ Pricing (estimates, shown even when your key is on a free tier — to justify pr
 
 Default `strategy.ranking.llm = { provider:"openrouter", model:"openai/gpt-4o-mini", secondary_provider:"gemini", secondary_model:"gemini-3.7-flash", rerank_limit:30, timeout_seconds:5 }`; override with `NEESHOPS_LLM_PROVIDER` / `NEESHOPS_LLM_MODEL` / `NEESHOPS_LLM_SECONDARY_*` or `--model` / `--secondary`.
 
-## 5. Current snapshot — 100-case batched (2026-08-29, `workers=8`, seed 7)
+## 5. Current snapshot — 100-case batched, **5-word insane** (2026-08-29, `workers=8`, seed 7) — insane way harder than public set
 
-Offline (no network): `python scripts/bench_v1.py --cases 100 --workers 8`
+Offline (no network): `python scripts/bench_v1.py --cases 100 --workers 8` — insane 5-word max, less context
 
 ```
 Bench v1.0: 100 cases (seed 7) — easy:10, medium:10, hard:30, insane:50 | workers=8 batch=16
 === arm: no-llm (heuristic) ===
-  -> summary hit 0.94 mrr 0.81 avg_lat 780.1ms p50 543.6ms llm 0.0ms calls 0 tokens 0+0 cost $0.000000 wall 132.4s
-     easy 1.0/0.95  medium 1.0/0.925  hard 0.833/0.713  insane 0.98/0.818
+  -> summary hit 0.56 mrr 0.411 avg_lat 686.0ms p50 495.2ms llm 0.0ms calls 0 tokens 0+0 cost $0.000000 wall 134.2s
+     easy 1.0/0.95  medium 0.9/0.85  hard 0.833/0.542  insane 0.24/0.137
 === arm: fake-llm (simulated openrouter text) ===
-  -> summary hit 0.95 mrr 0.848 avg_lat 709.7ms p50 508.3ms llm 0.0ms calls 162 tokens 41580+1782 cost $0.007321 wall 132.3s
-     easy 1.0/0.95  medium 1.0/0.925  hard 0.867/0.763  insane 0.98/0.863
+  -> summary hit 0.57 mrr 0.421 avg_lat 632.8ms p50 452.6ms llm 0.0ms calls 134 tokens 10920+468 cost $0.001924 wall 135.8s
+     easy 1.0/0.95  medium 1.0/0.95  hard 0.833/0.542  insane 0.24/0.137
 arm                                    hit    mrr    avg_ms  p50     llm_ms  calls pt      ct     cost $     wall s
 --------------------------------------------------------------------------------------------------------------------
-no-llm (heuristic)                     0.94   0.81   780.1   543.6   0.0     0     0       0      0.0        132.4
-fake-llm (simulated openrouter text)   0.95   0.848  709.7   508.3   0.0     162   41580   1782   0.007321   132.3
+no-llm (heuristic)                     0.56   0.411  686.0   495.2   0.0     0     0       0      0.0        134.2
+fake-llm (simulated openrouter text)   0.57   0.421  632.8   452.6   0.0     134   10920   468    0.001924   135.8
 ```
 
-Batched 8-way wall 132s vs ~400s serial (~3×). Fake helps hard +0.034 hit / +0.05 mrr.
-
-**Live 100-case batched — OpenRouter real** (`nvidia/nemotron-3-super-120b-a12b:free`, your free key, `workers=8`, `batch 16`): `python scripts/bench_v1.py --cases 100 --live --workers 8 --model nvidia/nemotron-3-super-120b-a12b:free`
+**Live 100-case batched — OpenRouter real** (`nvidia/nemotron-3-super-120b-a12b:free`, your free key, `workers=8`): `python scripts/bench_v1.py --cases 100 --live --workers 8 --model nvidia/nemotron-3-super-120b-a12b:free`
 
 ```
-Bench v1.0: 100 cases (seed 7) — easy:10, medium:10, hard:30, insane:50 | workers=8 batch=16
 === arm: no-llm (heuristic) ===
-  -> summary hit 0.94 mrr 0.81 avg_lat 780.1ms p50 543.6ms llm 0.0ms calls 0 tokens 0+0 cost $0.000000 wall 132.4s
+  -> summary hit 0.56 mrr 0.411 avg_lat 722.4ms p50 525.2ms llm 0.0ms calls 0 tokens 0+0 cost $0.000000 wall 138.0s
+     easy 1.0/0.95  medium 0.9/0.85  hard 0.833/0.542  insane 0.24/0.137
 === arm: fake-llm (simulated) ===
-  -> summary hit 0.95 mrr 0.848 avg_lat 709.7ms p50 508.3ms calls 162 tokens 41580+1782 cost $0.007321 wall 132.3s
+  -> summary hit 0.57 mrr 0.421 avg_lat 726.8ms p50 510.6ms calls 134 tokens 10920+468 cost $0.001924 wall 142.3s
 === arm: openrouter:nvidia/nemotron-3-super-120b-a12b:free ===
-  -> summary hit 0.94 mrr 0.81 avg_lat 2899.2ms p50 398.1ms avg_llm 7314.3ms calls 162 tokens 46328+5284 cost $0.010119 wall 200.3s
-     easy 1.0/0.95  medium 1.0/0.925  hard 0.833/0.713  insane 0.98/0.818
+  -> summary hit 0.56 mrr 0.406 avg_lat 1855.3ms p50 491.5ms avg_llm 8250.7ms calls 134 tokens 6692+899 cost $0.001544 wall 195.0s
+     easy 1.0/0.95  medium 0.9/0.85  hard 0.833/0.542  insane 0.24/0.137
 arm                                    hit    mrr    avg_ms  p50     llm_ms  calls pt      ct     cost $     wall s
 --------------------------------------------------------------------------------------------------------------------
-no-llm (heuristic)                     0.94   0.81   780.1   543.6   0.0     0     0       0      0.0        132.4
-fake-llm (simulated)                   0.95   0.848  709.7   508.3   0.0     162   41580   1782   0.007321   132.3
-openrouter:nemotron:free               0.94   0.81   2899.2  398.1   7314.3  162   46328   5284   0.010119   200.3
+no-llm (heuristic)                     0.56   0.411  722.4   525.2   0.0     0     0       0      0.0        138.0
+fake-llm (simulated)                   0.57   0.421  726.8   510.6   0.0     134   10920   468    0.001924   142.3
+openrouter:nemotron:free               0.56   0.406  1855.3  491.5   8250.7  134   6692    899    0.001544   195.0
 ```
 
-**Takeaway:** batched 8× cuts wall 200s vs ~560s serial (~2.8×) — API calls overlap instead of one-by-one. Real model shows **no accuracy gain vs heuristic on this 100** (0.94 flat; fake +0.01 on hard), but proves cost/latency accounting: **$0.010 for 100 cases** → extrapolated 200-session public ≈ $0.02, 10k sessions ≈ $1.00, `avg_llm 7.3s` (p50 398ms, long-tail on hard/insane). Heuristic is Pareto-optimal here; LLM helps only on hard slice — production justification is per-difficulty, not blanket.
+**Takeaway:** 5-word insane is **way harder than public set (0.49)** at **0.24 hit** — 76% of insane targets never enter top-200 for reranker to help, so LLM adds **0 hit** (fake +0.01 overall) despite 8.2s LLM. Batched 8× still cuts wall 195s vs ~420s serial (~2.1×). Production lesson: insane's bottleneck is retrieval (less context), not 30→10 reranking — heuristic is Pareto-optimal on this slate.
 
 ## 6. Live — how to compare models yourself
 
