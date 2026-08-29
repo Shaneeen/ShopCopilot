@@ -4,13 +4,15 @@ from neeshops.conversation.constraints import extract_constraints
 def test_extract_constraints():
     cases = [
         ("I want black shoes", {"color": "black"}),
-        ("I want red shoes", {"color": "red"}),
+        ("I want red hat", {"color": "red"}),
         ("I want white shoes", {"color": "white"}),
         ("I want running shoes", {"category": "shoes"}),
         ("I want leather shoes", {"material": "leather"}),
         ("I want size 9 shoes", {"size": "9"}),
-        ("I want casual shoes", {"style": "casual"}),
+        ("I want casual shirt", {"style": "casual"}),
         ("I want Nike shoes", {"brand": "nike"}),
+        ("I want a waterproof jacket", {"feature": "waterproof"}),
+        ("I need a dress for a wedding", {"use_case": "wedding"}),
     ]
 
     for message, expected in cases:

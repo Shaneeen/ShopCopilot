@@ -64,6 +64,29 @@ _BRAND_WORDS = {
     "converse",
     "vans",
 }
+_FEATURE_WORDS = {
+    "waterproof",
+    "breathable",
+    "lightweight",
+    "comfortable",
+    "durable",
+    "reversible",
+    "insulated",
+    "adjustable",
+}
+_USE_CASE_WORDS = {
+    "running",
+    "work",
+    "office",
+    "wedding",
+    "travel",
+    "gym",
+    "party",
+    "hiking",
+    "school",
+    "everyday",
+    "casual",
+}
 _PRICE_RE = re.compile(r"\$?\s?(\d+(?:\.\d+)?)\s*(?:dollars)?")
 _UNDER_RE = re.compile(r"under|below|less than|cheaper than|max(?:imum)?")
 _SIZE_RE = re.compile(r"\bsize\s*([0-9]+(?:\.[0-9]+)?|[xsml]{1,3})\b", re.IGNORECASE)
@@ -113,7 +136,14 @@ def extract_constraints(message: str, known_fields: list[str] | None = None) -> 
     brand_hit = tokens & _BRAND_WORDS
     if brand_hit and "brand" not in out:
         out["brand"] = sorted(brand_hit)[0]
-        # Size: match explicit "size X" phrases
+    feature_hit = tokens & _FEATURE_WORDS
+    if feature_hit and "feature" not in out:
+        out["feature"] = sorted(feature_hit)[0]
+    # Use case: simple vocabulary match
+    use_case_hit = tokens & _USE_CASE_WORDS
+    if use_case_hit and "use_case" not in out:
+        out["use_case"] = sorted(use_case_hit)[0]
+    # Size: match explicit "size X" phrases
     size_match = _SIZE_RE.search(text)
     if size_match and "size" not in out:
         out["size"] = size_match.group(1).upper()
