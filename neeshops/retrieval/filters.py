@@ -22,6 +22,7 @@ from typing import Any, Callable
 
 from neeshops.models.session import ConversationState
 from neeshops.retrieval.base import Candidate
+from neeshops.utils.tokens import tokenize
 
 FilterFn = Callable[[dict[str, Any], ConversationState], bool]
 
@@ -45,8 +46,13 @@ def budget_filter(product_row: dict[str, Any], state: ConversationState) -> bool
     budget = state.constraint_value("budget")
     if budget is None or state.has_no_preference("budget"):
         return True
-    price = product_row.get("price")
-    return price is None or price <= float(budget)
+    try:
+        price = product_row.get("price")
+        return price is None or float(price) <= float(budget)
+    except (TypeError, ValueError):
+        # Unparseable price (the real catalog has a few junk string values) —
+        # fail open, same as missing data.
+        return True
 
 
 def category_filter(product_row: dict[str, Any], state: ConversationState) -> bool:
@@ -56,14 +62,24 @@ def category_filter(product_row: dict[str, Any], state: ConversationState) -> bo
     categories = product_row.get("categories")
     if not categories:
         return True  # fail open on sparse metadata
-    return str(value).lower() in " ".join(str(c) for c in categories).lower()
+    categories_text = " ".join(str(c) for c in categories).lower()
+    # Users name categories in their own words ("women shirts"); the catalog
+    # stores breadcrumb paths ("Clothing, Shirts, T-Shirts"). Match on any
+    # meaningful token rather than the raw phrase, which would self-filter
+    # the very products the user is describing.
+    tokens = [t for t in tokenize(str(value)) if len(t) >= 3]
+    if not tokens:
+        return True
+    return any(t in categories_text for t in tokens)
 
 
 def text_contains_filter(field: str) -> FilterFn:
     """Soft filter for constraints (material, color, brand, style, ...)
     that the real catalog doesn't expose as a discrete field — passes if
-    the constraint value's word appears anywhere across the product's text
-    fields, or if there's nothing to check against."""
+    the constraint value appears across the product's text fields, or if
+    there's nothing to check against. Multi-word values match when every
+    token appears (order-independent), so slot-filled phrases like
+    "machine wash; imported" don't fail on word order."""
 
     def _filter(product_row: dict[str, Any], state: ConversationState) -> bool:
         value = state.constraint_value(field)
@@ -72,7 +88,11 @@ def text_contains_filter(field: str) -> FilterFn:
         text = _product_text(product_row)
         if not text:
             return True
-        return str(value).lower() in text
+        value_text = str(value).lower()
+        tokens = [t for t in tokenize(value_text) if len(t) >= 2]
+        if len(tokens) > 1:
+            return all(t in text for t in tokens)
+        return value_text in text
 
     return _filter
 
@@ -83,6 +103,10 @@ DEFAULT_FILTERS: list[FilterFn] = [
     text_contains_filter("color"),
     text_contains_filter("material"),
     text_contains_filter("brand"),
+    text_contains_filter("size"),
+    text_contains_filter("style"),
+    text_contains_filter("feature"),
+    text_contains_filter("use_case"),
 ]
 
 

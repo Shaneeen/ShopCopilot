@@ -1,6 +1,7 @@
-hi whatever
-
 # TechJam Conversational E-Commerce Search Challenge
+
+
+
 
 Build an AI shopping agent that asks useful follow-up questions and recommends the customer's hidden target product within at most 10 turns.
 
@@ -81,8 +82,6 @@ TechnicalScore = 0.50 × HitRate@10 + 0.30 × MRR + 0.20 × Efficiency
 Efficiency = clip((11 - MTTC) / 10, 0, 1)
 ```
 
-`TechnicalScore` is an objective input to the `Technical Execution` assessment. It is not a separate judging criterion and does not represent the entire `Technical Execution` score.
-
 Only exact `parent_asin` equality produces a hit. Core metrics are also reported by scenario.
 
 ## Model Choice and Cost
@@ -104,6 +103,7 @@ evaluator/local_evaluator.py      public-set simulator and scorer
 ## Judging and Submission Policy
 
 - Participant submission requirements: `docs/submission_rules.md`
+- Participant release checklist: `docs/participant_release_checklist.md`
 - Organizer-only final judging controls: `organizer/JUDGING_RUNBOOK.md`
 - Organizer private release checklist: `organizer/private_release_checklist.md`
 - Judging day operations SOP: `organizer/JUDGING_DAY_SOP.md`
@@ -134,19 +134,11 @@ recommendation reasons, a soft personalisation signal, and a controlled
 research/experimentation framework for tuning retrieval weights against
 the evaluator's metrics. Full architecture: `docs/neeshops/ARCHITECTURE.md`.
 
-**New teammates start here**:
-`docs/neeshops/BEGINNER_START_HERE.md` →
-`docs/neeshops/TWO_DAY_FULL_SCOPE_PLAN.md` →
-`docs/neeshops/WORKSTREAM_QUICKSTARTS.md` (read your assigned section).
-These guides keep the full project scope but turn it into ordered, testable
-steps. Use the overview, requirements, folder guide, full workstream plan,
-and integration contracts as detailed references.
-
-Official online sources:
-
-- Participant repository: https://github.com/TechJam2026/techjam-conversational-search
-- Participant Kit Release: https://github.com/TechJam2026/techjam-conversational-search/releases/tag/participant-kit
-- Amazon Reviews 2023: https://amazon-reviews-2023.github.io/
+**Start here**: `docs/neeshops/PROJECT_OVERVIEW.md` (living status +
+architecture diagrams) → `docs/neeshops/TRACK4_REQUIREMENTS.md`
+(competition source of truth) → `docs/neeshops/FOLDER_GUIDE.md` (what
+every folder is for) → `docs/neeshops/TEAM_WORKSTREAMS.md` (the 5-person
+job split) → `docs/neeshops/INTEGRATION_CONTRACTS.md` (module boundaries).
 
 ## Repository layout (additions)
 
@@ -161,16 +153,14 @@ docs/neeshops/        our architecture, team workstreams, experiment log, compet
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-python -m pip install -r requirements.txt
-python scripts/download_catalog.py  # official release + checksum + 50k-row validation
-python scripts/check_readiness.py    # explains any missing setup item
+pip install -r requirements.txt   # only needed for neeshops/ — the official baseline itself is stdlib-only
 cp .env.example .env              # optional, only for LLM-backed features (disabled by default)
 ```
 
 ## Running things
 
 ```bash
-# Official evaluation (after check_readiness reports ready)
+# Official baseline / evaluation (unchanged commands, works as documented above)
 python3 -m evaluator.local_evaluator
 
 # Our tests (official evaluator tests + our supplementary tests)
@@ -195,8 +185,7 @@ Full breakdown: `docs/neeshops/TEAM_WORKSTREAMS.md`.
 
 Architecture-first migration onto the official base. Semantic retrieval
 and LLM reranking remain disabled interface stubs; the research agent's
-optimizer is a simple grid/random search. The initial deterministic NeeShops
-candidate was scored against the official 50k catalog and 200 public sessions
-on 2026-08-28; see `docs/neeshops/PROJECT_OVERVIEW.md`. See
+optimizer is a simple grid/random search. Nothing in `neeshops/` has been
+scored against the real 50k catalog yet — see
 `docs/neeshops/COMPETITION_NOTES.md` for the reproduction checklist and
 `docs/neeshops/EXPERIMENTS.md` for the (currently empty) experiment log.
