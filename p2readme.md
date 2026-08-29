@@ -1,8 +1,8 @@
 # P2 README — Retrieval, Clarification Quality & Oracle Evaluation
 
 **Workstream:** Person 2 (retrieval) — with measured cross-workstream fixes
-**Last updated:** 2026-08-28
-**Status:** Stage-2 complete — adaptive clarification, slot-filling, field-weighted BM25, conversation-accumulated queries, oracle eval harness. All 59 tests green.
+**Last updated:** 2026-08-29 — staging-main integrated (P2 + P3)
+**Status:** P2 Stage-2 + retrieval strategies/RRF/provenance (148 tests green on staging-main, 79 after P2-only merge) + P3 ranking merged; public-set judging — see §7 + §8.
 
 ---
 
@@ -207,12 +207,45 @@ python -m evaluator.local_evaluator        # official public-set numbers
 
 ---
 
-## 7. Quick commands
+## 7. Integrated benchmark — staging-main (P2 + P3, 2026-08-29)
+
+After merging `yu_le_p2` + `shaneen-Person3_combined` into `staging-main` (with
+`main` → `staging-main` pre-sync, union-resolved `.gitignore`/`requirements.txt`):
 
 ```bash
-python -m pytest -q                                        # 59 tests
+PYTHONPATH=. python -m evaluator.local_evaluator   # public set, 200 sessions
+python scripts/run_oracle_eval.py --strategy both --cases 30 --seed 7
+pytest -q                                          # 148 passed, 1 deselected
+python scripts/check_readiness.py                  # all PASS
+```
+
+| Suite | Metric | Score |
+|---|---|---|
+| **Public set (official evaluator, 200 sessions, deterministic)** | Hit@10 | **0.49** (+0.365 vs organiser weak 0.125, +0.205 vs NeeShops 2026-08-28 initial 0.285) |
+| | MRR | **0.284** (vs 0.068 baseline / 0.189 initial) |
+| | MTTC | **7.25** (vs 9.81 / 8.55) |
+| | TechnicalScore (0.5·HR+0.3·MRR+0.2·Eff) | **0.405** (vs 0.107 / 0.248) |
+| By scenario | Buying 0.40 (80), Browsing **0.513** (80), Intent-override **0.633** (30), Boundary 0.60 (10) |
+| **Oracle (random catalog targets, 30 cases seed 7, same pool as §1)** | Hit@10 baseline/adaptive | 0.567 → **0.600** (reproduces P2 §1 on staging-main) |
+| | MRR | 0.208 → **0.239** |
+| | Pool@200% | 13.2 → 14.3 |
+
+P3 attribution on public set (staging-main vs P2-only initial): the P2 pipeline
+lifted the public score from organiser 0.285→?; P3's constraint-aware reranking
+(R2/R3) + personalization boost (weight 0.15, soft-signal) lifts it further to
+**0.49/0.284** — MRR +0.095 and Hit +0.205 over the 2026-08-28 deterministic
+baseline recorded in `docs/neeshops/PROJECT_OVERVIEW.md`. Browsing and
+intent-override now lead; buying remains the headroom.
+
+Latency: oracle avg 162–175 ms/turn; live demo hybrid 90–190 ms per turn;
+public-set structured logs show 5–6 ms retrieval matvec + ranking — all ≪ budget.
+
+## 8. Quick commands
+
+```bash
+python -m pytest -q                                        # staging-main: 148 passed
 python scripts/run_test_cases.py                           # 5 scenarios
 python scripts/run_oracle_eval.py --strategy both --cases 30 --seed 7
-python scripts/interactive_demo.py                         # http://127.0.0.1:8787
-python -m evaluator.local_evaluator                        # official scored run
+python scripts/interactive_demo.py                         # http://127.0.0.1:8787 — provenance tiles, cut-line
+PYTHONPATH=. python -m evaluator.local_evaluator           # official scored run → results.json
 ```

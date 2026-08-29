@@ -124,15 +124,16 @@ touching the official contract.
 
 ## What we built
 
-`starter/agent.py` is now a thin adapter (unchanged interface — still
-`Agent(catalog_path)`, `reset()`, `respond()`) that delegates to our own
-`neeshops/` package: conversation state (intent-override + no-preference
-semantics), buying/browsing routing, a clarification engine, hybrid
-BM25+semantic retrieval (semantic currently a disabled interface stub),
-metadata filtering, a heuristic reranker with human-readable
-recommendation reasons, a soft personalisation signal, and a controlled
-research/experimentation framework for tuning retrieval weights against
-the evaluator's metrics. Full architecture: `docs/neeshops/ARCHITECTURE.md`.
+`starter/agent.py` is a thin adapter (unchanged `Agent(catalog_path)`,
+`reset()`, `respond()` contract) delegating to `neeshops/`: conversation
+state + buying/browsing routing + adaptive clarification, **hybrid
+BM25 (field-weighted, FTS5) + semantic (hashed TF-IDF + numpy cosine)**
+with strategy knob (`bm25_only`/`semantic_only`/`hybrid`/`fused` RRF k=60)
+and provenance-stamped merge, metadata filtering, **constraint-aware reranking
+(R2/R3) + personalization boost (soft, weight 0.15) + optional LLM reranker
+(Gemini/fake)**, and a controlled research/experimentation framework.
+Detail: `docs/neeshops/ARCHITECTURE.md`; P2 measured gains: `p2readme.md`;
+P3 ranking: `neeshops/ranking/README.md` + `docs/person 3/`.
 
 **Start here**: `docs/neeshops/PROJECT_OVERVIEW.md` (living status +
 architecture diagrams) → `docs/neeshops/TRACK4_REQUIREMENTS.md`
@@ -160,18 +161,13 @@ cp .env.example .env              # optional, only for LLM-backed features (disa
 ## Running things
 
 ```bash
-# Official baseline / evaluation (unchanged commands, works as documented above)
-python3 -m evaluator.local_evaluator
-
-# Our tests (official evaluator tests + our supplementary tests)
-pytest
-
-# Fast local smoke check of the adapter, without the full evaluator
-python scripts/run_baseline.py
-
-# Our dev/holdout split + experiment tooling (see docs/neeshops/EXPERIMENTS.md)
+PYTHONPATH=. python -m evaluator.local_evaluator  # official scoring → results.json
+pytest -q                                          # staging-main: 148 passed, 1 deselected
+python scripts/run_oracle_eval.py --strategy both --cases 30 --seed 7  # P2 oracle A/B
+python scripts/run_baseline.py                     # fast adapter smoke check
 python scripts/create_dev_split.py
 python scripts/run_experiment.py --random 3
+python scripts/interactive_demo.py                 # http://127.0.0.1:8787 — funnel, provenance tiles
 ```
 
 ## Team workstreams
@@ -181,11 +177,22 @@ conflicts: conversation & agent intelligence, retrieval & search, ranking
 core, personalisation & evaluation, research agent & evaluation, and integration/demo/DX.
 Full breakdown: `docs/neeshops/TEAM_WORKSTREAMS.md`.
 
-## Status
+## Status (staging-main 2026-08-29 — P2+P3 integrated)
 
-Architecture-first migration onto the official base. Semantic retrieval
-and LLM reranking remain disabled interface stubs; the research agent's
-optimizer is a simple grid/random search. Nothing in `neeshops/` has been
-scored against the real 50k catalog yet — see
-`docs/neeshops/COMPETITION_NOTES.md` for the reproduction checklist and
-`docs/neeshops/EXPERIMENTS.md` for the (currently empty) experiment log.
+*Branches:* `main` (organiser) → `staging-main` pre-synced → `yu_le_p2`
+(retrieval strategies, RRF, provenance, deterministic merge, demo diagnostics)
++ `shaneen-Person3_combined` (constraint-aware ranking R2/R3, personalization,
+LLM reranker Gemini/fake). Merge unions: `.gitignore` (P2 semantic ignores +
+P3 `.obsidian`) / `requirements.txt` (`numpy` + `google-genai`). Full suite
+**148 passed, 1 deselected**; oracle `30/7` reproduces §1; readiness all PASS.
+
+*Scores — official evaluator (200 public sessions, 50k catalog, `results.json`):*
+`Hit@10 0.49` / `MRR 0.284` / `MTTC 7.25` / `Technical 0.405` — vs organiser weak
+`0.125/0.068/9.81/0.107` and vs NeeShops 2026-08-28 initial `0.285/0.189/8.55/0.248`
+(see `docs/neeshops/PROJECT_OVERVIEW.md`). By scenario: buying 0.40, browsing
+**0.513**, intent-override **0.633**, boundary 0.60. P2 oracle (random catalog
+targets, `scripts/run_oracle_eval.py --cases 30 --seed 7`): adaptive **0.600
+Hit / 0.239 MRR / 5.77 MTTC** vs baseline 0.567/0.208/6.00 — pipeline fixes are
+the big lever; adaptive +0.031 technical. Latency 60–175 ms/turn ≪ budget.
+See `p2readme.md §7` for the full breakdown and `evaluation/results/` for P3B
+weight sweeps.
