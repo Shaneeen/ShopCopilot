@@ -1,4 +1,5 @@
 from neeshops.conversation.constraints import extract_constraints
+from neeshops.models.session import NO_PREFERENCE
 
 
 def test_extract_constraints():
@@ -16,6 +17,9 @@ def test_extract_constraints():
         ("I have a budget of $100", {"budget": 100.0}),
         ("my budget is up to $120", {"budget": 120.0}),
         ("I can spend a maximum of $80", {"budget": 80.0}),
+        ("I don't care about the color", {"color": NO_PREFERENCE}),
+        ("any material is fine", {"material": NO_PREFERENCE}),
+        ("I don't mind which brand", {"brand": NO_PREFERENCE}),
     ]
 
     for message, expected in cases:

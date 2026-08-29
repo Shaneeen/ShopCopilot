@@ -15,8 +15,14 @@ from neeshops.utils.tokens import tokenize
 
 _NO_PREFERENCE_PATTERNS = [
     "no preference", "don't care", "doesn't matter", "any is fine",
-    "anything is fine", "not picky", "no particular", "either is fine",
+    "anything is fine", "not picky", "no particular", "either is fine","don't mind"
 ]
+_NO_PREFERENCE_FIELD_RE = re.compile(
+    r"\b(?:any|whatever)\s+"
+    r"(category|material|color|size|style|brand|budget|feature|use[_ ]?case)"
+    r"\s+(?:is|are)\s+fine\b",
+    re.IGNORECASE,
+)
 
 _COLOR_WORDS = {
     "black", "white", "red", "blue", "green", "yellow", "pink", "purple",
@@ -112,6 +118,11 @@ def extract_constraints(message: str, known_fields: list[str] | None = None) -> 
             for field in fields:
                 if field in text:
                     out[field] = NO_PREFERENCE
+    # No-preference: "any material is fine", "whatever brand is fine"
+    match = _NO_PREFERENCE_FIELD_RE.search(text)
+    if match:
+        field = match.group(1).replace(" ", "_")
+        out[field] = NO_PREFERENCE
 
     # Budget: "under $120", "below 80 dollars"
     if _BUDGET_RE.search(text):
