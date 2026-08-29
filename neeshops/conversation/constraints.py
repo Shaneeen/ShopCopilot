@@ -24,6 +24,17 @@ _COLOR_WORDS = {
     "gold", "silver", "wine", "burgundy",
 }
 
+_CATEGORY_WORDS = {
+    "shoes",
+    "shirts",
+    "pants",
+    "dresses",
+    "jackets",
+    "bags",
+    "watches",
+    "headphones",
+}
+
 _PRICE_RE = re.compile(r"\$?\s?(\d+(?:\.\d+)?)\s*(?:dollars)?")
 _UNDER_RE = re.compile(r"under|below|less than|cheaper than|max(?:imum)?")
 
@@ -56,7 +67,10 @@ def extract_constraints(message: str, known_fields: list[str] | None = None) -> 
     color_hit = tokens & _COLOR_WORDS
     if color_hit and "color" not in out:
         out["color"] = sorted(color_hit)[0]
-
+    # Category: simple vocabulary match
+    category_hit = tokens & _CATEGORY_WORDS
+    if category_hit and "category" not in out:
+        out["category"] = sorted(category_hit)[0]
     return out
 
 
