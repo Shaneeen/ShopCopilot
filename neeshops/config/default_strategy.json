@@ -19,7 +19,7 @@
   },
 
   "clarification": {
-    "max_questions_per_session": 2,
+    "max_questions_per_session": 3,
     "min_candidates_before_recommend": 5,
     "ask_if_candidates_above": 60
   },

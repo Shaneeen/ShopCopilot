@@ -23,19 +23,17 @@ experiment. Generate the table below from `ResultsStore.all()` /
 
 ## Accepted experiments
 
-_None yet — Stage 1 is architecture only. First real experiments land once
-`evaluator/` is vendored and `scripts/setup_catalog.py` has been run
-against the real catalog._
-
 | ID | Hypothesis | Config change | Baseline → Candidate | Δ | Accepted |
 |---|---|---|---|---|---|
-| `candidate_initial` | Foundational NeeShops architecture (State, Clarification, BM25, Filters, Heuristic Ranking) outperforms stateless weak starter. | Full NeeShops pipeline over `default_strategy.json` | 0.10671 → 0.248074 | +0.141364 (+132.5%) | YES |
+| `candidate_initial` | Foundational NeeShops architecture (State, Clarification, BM25, Filters, Heuristic Ranking) outperforms stateless weak starter. | Full NeeShops pipeline over `default_strategy.json` | 0.106710 → 0.248074 | +0.141364 (+132.5%) | YES |
+| `targeted::intent_override::personalization_weight=0.05` | Reducing personalization weight prevents past tags from fighting new intent. | `ranking.personalization_weight: 0.05` | 0.244890 → 0.245197 | +0.000307 (+0.1%) | YES |
+| `targeted::intent_override::max_questions=3` | Allowing 3 questions gives the agent headroom to clarify multi-attribute requests and shifted intent. | `clarification.max_questions_per_session: 3` | 0.244890 → 0.286280 | +0.041390 (+16.9%) | YES |
 
 ## Rejected experiments (instructive ones only)
 
 | ID | Hypothesis | Why it failed |
 |---|---|---|
-| — | — | — |
+| `targeted::intent_override::ask_above=40` | Triggering clarification earlier when candidates > 40. | Tied baseline score (0.244890 → 0.244890). Rejected per strict delta > 0 guardrail. |
 
 ## Guardrails
 
