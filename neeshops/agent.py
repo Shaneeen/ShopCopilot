@@ -99,25 +99,42 @@ class NeeShopsAgent:
         query = build_retrieval_query(user_message, state=state)
 
         # 4. Retrieve using updated state (route + candidate_limit)
-        candidates = self.retriever.search(
-            query, state, top_k=self.strategy["retrieval"]["candidate_limit"]
-        )
+        try:
+            if hasattr(self.retriever, "is_available") and not self.retriever.is_available():
+                candidates = []
+            else:
+                candidates = self.retriever.search(
+                    query, state, top_k=self.strategy["retrieval"]["candidate_limit"]
+                )
+        except Exception:
+            candidates = []
 
         # 4. Filter using updated state constraints
-        if self.catalog_lookup:
-            from neeshops.retrieval.filters import apply_filters
+        if self.catalog_lookup and candidates:
+            try:
+                from neeshops.retrieval.filters import apply_filters
 
-            candidates = apply_filters(candidates, self.catalog_lookup, state)
+                candidates = apply_filters(candidates, self.catalog_lookup, state)
+            except Exception:
+                pass
 
         # 5. Clarification engine decides based on updated state and candidates
-        decision = self.clarification_engine.decide(state, candidates, turn)
-        if decision["ask_attribute"]:
+        try:
+            decision = self.clarification_engine.decide(state, candidates, turn)
+        except Exception:
+            decision = {
+                "ask_attribute": None,
+                "question": None,
+                "should_recommend": bool(candidates),
+            }
+
+        if decision.get("ask_attribute"):
             self.state_manager.record_asked_attribute(session_id, decision["ask_attribute"])
 
         # 6. Rank candidates (with fallback to HeuristicRanker if configured ranker is unavailable or fails)
         recommendations = []
         usage = {"prompt_tokens": 0, "completion_tokens": 0}
-        if decision["should_recommend"] and candidates:
+        if decision.get("should_recommend") and candidates:
             try:
                 if not self.ranker.is_available():
                     raise RuntimeError(f"Ranker '{self.ranker.name}' is unavailable")
@@ -137,18 +154,22 @@ class NeeShopsAgent:
                         usage = self.ranker.last_usage
             except Exception:
                 if not isinstance(self.ranker, HeuristicRanker):
-                    fallback = HeuristicRanker(strategy=self.strategy)
-                    recommendations = fallback.rank(
-                        candidates, self.catalog_lookup, state, top_k=top_k
-                    )
-                    usage = {"prompt_tokens": 0, "completion_tokens": 0}
+                    try:
+                        fallback = HeuristicRanker(strategy=self.strategy)
+                        recommendations = fallback.rank(
+                            candidates, self.catalog_lookup, state, top_k=top_k
+                        )
+                        usage = {"prompt_tokens": 0, "completion_tokens": 0}
+                    except Exception:
+                        recommendations = []
                 else:
-                    raise
-            self.state_manager.record_recommendations(
-                session_id, [r.parent_asin for r in recommendations]
-            )
+                    recommendations = []
+            if recommendations:
+                self.state_manager.record_recommendations(
+                    session_id, [r.parent_asin for r in recommendations]
+                )
 
-        message = decision["question"] or self._default_message(recommendations)
+        message = decision.get("question") or self._default_message(recommendations)
 
         latency_ms = (time.perf_counter() - start) * 1000
         log_event(

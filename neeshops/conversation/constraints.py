@@ -51,13 +51,23 @@ def extract_constraints(message: str, known_fields: list[str] | None = None) -> 
         if price_match:
             out["budget"] = float(price_match.group(1))
 
-    # Color: simple vocabulary match
-    tokens = set(tokenize(text))
-    color_hit = tokens & _COLOR_WORDS
-    if color_hit and "color" not in out:
-        out["color"] = sorted(color_hit)[0]
+    # Color: vocabulary match with negation/override awareness (e.g. "forget blue, I want red")
+    negated_words = set(
+        re.findall(r"(?:forget|not|no|instead of|rather than|drop)\s+([a-z]+)", text)
+    )
+    tokens_list = tokenize(text)
+    candidate_colors = [
+        t for t in tokens_list if t in _COLOR_WORDS and t not in negated_words
+    ]
+    if candidate_colors and "color" not in out:
+        out["color"] = candidate_colors[-1]
+    elif "color" not in out:
+        all_colors = [t for t in tokens_list if t in _COLOR_WORDS]
+        if all_colors:
+            out["color"] = all_colors[-1]
 
     return out
+
 
 
 def override_intent(previous: dict, updates: dict) -> dict:

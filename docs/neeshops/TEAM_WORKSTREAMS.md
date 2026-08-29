@@ -361,16 +361,15 @@ below).
 - **P5-D3** — Failures in optional components have sensible fallbacks
   (e.g. LLM unavailable → deterministic retrieval/ranking still returns a
   valid response).
-  *Acceptance*: **not yet built** — depends on P3's LLM fallback wiring
-  (P3-D3) landing in `neeshops/agent.py`; P5 reviews/merges that PR.
+  *Acceptance*: **done and tested** (`tests/test_ranking.py`, `tests/test_reliability.py`, `scripts/reliability_harness.py`).
 - **P5-D4** — Integration test covers all four scenario families (Buying,
   Browsing, Intent Override, Boundary).
-  *Acceptance*: **partially done** — `tests/test_agent_smoke.py` runs a
-  generic multi-turn conversation; add one test per scenario archetype.
+  *Acceptance*: **done and tested** (`tests/test_agent_smoke.py` has dedicated end-to-end tests for Buying, Browsing, Intent Override, and Boundary archetypes).
 - **P5-D5** — Project setup reproducible from README by another teammate.
   *Acceptance*: root `README.md`'s NeeShops section — already documents
   setup/test/eval commands; verify a clean-checkout teammate can follow it
   without asking questions.
+
 - **P5-D6 — Agent Trace Viewer.** Demo flow: multi-turn Agent session,
   internal decisions/logs, results, evaluator metrics — made *visible*,
   not just logged.
