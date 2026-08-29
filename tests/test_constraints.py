@@ -8,6 +8,7 @@ def test_extract_constraints():
         ("I want white shoes", {"color": "white"}),
         ("I want running shoes", {"category": "shoes"}),
         ("I want leather shoes", {"material": "leather"}),
+        ("I want size 9 shoes", {"size": "9"}),
     ]
 
     for message, expected in cases:
