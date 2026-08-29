@@ -37,6 +37,10 @@ class Turn(BaseModel):
     route: Optional[str] = None  # "buying" | "browsing"
     asked_attribute: Optional[str] = None
     returned_asins: list[str] = Field(default_factory=list)
+    informative: bool = False
+    """True when the user's message yielded at least one usable constraint
+    value (a no-preference reply is not informative). The clarification
+    engine uses this to stop asking once replies stop carrying information."""
 
 
 class UserProfile(BaseModel):

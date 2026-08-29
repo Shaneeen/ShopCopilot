@@ -37,8 +37,22 @@ def test_bm25_returns_valid_parent_asins(catalog_path):
         assert candidate.source == "bm25"
 
 
-def test_bm25_empty_query_returns_no_candidates(catalog_path):
+def test_bm25_empty_query_serves_popular_fallback(catalog_path):
+    """No usable keywords (fake prompt / empty context) → a stable
+    popularity-ranked slice instead of an empty pool, so recommendations
+    never go blank and questions drive convergence."""
     retriever = BM25Retriever(catalog_path=catalog_path)
+    state = ConversationState(session_id="s1")
+    results = retriever.search("", state, top_k=2)
+    assert [c.parent_asin for c in results] == ["B001", "B002"]
+    assert all(c.source == "popular" for c in results)
+
+
+def test_bm25_empty_query_fallback_can_be_disabled(catalog_path):
+    retriever = BM25Retriever(
+        catalog_path=catalog_path,
+        strategy={"retrieval": {"empty_query_fallback": False}},
+    )
     state = ConversationState(session_id="s1")
     assert retriever.search("", state, top_k=5) == []
 

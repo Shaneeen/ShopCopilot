@@ -64,8 +64,11 @@ _UNDER_RE = re.compile(
 )
 
 _LOOKING_FOR_RE = re.compile(r"looking for ([^.!?;]+)", re.I)
-_REQUIREMENT_RE = re.compile(r"key requirement is:?\s*([^.!?;]+)", re.I)
+# Covers both the opening "A key requirement is: X" and the evaluator's
+# mid-session override "What I need is: X".
+_REQUIREMENT_RE = re.compile(r"(?:key requirement is|what i need is):?\s*([^.!?;]+)", re.I)
 _REPLY_PREFIX_RE = re.compile(r"^(?:for that,?\s*)?what matters is:?\s*", re.I)
+_OVERRIDE_RE = re.compile(r"ignore (?:my|the|your) (?:earlier|previous|original) preference", re.I)
 
 _SLOT_VALUE_LIMIT = 80
 _CATEGORY_VALUE_LIMIT = 60
@@ -149,6 +152,35 @@ def _slot_value(slot: str, text: str):
     return _clean_value(body) or NO_PREFERENCE
 
 
+def is_intent_override(text: str) -> bool:
+    """Detect the evaluator's mid-session override turn ("Actually, ignore my
+    earlier preference. What I need is: X."). Callers reset stale context
+    (constraints + accumulated query) before parsing this message."""
+    return bool(_OVERRIDE_RE.search(text))
+
+
+def _parse_compound_reply(text: str) -> dict:
+    """Parse a wildcard (ask_attribute="other") reply into multiple
+    {field: value} updates, one per ';'-separated fragment.
+
+    The evaluator customer answers an "other" question with up to two
+    constraints of ANY type ("For that, what matters is: cotton; color:
+    black."), so each fragment is classified with the same vocabulary
+    `_classify_requirement` uses (budget / color: prefix / material / color /
+    size, else feature — a text-containment constraint).
+    """
+    body = _REPLY_PREFIX_RE.sub("", text)
+    out: dict = {}
+    for fragment in body.split(";"):
+        fragment = _clean_value(fragment)
+        if not fragment:
+            continue
+        for field, value in _classify_requirement(fragment).items():
+            if value and value != NO_PREFERENCE:
+                out.setdefault(field, value)
+    return out
+
+
 def _classify_requirement(value: str) -> dict:
     """Classify one 'key requirement' clause into a {field: value} update."""
     lowered = value.lower()
@@ -230,7 +262,19 @@ def extract_constraints(
 
     # 1. Slot-filling: the reply to the question we just asked is the most
     #    reliable signal in the message — parse it before anything else.
-    if slot in fields:
+    #    A wildcard ("other") reply carries up to two constraints of any
+    #    type, each parsed into its own field; an unparseable reply marks
+    #    "other" NO_PREFERENCE so the clarification engine stops asking it.
+    if slot == "other":
+        if _has_no_preference(text):
+            out["other"] = NO_PREFERENCE
+        else:
+            parsed = _parse_compound_reply(message)
+            if parsed:
+                out.update(parsed)
+            else:
+                out["other"] = NO_PREFERENCE
+    elif slot in fields:
         out[slot] = _slot_value(slot, message)
 
     # 2. Explicit no-preference phrases naming a field.

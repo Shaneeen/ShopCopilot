@@ -52,6 +52,11 @@ class RankingFeatures:
 class RankingFeatureExtractor:
     """Extract deterministic features without mutating candidate or state."""
 
+    def __init__(self, budget_tolerance: float = 1.0) -> None:
+        # >1.0 keeps products marginally above "budget around $X"-style soft
+        # caps in the MATCH tier instead of marking them as violations.
+        self._budget_tolerance = float(budget_tolerance)
+
     def extract(
         self,
         candidate: Candidate,
@@ -68,7 +73,9 @@ class RankingFeatureExtractor:
             if field_name not in constraints:
                 continue
             if field_name == "budget":
-                statuses[field_name] = _budget_status(constraints[field_name], row.get("price"))
+                statuses[field_name] = _budget_status(
+                    constraints[field_name], row.get("price"), self._budget_tolerance
+                )
             else:
                 statuses[field_name] = _attribute_status(
                     constraints[field_name],
@@ -173,12 +180,12 @@ def _soft_status(field_name: str, required: Any, row: Mapping[str, Any]) -> Matc
     return MatchStatus.MATCH if required_tokens <= observed_tokens else MatchStatus.UNKNOWN
 
 
-def _budget_status(required: Any, price: Any) -> MatchStatus:
+def _budget_status(required: Any, price: Any, tolerance: float = 1.0) -> MatchStatus:
     budget = _number(required)
     product_price = _number(price)
     if budget is None or product_price is None:
         return MatchStatus.UNKNOWN
-    return MatchStatus.MATCH if product_price <= budget else MatchStatus.MISMATCH
+    return MatchStatus.MATCH if product_price <= budget * tolerance else MatchStatus.MISMATCH
 
 
 def _number(value: Any) -> float | None:

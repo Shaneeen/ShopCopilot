@@ -46,7 +46,6 @@ from evaluator.local_evaluator import (  # noqa: E402
 )
 from neeshops.config.settings import load_strategy  # noqa: E402
 from neeshops.retrieval.filters import apply_filters  # noqa: E402
-from neeshops.utils.tokens import keywords  # noqa: E402
 from starter.agent import Agent  # noqa: E402
 
 BASELINE_CLARIFICATION = {
@@ -86,8 +85,10 @@ def pool_diagnostics(agent: Agent, session_id: str, message: str, target: str) -
     and report where the target stands in the 200-candidate contract."""
     impl = agent._impl
     state = impl.state_manager.get(session_id)
-    query = " ".join(keywords(message))
-    pool = impl.retriever.search(query, state, impl.strategy["retrieval"]["candidate_limit"])
+    queries = impl.build_retrieval_queries(state, message)
+    pool = impl.retriever.search_multi(
+        queries, state, impl.strategy["retrieval"]["candidate_limit"]
+    )
     pool_rank = next((i + 1 for i, c in enumerate(pool) if c.parent_asin == target), None)
     filtered = apply_filters(pool, impl.catalog_lookup, state)
     filtered_rank = next((i + 1 for i, c in enumerate(filtered) if c.parent_asin == target), None)

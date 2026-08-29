@@ -88,34 +88,49 @@ def _engine(catalog_lookup, ask_above=3):
     return ClarificationEngine(strategy=strategy, catalog_lookup=catalog_lookup)
 
 
-def test_adaptive_picks_informative_field_with_catalog():
+def test_wildcard_asked_first_with_and_without_catalog():
+    """The open "what else matters?" question yields up to two constraints
+    of any type per answer, so it goes first regardless of catalog data."""
     engine = _engine(CATALOG)
     candidates = [FakeCandidate(a) for a in CATALOG]
     decision = engine.decide(_state_with_history(None), candidates, turn=1)
-    assert decision["ask_attribute"] in ("material", "color", "budget")
-    assert decision["question"]  # question text present
+    assert decision["ask_attribute"] == "other"
+    assert decision["question"]
 
-
-def test_adaptive_falls_back_without_catalog():
     engine = _engine({})
     decision = engine.decide(_state_with_history(None), [FakeCandidate("A1")], turn=1)
-    assert decision["ask_attribute"] == "category"  # fixed-order fallback
+    assert decision["ask_attribute"] == "other"
 
 
-def test_adaptive_question_text_names_pool_values():
+def test_wildcard_cap_stops_asking_other():
     engine = _engine(CATALOG)
-    candidates = [FakeCandidate(a) for a in CATALOG]
-    decision = engine.decide(_state_with_history("material"), candidates, turn=2)
-    assert decision["ask_attribute"] != "material"  # already asked
-    if decision["ask_attribute"] == "budget":
-        assert "$" in decision["question"]
+    state = _state_with_history(None)
+    for turn in (1, 2, 3):
+        state.history.append(
+            Turn(turn=turn, user_message=f"ans {turn}", asked_attribute="other", informative=True)
+        )
+        state.asked_attributes.append("other")
+    decision = engine.decide(state, [FakeCandidate(a) for a in CATALOG], turn=4)
+    assert decision["ask_attribute"] != "other"
+
+
+def test_entropy_fallback_after_wildcard_exhausted():
+    engine = _engine(CATALOG)
+    state = _state_with_history(None)
+    state.constraints["other"] = NO_PREFERENCE  # wildcard gave nothing left
+    state.history.append(Turn(turn=1, user_message="nothing else", asked_attribute="other"))
+    state.asked_attributes.append("other")
+    decision = engine.decide(state, [FakeCandidate(a) for a in CATALOG], turn=2)
+    assert decision["ask_attribute"] in ("material", "color", "budget")
 
 
 def test_engine_without_lookup_uses_fixed_order():
     engine = _engine({})
     state = _state_with_history(None)
     state.constraints["category"] = NO_PREFERENCE
-    decision = engine.decide(state, [FakeCandidate("A1")], turn=2)
+    state.constraints["other"] = NO_PREFERENCE  # wildcard exhausted
+    candidates = [FakeCandidate(a) for a in CATALOG]
+    decision = engine.decide(state, candidates, turn=2)
     assert decision["ask_attribute"] == "material"
 
 

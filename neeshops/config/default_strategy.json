@@ -5,6 +5,15 @@
     "candidate_limit": 200,
     "strategy": "hybrid",
     "rrf_k": 60,
+    "multi_query": {
+      "enabled": true,
+      "weights": {
+        "accumulated": 1.0,
+        "latest": 1.0,
+        "constraints": 1.0
+      }
+    },
+    "empty_query_fallback": true,
     "bm25_field_weights": {
       "parent_asin": 1.0,
       "title": 8.0,
@@ -32,6 +41,7 @@
       "retrieval_normalization": "raw",
       "fusion_method": "minmax",
       "rrf_k": 60,
+      "budget_tolerance": 1.10,
       "weights": {
         "retrieval": 0.40,
         "category": 0.12,
@@ -73,8 +83,14 @@
   "clarification": {
     "strategy": "adaptive",
     "max_questions_per_session": 4,
+    "other_max_asks": 3,
     "min_candidates_before_recommend": 5,
     "ask_if_candidates_above": 60
+  },
+
+  "filters": {
+    "budget_tolerance": 1.10,
+    "min_pool_keep": 10
   },
 
   "feature_flags": {

@@ -60,6 +60,7 @@ class BM25Retriever(Retriever):
         self._conn_lock = threading.Lock()
         self._conn: Optional[sqlite3.Connection] = None
         self._strategy = strategy  # lazy-loaded when unset; see set_strategy
+        self._popular: Optional[list[str]] = None  # empty-query fallback, built lazily
 
     def set_strategy(self, strategy: dict) -> None:
         """Allow the hybrid router (or an experiment) to inject the active
@@ -139,7 +140,11 @@ class BM25Retriever(Retriever):
 
     def search(self, query: str, state: ConversationState, top_k: int) -> list[Candidate]:
         if not query.strip():
-            return []
+            # No usable keywords (fake prompt / near-empty context) — serve a
+            # stable popularity-ranked slice instead of nothing, so
+            # recommendations stay non-empty and the clarification questions
+            # drive convergence.
+            return self._popular_fallback(top_k)
         # FTS5 MATCH with a permissive OR of terms; bm25() returns a lower
         # score for a better match, so we negate it into an ascending score.
         # Config can boost fields (title/categories) so products whose
@@ -155,6 +160,46 @@ class BM25Retriever(Retriever):
             # Malformed FTS query (e.g. reserved characters) — fail soft.
             return []
         return [Candidate(parent_asin=r[0], score=-r[1], source=self.name) for r in rows]
+
+    def _popular_fallback(self, top_k: int) -> list[Candidate]:
+        if not self._strategy_cfg().get("retrieval", {}).get(
+            "empty_query_fallback", True
+        ):
+            return []
+        if self._popular is None:
+            self._popular = self._build_popular_list()
+        rows = self._popular[:top_k] if top_k else self._popular
+        total = max(1, len(rows))
+        return [
+            Candidate(parent_asin=asin, score=1.0 - i / total, source="popular")
+            for i, asin in enumerate(rows)
+        ]
+
+    def _build_popular_list(self, limit: int = 200) -> list[str]:
+        """parent_asins ordered by review count (desc), scanned once from
+        the raw catalog and cached for the process lifetime."""
+        import json
+
+        entries: list[tuple[int, str]] = []
+        try:
+            with open(self.catalog_path, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    row = json.loads(line)
+                    asin = str(row.get("parent_asin", ""))
+                    if not asin:
+                        continue
+                    try:
+                        popularity = int(row.get("rating_number") or 0)
+                    except (TypeError, ValueError):
+                        popularity = 0
+                    entries.append((-popularity, asin))
+        except OSError:
+            return []
+        entries.sort()
+        return [asin for _, asin in entries[:limit]]
 
     def _match_expression(self, terms: list[str]) -> str:
         """OR-of-terms MATCH string (organiser starter behaviour)."""

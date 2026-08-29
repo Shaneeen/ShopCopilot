@@ -106,6 +106,31 @@ openrouter:nemotron:free               0.56   0.406  1855.3  491.5   8250.7  134
 
 **Takeaway:** 5-word insane is **way harder than public set (0.49)** at **0.24 hit** — 76% of insane targets never enter top-200 for reranker to help, so LLM adds **0 hit** (fake +0.01 overall) despite 8.2s LLM. Batched 8× still cuts wall 195s vs ~420s serial (~2.1×). Production lesson: insane's bottleneck is retrieval (less context), not 30→10 reranking — heuristic is Pareto-optimal on this slate.
 
+## 5.1 Snapshot after the 2026-08-29 pipeline rework — same 100 cases, seed 7, no-LLM arm
+
+Rework = wildcard-first clarification (`other`, compound `;`-answers) + 3-angle
+multi-query RRF retrieval + demote-not-drop filters + `ConstraintAwareRanker`
+as default ranker (see `p2readme.md §7b`). Run:
+`python scripts/bench_v1.py --cases 100 --seed 7 --json <out>` (serial).
+
+| Tier (n) | Before — hit / MRR (§5) | After — hit / MRR | Δ hit |
+|---|---|---|---|
+| easy (10) | 1.000 / 0.950 | 1.000 / 0.853 | = |
+| medium (10) | 0.900 / 0.850 | 0.900 / 0.683 | = |
+| hard (30) | 0.833 / 0.542 | **0.933 / 0.621** | **+0.100** |
+| insane (50) | 0.240 / 0.137 | **0.340 / 0.188** | **+0.100** |
+| **overall (100)** | 0.560 / 0.411 | **0.640 / 0.434** | **+0.080** |
+
+Fake-LLM arm after the rework (offline plumbing check): overall 0.66 / 0.481 —
+easy 1.0/0.853, medium 1.0/1.0, hard 0.967/0.671, insane 0.34/0.188.
+
+**Takeaway addendum (08-29):** the "76% of insane targets never enter top-200"
+bottleneck is largely fixed by multi-query retrieval — oracle target-in-pool@200
+went 14.3% → **68.2%** and insane hit 0.24 → **0.34** without any LLM. Easy/medium
+MRR dipped slightly because the target now enters the top-10 *earlier* at worse
+first-seen ranks (the harness stops at first appearance — MTTC improves, RR per
+case can drop); hit rate is unchanged or better everywhere.
+
 ## 6. Live — how to compare models yourself
 
 ```bash

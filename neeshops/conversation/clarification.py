@@ -4,23 +4,26 @@ The organiser's Agent contract allows a message + recommendations in the
 same turn, so "should_recommend" and "ask_attribute" are independent
 decisions, not a branch.
 
-Two question-selection strategies (config: clarification.strategy):
+Question selection (config: clarification.strategy):
 
-- **fixed** — the original rule: ask about the first unset slot in
-  CONSTRAINT_FIELDS order. Needs no catalog data.
-- **adaptive** (default) — look at the actual candidate pool and ask about
-  the attribute whose value distribution is most *informative* (highest
-  entropy over the pool's top values, skipping fields where one value
-  covers >90% of the pool — asking would split off nothing). Fields a
-  user can answer with a short vocabulary word (material, colour, budget,
-  style, size) are considered before taxonomy-ish fields (category,
-  brand), because those short answers are exactly what the constraint
-  slot-filler parses reliably. Question text is value-aware, e.g.
-  "Any colour — black, brown, or tan?" instead of a generic template.
+- **wildcard-first (default gate)** — while the wildcard budget allows, ask
+  the open question (`ask_attribute="other"`, contract-legal): its answer
+  carries up to two constraints of ANY type (parsed compound in
+  constraints.py), roughly double the information of a specific-attribute
+  question, which often draws "I don't have an additional preference" and
+  wastes the turn. The wildcard stops once its cap is reached, the user
+  signals nothing-left-to-share, or their last two answers carried no new
+  information.
+- **adaptive (fallback)** — entropy over the candidate pool's value
+  distributions picks the most informative specific attribute, skipping
+  fields where one value covers >90% of the pool. Short-vocabulary fields
+  (material, colour, budget, style, size) come before taxonomy-ish ones
+  (category, brand). Question text is value-aware, e.g. "Any colour —
+  black, brown, or tan?".
+- **fixed** — first unset slot in CONSTRAINT_FIELDS order, no catalog data
+  needed.
 
-Both modes fall back to the fixed order when there's no catalog data or
-no field passes the informativeness gate, so the engine always returns
-something useful. The interface is stable: decide() takes only
+All modes degrade gracefully; the interface is stable: decide() takes only
 (state, candidates, turn).
 """
 from __future__ import annotations
@@ -31,7 +34,7 @@ from typing import Any, Optional
 
 from neeshops.conversation.constraints import value_from_row
 from neeshops.config.settings import load_strategy
-from neeshops.models.session import CONSTRAINT_FIELDS, ConversationState
+from neeshops.models.session import CONSTRAINT_FIELDS, NO_PREFERENCE, ConversationState
 
 _QUESTIONS = {
     "use_case": "What will you mainly use it for?",
@@ -41,6 +44,7 @@ _QUESTIONS = {
     "size": "What size should I look for?",
     "material": "Any material you prefer, or want to avoid?",
     "brand": "Any brand you like, or want to avoid?",
+    "other": "To narrow this down — what else matters most: the material, the colour, or the price?",
 }
 
 # Attributes a shopper can typically answer with one short word the
@@ -70,7 +74,9 @@ class ClarificationEngine:
         to ask (question budget spent, or every field is known/no-preference).
         """
         candidate_count = len(candidates)
-        questions_asked = len(state.asked_attributes)
+        # Count real questions from history — asked_attributes is deduplicated
+        # and would never exhaust the budget when one attribute repeats.
+        questions_asked = sum(1 for t in state.history if t.asked_attribute)
         budget_left = questions_asked < self._cfg["max_questions_per_session"]
 
         # Recommend once the pool meets the threshold, or — once there's
@@ -83,13 +89,15 @@ class ClarificationEngine:
 
         ask_attribute = None
         question = None
-        # Ask when the pool is too broad to rank confidently, OR too narrow
-        # to satisfy min_candidates_before_recommend — either way a missing
-        # constraint is worth asking about.
-        pool_needs_narrowing = candidate_count > self._cfg["ask_if_candidates_above"]
-        pool_too_thin = candidate_count < self._cfg["min_candidates_before_recommend"]
-
-        if budget_left and (pool_needs_narrowing or pool_too_thin):
+        if budget_left and self._wildcard_available(state):
+            # Wildcard-first: an open "what else matters?" question yields up
+            # to two constraints of any type per answer, while a specific
+            # attribute question often draws "I don't have an additional
+            # preference" — a wasted turn. See extract_constraints for how
+            # the compound reply is parsed.
+            ask_attribute = "other"
+            question = self._question_for("other", candidates)
+        elif budget_left and candidate_count > self._cfg["ask_if_candidates_above"]:
             if (
                 self._cfg.get("strategy") == "adaptive"
                 and self._catalog_lookup
@@ -106,6 +114,20 @@ class ClarificationEngine:
             "question": question,
             "should_recommend": should_recommend,
         }
+
+    def _wildcard_available(self, state: ConversationState) -> bool:
+        """Keep asking the wildcard while it still pays for itself: within
+        the per-session cap, before the user says they've shared everything,
+        and while their last two answers still carried new information."""
+        other_asks = sum(1 for t in state.history if t.asked_attribute == "other")
+        if other_asks >= int(self._cfg.get("other_max_asks", 3)):
+            return False
+        if state.constraints.get("other") == NO_PREFERENCE:
+            return False
+        asked_turns = [t for t in state.history if t.asked_attribute]
+        if len(asked_turns) >= 2 and all(not t.informative for t in asked_turns[-2:]):
+            return False
+        return True
 
     # -- adaptive selection -------------------------------------------------
 

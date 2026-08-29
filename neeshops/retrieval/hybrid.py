@@ -123,3 +123,53 @@ class HybridRetriever(Retriever):
             merged_count=len(merged),
         )
         return merged[:top_k] if top_k else merged
+
+    def search_multi(
+        self,
+        queries: dict[str, str],
+        state: ConversationState,
+        top_k: int,
+    ) -> list[Candidate]:
+        """Run several per-angle queries ({"accumulated", "latest",
+        "constraints"} from NeeShopsAgent.build_retrieval_queries) and fuse
+        them with reciprocal rank fusion: a product surfacing under multiple
+        angles outranks one found by a single angle, which lifts pool recall
+        for hard cases where the long accumulated OR-query alone dilutes
+        BM25 ordering.
+
+        Falls back to plain single-query `search()` when multi_query is
+        disabled or fewer than two non-empty queries remain.
+        """
+        cfg = self._retrieval_cfg()
+        mq_cfg = cfg.get("multi_query") or {}
+        non_empty = {role: q for role, q in queries.items() if q and q.strip()}
+        if not mq_cfg.get("enabled", True) or len(non_empty) <= 1:
+            joined = " ".join(q for q in queries.values() if q)
+            return self.search(joined, state, top_k)
+
+        candidate_limit = cfg.get("candidate_limit", 200)
+        role_weights = mq_cfg.get("weights") or {}
+        lists: dict[str, list[Candidate]] = {}
+        weights: dict[str, float] = {}
+        for role, query in non_empty.items():
+            weight = float(role_weights.get(role, 1.0))
+            if self.bm25.is_available():
+                lists[f"bm25:{role}"] = stamp_provenance(
+                    self.bm25.search(query, state, candidate_limit), f"bm25:{role}"
+                )
+                weights[f"bm25:{role}"] = weight
+            if self.semantic.is_available():
+                lists[f"semantic:{role}"] = stamp_provenance(
+                    self.semantic.search(query, state, candidate_limit), f"semantic:{role}"
+                )
+                weights[f"semantic:{role}"] = weight
+
+        merged = merge_rrf(lists, weights, k=int(cfg.get("rrf_k", 60)))
+        log_event(
+            "retrieval.multi_query",
+            session_id=state.session_id,
+            route=state.route,
+            query_roles={role: len(q.split()) for role, q in non_empty.items()},
+            merged_count=len(merged),
+        )
+        return merged[:top_k] if top_k else merged

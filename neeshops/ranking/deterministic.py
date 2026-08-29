@@ -39,7 +39,9 @@ class ConstraintAwareRanker(Ranker):
     ) -> None:
         self._strategy = strategy or load_strategy()
         self._cfg = self._strategy["ranking"]["deterministic"]
-        self._extractor = extractor or RankingFeatureExtractor()
+        self._extractor = extractor or RankingFeatureExtractor(
+            budget_tolerance=float(self._cfg.get("budget_tolerance", 1.10))
+        )
         self.last_diagnostics: dict[str, RankingDiagnostic] = {}
         self.last_latency_ms = 0.0
 

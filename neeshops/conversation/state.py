@@ -75,6 +75,7 @@ class StateManager:
                 user_message=user_message,
                 route=state.route,
                 asked_attribute=asked_attribute,
+                informative=_is_informative(extracted_constraints),
             )
         )
         if asked_attribute and asked_attribute not in state.asked_attributes:
@@ -98,3 +99,14 @@ class StateManager:
     def mark_no_preference(self, session_id: str, field: str) -> None:
         state = self.get(session_id)
         state.constraints[field] = NO_PREFERENCE
+
+
+def _is_informative(extracted_constraints: dict[str, object]) -> bool:
+    """A message is informative when it yielded at least one usable value —
+    NO_PREFERENCE markers and empty updates carry no product signal."""
+    for value in (extracted_constraints or {}).values():
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return True
+        if isinstance(value, str) and value.strip() and value != NO_PREFERENCE:
+            return True
+    return False

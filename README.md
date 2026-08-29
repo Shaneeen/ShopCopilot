@@ -184,15 +184,25 @@ Full breakdown: `docs/neeshops/TEAM_WORKSTREAMS.md`.
 + `shaneen-Person3_combined` (constraint-aware ranking R2/R3, personalization,
 LLM reranker Gemini/fake). Merge unions: `.gitignore` (P2 semantic ignores +
 P3 `.obsidian`) / `requirements.txt` (`numpy` + `google-genai`). Full suite
-**148 passed, 1 deselected**; oracle `30/7` reproduces §1; readiness all PASS.
+**162 passed, 1 deselected** (after the 08-29 rework); oracle `30/7` reproduces
+§1; readiness all PASS.
 
-*Scores — official evaluator (200 public sessions, 50k catalog, `results.json`):*
-`Hit@10 0.49` / `MRR 0.284` / `MTTC 7.25` / `Technical 0.405` — vs organiser weak
-`0.125/0.068/9.81/0.107` and vs NeeShops 2026-08-28 initial `0.285/0.189/8.55/0.248`
-(see `docs/neeshops/PROJECT_OVERVIEW.md`). By scenario: buying 0.40, browsing
-**0.513**, intent-override **0.633**, boundary 0.60. P2 oracle (random catalog
-targets, `scripts/run_oracle_eval.py --cases 30 --seed 7`): adaptive **0.600
-Hit / 0.239 MRR / 5.77 MTTC** vs baseline 0.567/0.208/6.00 — pipeline fixes are
-the big lever; adaptive +0.031 technical. Latency 60–175 ms/turn ≪ budget.
-See `p2readme.md §7` for the full breakdown and `evaluation/results/` for P3B
-weight sweeps.
+*Scores — official evaluator (200 public sessions, 50k catalog, `results.json`).
+Baseline references: organiser weak starter `0.125/0.068/9.81/0.107`; NeeShops
+2026-08-28 initial `0.285/0.189/8.55/0.248` (see
+`docs/neeshops/PROJECT_OVERVIEW.md`).*
+
+| Suite | Metric | 2026-08-29 rework (current) | staging-main 08-29 (prev) | Organiser weak |
+|---|---|---|---|---|
+| **Public set** (official evaluator, 200 sessions) | Hit@10 / MRR / MTTC / Technical | **0.805 / 0.402 / 3.93 / 0.665** | 0.49 / 0.284 / 7.25 / 0.405 | 0.125 / 0.068 / 9.81 / 0.107 |
+| By scenario (HR@10) | buying / browsing / intent-override / boundary | **0.913 / 0.725 / 0.800 / 0.60** | 0.40 / 0.513 / 0.633 / 0.60 | — |
+| **Oracle** (random catalog targets, 30/7) | Hit / MRR / MTTC · Pool@200 | **0.767 / 0.389 / 3.90 · 68.2%** | 0.600 / 0.239 / 5.77 · 14.3% | — |
+| **Bench v1.0** (100 cases, no-LLM, seed 7) | hard / insane hit | **0.933 / 0.340** | 0.833 / 0.240 | — |
+
+The 2026-08-29 rework: wildcard-first clarification (`other` questions whose
+compound answers yield 2 constraints/turn), 3-angle multi-query RRF retrieval
+(target-in-pool@200 14.3% → 68.2%), demote-not-drop metadata filters
+(filter-killed-target → 0), and `ConstraintAwareRanker` wired as the default
+ranker — stage-by-stage rationale in `p2readme.md §7b`, bench before/after in
+`evaluation/BENCH_V1.0.md §5.1`. Tests: **162 passed, 1 deselected**.
+Latency 60–270 ms/turn ≪ budget.
