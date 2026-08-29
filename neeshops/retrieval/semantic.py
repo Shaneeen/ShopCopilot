@@ -187,6 +187,12 @@ class SemanticRetriever(Retriever):
 
     # -- availability ------------------------------------------------------
 
+    def set_strategy(self, strategy: Optional[dict[str, Any]]) -> None:
+        """Allow the hybrid router (or an experiment) to inject the active
+        strategy so a feature-flag change applies without reconstructing
+        the retriever; availability is re-evaluated on next access."""
+        self._strategy = strategy or load_strategy()
+
     def _enabled(self) -> bool:
         if get_settings().enable_semantic_retrieval:
             return True

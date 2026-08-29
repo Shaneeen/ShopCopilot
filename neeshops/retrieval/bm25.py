@@ -88,7 +88,8 @@ class BM25Retriever(Retriever):
             conn = self._ensure_index()
             cur = conn.execute(
                 f"SELECT parent_asin, bm25(products{self._bm25_args()}) AS rank "
-                "FROM products WHERE products MATCH ? ORDER BY rank LIMIT ?",
+                "FROM products WHERE products MATCH ? "
+                "ORDER BY rank, parent_asin LIMIT ?",
                 (self._match_expression(terms), top_k),
             )
             return cur.fetchall()

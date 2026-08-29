@@ -3,6 +3,8 @@
 
   "retrieval": {
     "candidate_limit": 200,
+    "strategy": "hybrid",
+    "rrf_k": 60,
     "bm25_field_weights": {
       "parent_asin": 1.0,
       "title": 8.0,

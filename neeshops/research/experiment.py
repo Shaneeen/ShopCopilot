@@ -8,12 +8,17 @@ from __future__ import annotations
 import copy
 import uuid
 from dataclasses import dataclass, field
+from typing import Any
 
 from neeshops.config.settings import load_strategy
 
 # Parameters the research agent is allowed to touch. Anything not listed
 # here is rejected in Experiment.__post_init__ — extend deliberately.
+# retrieval.strategy / retrieval.rrf_k let experiments compare the P2
+# retrieval strategies (bm25_only / semantic_only / hybrid / fused).
 SAFE_PARAMETERS = {
+    "retrieval.strategy",
+    "retrieval.rrf_k",
     "retrieval.buying.bm25_weight",
     "retrieval.buying.semantic_weight",
     "retrieval.browsing.bm25_weight",
@@ -31,8 +36,9 @@ SAFE_PARAMETERS = {
 class Experiment:
     name: str
     hypothesis: str
-    parameters: dict[str, float]
-    """Dot-path -> new value, e.g. {"browsing.semantic_weight": 0.65}."""
+    parameters: dict[str, Any]
+    """Dot-path -> new value, e.g. {"browsing.semantic_weight": 0.65}
+    or {"retrieval.strategy": "fused"}."""
     experiment_id: str = field(default_factory=lambda: uuid.uuid4().hex[:8])
 
     def __post_init__(self) -> None:

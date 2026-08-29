@@ -19,9 +19,12 @@ class Retriever(ABC):
 
 class Candidate:
     parent_asin: str; score: float; source: str
+    metadata: dict | None   # OPTIONAL retrieval provenance — see below
 
 apply_filters(candidates, catalog_lookup, state, filters=None) -> list[Candidate]
 merge_weighted(candidate_lists: dict[str, list[Candidate]], weights: dict[str, float]) -> list[Candidate]
+merge_rrf(candidate_lists: dict[str, list[Candidate]], weights: dict[str, float], k: int = 60) -> list[Candidate]
+stamp_provenance(candidates: list[Candidate], source: str) -> list[Candidate]
 ```
 
 Implementations: `BM25Retriever`, `SemanticRetriever`, `HybridRetriever`
@@ -76,12 +79,60 @@ Implementations: `BM25Retriever`, `SemanticRetriever`, `HybridRetriever`
 - `candidate_merge.py`: `merge_weighted` min-max normalises each
   retriever's raw scores before the weighted sum (BM25 and cosine aren't
   comparable scales), dedups by `parent_asin`, concatenates
-  `source` ("bm25+semantic"), and sorts deterministically.
-- `hybrid.py`: reads per-route (`buying`/`browsing`) BM25/semantic weights
-  and `candidate_limit` from `neeshops/config/default_strategy.json`,
-  calls each available retriever, merges via `merge_weighted`, truncates
-  to `top_k` (agent passes 200 — the pre-rank pool that bounds P3's
-  `rerank_limit=40` LLM cost).
+  `source` ("bm25+semantic"), and sorts deterministically (exact ties break
+  on `parent_asin` ascending). `merge_rrf` is the rank-based alternative
+  (reciprocal rank fusion, `retrieval.rrf_k`) for the "fused" strategy —
+  no score normalisation needed. Both stamp retrieval provenance into each
+  candidate's `metadata` (see the handoff contract below).
+- `hybrid.py`: reads `retrieval.strategy`, per-route (`buying`/`browsing`)
+  BM25/semantic weights and `candidate_limit` from
+  `neeshops/config/default_strategy.json`, calls each available retriever,
+  merges, and truncates to `top_k` (agent passes 200 — the pre-rank pool
+  that bounds P3's `rerank_limit=40` LLM cost).
+
+## Retrieval provenance — the P3 handoff contract (additive, non-breaking)
+
+The stable contract is unchanged: `Candidate(parent_asin, score, source)`.
+Provenance is carried in an OPTIONAL `metadata` dict on the same object —
+3A consumes it if present, ignores it if not, and never needs to
+reconstruct per-source ordering from the merged score:
+
+```python
+candidate.metadata = {
+    "rank": 3,                                        # final retrieval rank, 1-based,
+                                                      # == position in the returned list
+    "bm25":     {"raw_score": 12.34, "rank": 5},      # one entry per source that
+    "semantic": {"raw_score": 0.82, "rank": 2},       # actually retrieved this asin
+}
+```
+
+- `raw_score` is the retriever's own score BEFORE merge normalisation
+  (BM25 `bm25()` negated rank; cosine similarity for semantic).
+- `rank` inside a source entry is the 1-based position within that
+  retriever's own list; the top-level `rank` is the final merged rank.
+- Always stamped by `HybridRetriever.search` in every strategy (weighted,
+  fused, and single-source via `stamp_provenance`). If `apply_filters`
+  drops candidates downstream, the stamped `rank` reflects the pool as
+  returned by retrieval, before filtering.
+- Diagnostic value: target absent from the pool → recall problem; target
+  in the pool (check `raw_score`/`rank` per source) but outside the final
+  top-10 → ranking problem.
+
+## Retrieval strategies (`retrieval.strategy` in default_strategy.json)
+
+| Strategy | What P3 gets | Fallback |
+|---|---|---|
+| `bm25_only` (P2-A) | BM25 list alone, raw BM25 scores | semantic if BM25 unavailable |
+| `semantic_only` (P2-B) | semantic list alone, raw cosine scores | BM25 if semantic unavailable |
+| `hybrid` (P2-C, default) | current min-max + weighted-sum merge, per-route weights | — |
+| `fused` (P2-D) | reciprocal rank fusion (`retrieval.rrf_k`, default 60), per-route weights as multipliers | — |
+
+An unknown value falls back to `hybrid` (logged). Experiments can switch
+strategy per run via the safe parameter `retrieval.strategy`
+(`neeshops/research/experiment.py`), alongside `retrieval.rrf_k`.
+`HybridRetriever` also injects a supplied experiment strategy into BOTH
+sub-retrievers (`set_strategy`), so feature-flag changes apply without
+reconstructing the semantic index.
 
 ## How to extend
 
