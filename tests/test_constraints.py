@@ -13,6 +13,9 @@ def test_extract_constraints():
         ("I want Nike shoes", {"brand": "nike"}),
         ("I want a waterproof jacket", {"feature": "waterproof"}),
         ("I need a dress for a wedding", {"use_case": "wedding"}),
+        ("I have a budget of $100", {"budget": 100.0}),
+        ("my budget is up to $120", {"budget": 120.0}),
+        ("I can spend a maximum of $80", {"budget": 80.0}),
     ]
 
     for message, expected in cases:

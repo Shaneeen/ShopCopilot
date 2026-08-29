@@ -88,7 +88,11 @@ _USE_CASE_WORDS = {
     "casual",
 }
 _PRICE_RE = re.compile(r"\$?\s?(\d+(?:\.\d+)?)\s*(?:dollars)?")
-_UNDER_RE = re.compile(r"under|below|less than|cheaper than|max(?:imum)?")
+_BUDGET_RE = re.compile(
+    r"under|below|less than|cheaper than|max(?:imum)?|"
+    r"up to|budget|spend|no more than",
+    re.IGNORECASE,
+)
 _SIZE_RE = re.compile(r"\bsize\s*([0-9]+(?:\.[0-9]+)?|[xsml]{1,3})\b", re.IGNORECASE)
 
 
@@ -110,7 +114,7 @@ def extract_constraints(message: str, known_fields: list[str] | None = None) -> 
                     out[field] = NO_PREFERENCE
 
     # Budget: "under $120", "below 80 dollars"
-    if _UNDER_RE.search(text):
+    if _BUDGET_RE.search(text):
         price_match = _PRICE_RE.search(text)
         if price_match:
             out["budget"] = float(price_match.group(1))
