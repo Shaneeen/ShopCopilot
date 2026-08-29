@@ -15,7 +15,46 @@
 
   "ranking": {
     "rerank_limit": 40,
-    "personalization_weight": 0.15
+    "personalization_weight": 0.15,
+    "deterministic": {
+      "rerank_limit": 40,
+      "retrieval_normalization": "raw",
+      "fusion_method": "minmax",
+      "rrf_k": 60,
+      "weights": {
+        "retrieval": 0.40,
+        "category": 0.12,
+        "title_overlap": 0.08,
+        "feature_overlap": 0.08,
+        "color": 0.06,
+        "material": 0.06,
+        "brand": 0.06,
+        "style": 0.03,
+        "size": 0.04,
+        "budget": 0.04,
+        "personalization": 0.03
+      },
+      "features_enabled": {
+        "retrieval": true,
+        "category": true,
+        "title_overlap": true,
+        "feature_overlap": true,
+        "color": true,
+        "material": true,
+        "brand": true,
+        "style": true,
+        "size": true,
+        "budget": true,
+        "personalization": true
+      }
+    },
+    "llm": {
+      "provider": "gemini",
+      "model": "gemini-3.7-flash",
+      "rerank_limit": 30,
+      "minimum_constraints": 2,
+      "timeout_seconds": 5
+    }
   },
 
   "clarification": {

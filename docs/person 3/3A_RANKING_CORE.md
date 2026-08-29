@@ -40,10 +40,9 @@ from 3B.
 - **P3-D3** — If an LLM reranker is used: bounded candidate count in,
   token usage tracked, secrets from environment variables only, and a
   working fallback when unavailable.
-  *Acceptance*: `LLMReranker` currently raises `NotImplementedError` when
-  disabled — implement it AND wire the fallback into `neeshops/agent.py`
-  (currently always constructs `HeuristicRanker` unconditionally; this is
-  the actual integration gap).
+  *Acceptance*: the Gemini and fake providers plus all offline fallback paths
+  are complete. Phase 4 still needs the P5-owned `neeshops/agent.py` selection
+  seam; it is intentionally outside this phase.
 - **P3-D4** — Ranker output is a valid, ordered `parent_asin` list.
   *Acceptance*: **already done** for `HeuristicRanker`.
 
@@ -54,17 +53,18 @@ MRR, Top-10 ordering quality, latency, token usage/cost if an LLM is used
 
 ## Roadmap and current position
 
-The Person 3 ranking work is split into six phases. As of commit `0a4a972`,
-3A is at the end of **Phase 2**: the deterministic baseline and guarded LLM
-ranking policy are implemented and tested. Provider integration, official
-Agent wiring, real P2-candidate validation, and the measured 3B comparison
-remain.
+The Person 3 ranking work is split into six phases, with **Phase 2.5** added
+as an engineering-strengthening step. 3A has implemented the original R1,
+the R2/R3 experimental deterministic strategies, guarded semantic reranking,
+the Gemini adapter, offline fake, and provider tests. Official Agent wiring,
+real P2-candidate validation, and measured 3B comparison remain.
 
 | Phase | Deliverable | Status |
 |---|---|---|
 | 1 | Deterministic ranking baseline | Complete |
 | 2 | Safe LLM reranking core | Complete |
-| 3 | Real model-provider adapter | Not started |
+| 2.5 | Constraint features, retrieval normalization/fusion, experiment harness | Complete on synthetic fixtures; real P2 comparison pending |
+| 3 | Real model-provider adapter | Complete |
 | 4 | Official Agent integration with P5 | Not started |
 | 5 | P2 candidate integration and ranking-quality evaluation | Ready to start when P2 data is available |
 | 6 | 3A handoff to 3B and final measured comparison | Not started |
@@ -95,6 +95,96 @@ Verify with:
 pytest -vv tests/test_ranking.py tests/test_agent_contract.py
 ```
 
+### Phase 2.5 — Deterministic ranking engineering (complete on synthetic data)
+
+This phase preserves the original `HeuristicRanker` unchanged and adds an
+explicit strategy ladder for apples-to-apples experiments:
+
+| Strategy | Implementation | Status |
+|---|---|---|
+| R0 Retrieval | `RetrievalOrderRanker` | Implemented; preserves first-seen candidate order |
+| R1 Existing Heuristic | `HeuristicRanker` | Preserved baseline; raw merged score plus soft personalization |
+| R2 Constraint-Aware | `ConstraintAwareRanker` | Implemented and offline-tested |
+| R3 Fusion-Aware | `FusionAwareRanker` | Score normalization implemented; RRF tested synthetically |
+| R4 CrossEncoder | — | Planned; deliberately not implemented yet |
+| R5 Gemini | `LLMReranker` + Gemini provider | Implemented and experimental |
+| R6 Hybrid | — | Planned |
+
+**NEW != BETTER.** Every strategy remains experimental until it is measured
+on the same cases and candidate pools. R1 remains selectable as its own class;
+the experiment harness registers R0/R1/R2/R3 independently and can later
+register R4/R5/R6 without changing its record schema.
+
+#### Feature and constraint model
+
+`RankingFeatureExtractor` is separate from score aggregation. Its internal
+`RankingFeatures` record contains normalized retrieval signal and rank;
+category, title, feature, color, material, brand, style, size, and budget
+signals; hard-violation count; and the existing 3B-owned personalization
+boost. `ConstraintEvaluation` retains per-field `MATCH`, `MISMATCH`, or
+`UNKNOWN`, hard violations, and soft matches. `last_diagnostics` exposes these
+records plus the final relevance score for development only; the public
+`Recommendation` and Agent contracts are unchanged.
+
+Current explicit category, color, material, size, brand, and maximum budget
+are treated as hard, objectively checkable requirements. Style, feature, and
+use case are soft because the current catalog represents them as incomplete
+descriptive text. A hard mismatch is recorded only from explicit catalog
+metadata (or price). Catalog title/features/details may prove a positive
+attribute match, but their silence cannot prove a mismatch. Missing price or
+attribute metadata is therefore `UNKNOWN`, never an automatic violation.
+
+R2/R3 order first by hard-violation count, then configured relevance, then
+original candidate rank. This ensures soft personalization can move close
+candidates but cannot outrank a product that satisfies a current explicit
+requirement with one that explicitly violates it. Ranking consumes only the
+current `state.constraints`; it never reads history, so P1's override semantics
+(for example black replaced by brown) remain authoritative.
+
+All aggregation weights and per-feature ablation switches live under
+`ranking.deterministic` in `default_strategy.json`. The current values are
+starting hypotheses, not tuned evidence. Features can independently be
+disabled for retrieval-only, constraints, metadata-overlap, and personalization
+ablations without editing Python.
+
+#### Retrieval normalization and RRF boundary
+
+`normalize_scores` supports `raw`, `minmax`, and rank normalization with
+deterministic equal-score, empty, and non-finite handling. R3 defaults to
+min-max normalization. `reciprocal_rank_fusion` implements
+`sum(1 / (k + rank_in_source))` with configurable `rrf_k=60`, duplicate-ID
+protection, and missing-source safety.
+
+P2 currently min-max normalizes BM25 and semantic lists and emits only one
+weighted merged `Candidate.score` plus a source label. A label such as
+`bm25+semantic` does not contain the independent ranks needed to reconstruct
+RRF. Consequently live R3 uses the available merged score normalization.
+RRF is active only when genuine per-source rankings are explicitly supplied;
+otherwise it safely falls back to rank normalization. Real RRF validation is
+pending a P2 contract extension or side-channel artifact containing those
+rankings.
+
+#### Experiment harness and verification
+
+`RankingExperimentHarness` runs the same `RankingExperimentCase` through any
+registered `Ranker`. Each record contains case and strategy name, configuration,
+synthetic flag, input count, original and ranked top tens, measured wall-clock
+latency, fallback/error, and optional target rank/reciprocal rank. It does not
+invent HitRate or MRR when no target is defined. Synthetic boot fixtures cover
+hard material conflict, retrieval conflict, sparse metadata, intent override,
+and personalization conflict.
+
+Verify offline with:
+
+```bash
+.venv/bin/pytest -vv tests/test_ranking.py tests/test_deterministic_ranking.py tests/test_ranking_experiments.py
+```
+
+The recommended R4 next step is a separate local `CrossEncoderRanker` that
+consumes the bounded R2/R3 shortlist, preserves deterministic fallback, and is
+first evaluated through this harness. No model dependency or download belongs
+in Phase 2.5.
+
 ### Phase 2 — Safe LLM reranking core (complete)
 
 Goal: enforce the ranking and failure-safety rules before connecting a paid or
@@ -102,7 +192,8 @@ external model.
 
 Completed evidence:
 
-- Input is bounded by `ranking.rerank_limit` (40 by default).
+- Input is bounded by `ranking.llm.rerank_limit` (30 by default) after the
+  deterministic heuristic stage.
 - Product titles and features are truncated before building the payload.
 - Only known, unique candidate IDs are accepted from model output.
 - Omitted IDs are filled deterministically using heuristic order.
@@ -117,27 +208,128 @@ Verify with:
 pytest -vv tests/test_llm_reranker.py
 ```
 
-### Phase 3 — Real model-provider adapter (next implementation phase)
+### Phase 3 — Google Gemini semantic provider (complete)
 
 Goal: connect the guarded core to the selected provider without changing the
 public `Ranker.rank(...)` contract.
 
-Tasks:
+Google Gemini is the initial provider, implemented with Google's current
+`google-genai` SDK. The default model is the stable Flash-class
+`gemini-3.7-flash`; `NEESHOPS_LLM_MODEL` makes this an operational default,
+not an architectural dependency. LLM reranking remains off by default.
 
-- [ ] Select and document the provider and model.
-- [ ] Implement an adapter that accepts the bounded payload and returns
-      `{"ordered_ids": [...], "usage": {...}}`.
-- [ ] Read credentials only from environment-backed settings; never commit a
-      key.
-- [ ] Enforce the configured five-second call timeout.
-- [ ] Parse real prompt/completion token counts.
-- [ ] Test authentication, timeout, network, malformed JSON, and provider
-      error paths.
-- [ ] Measure actual latency and approximate cost.
-- [ ] Document whether the provider requires network access during scoring.
+The production flow is:
 
-Exit check: a real call reorders only known candidates, while a missing key or
-failed call produces the same safe heuristic fallback proven in Phase 2.
+```text
+P2 candidates
+  -> HeuristicRanker deterministic order (up to its configured limit)
+  -> top 30 semantic shortlist
+  -> optional Gemini ordered IDs
+  -> strict known/unique-ID validation and heuristic fill
+  -> requested top_k (normally 10)
+```
+
+`RankingProvider.rerank(ProviderRequest, timeout_seconds) -> ProviderResult`
+is the narrow provider boundary. `GeminiRankingProvider` contains all SDK
+details. `FakeRankingProvider` implements the identical interface without an
+API key, network, or SDK call and lets tests prescribe an ordering.
+
+#### Eligibility and defaults
+
+Gemini runs only when all of these deterministic conditions hold:
+
+- `NEESHOPS_ENABLE_LLM_RERANKER=true` (or explicit test injection);
+- a provider is configured and available;
+- at least two meaningful fields from the actual `CONSTRAINT_FIELDS` schema
+  are set (`NO_PREFERENCE`, empty, and unknown fields do not count); and
+- at least two heuristic candidates are available.
+
+Defaults are `provider=gemini`, `model=gemini-3.7-flash`, semantic
+`rerank_limit=30`, `minimum_constraints=2`, and `timeout_seconds=5`. The
+heuristic limit remains separately configured at `ranking.rerank_limit=40`.
+
+#### Request and structured response
+
+Gemini receives only current explicit constraints and a deterministic compact
+candidate list: `parent_asin`, a title truncated to 200 characters, numeric
+price when present, up to five 80-character categories, and up to three
+160-character features. It does not receive raw profile data, ratings, store,
+retrieval scores, retrieval source, the full catalog object, giant details, or
+long descriptions.
+
+The compact instruction defines Gemini as a semantic relevance judge: rank
+only supplied IDs, prioritize explicit and hard requirements, invent nothing,
+return no scores or explanations, and optionally omit uncertain candidates.
+Gemini structured output uses the Pydantic schema:
+
+```json
+{"ordered_ids": ["B001", "B004", "B002"]}
+```
+
+Every response is still validated locally. Unknown, empty, and duplicate IDs
+are removed. Valid partial output is placed first, omitted shortlist IDs retain
+heuristic order, and any remaining heuristic candidates follow. Zero valid IDs
+causes a complete heuristic fallback.
+
+#### Failure behavior and observability
+
+Disabled, insufficient-constraint, and too-few-candidate skips are intentional,
+so they return heuristic results with no fallback error. Actual fallback codes
+are `missing_credentials`, `timeout`, `provider_error`,
+`malformed_response`, and `invalid_provider_result`. All provider and network
+exceptions are sanitized and fail soft; no exception text or key is logged.
+
+The SDK receives the configured timeout through `HttpOptions.timeout` in
+milliseconds, which bounds the real HTTP request rather than merely abandoning
+a still-running thread. `last_latency_ms` uses `time.perf_counter()` around the
+provider call. `last_usage` maps provider-reported input/output counts to
+`prompt_tokens` and `completion_tokens`; unavailable metadata stays `None` and
+is never fabricated. Cost is not estimated because no pricing configuration
+exists yet.
+
+#### Environment and verification
+
+Install and run the offline suite:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/pytest -vv tests/test_ranking.py tests/test_llm_reranker.py tests/test_gemini_provider.py
+.venv/bin/pytest -q
+```
+
+Normal pytest excludes the `integration` marker and requires no credential or
+network. Run the optional real smoke test explicitly with:
+
+```bash
+.venv/bin/pytest -m integration -s tests/test_gemini_integration.py
+```
+
+Supported environment variables (all shown with safe placeholders in
+`.env.example`) are:
+
+- `GEMINI_API_KEY`
+- `NEESHOPS_ENABLE_LLM_RERANKER`
+- `NEESHOPS_LLM_PROVIDER`
+- `NEESHOPS_LLM_MODEL`
+- `NEESHOPS_LLM_RERANK_LIMIT`
+- `NEESHOPS_LLM_MIN_CONSTRAINTS`
+- `NEESHOPS_LLM_TIMEOUT_SECONDS`
+
+`.env` and `.env.local` are ignored while `.env.example` remains tracked.
+Never put a key in source, fixtures, tests, output, or exceptions.
+
+Current limitations: Gemini needs network when enabled; no model-price table or
+estimated cost is maintained; Phase 4 has not exposed usage through the Agent;
+and ranking quality has not yet been measured on real P2 candidates.
+
+#### What Shaneen needs to do
+
+1. Go to Google AI Studio and create a Gemini API key.
+2. Copy the key.
+3. Put it in the local environment as `GEMINI_API_KEY`.
+4. Set `NEESHOPS_ENABLE_LLM_RERANKER=true` locally.
+5. Run `.venv/bin/pytest -m integration -s tests/test_gemini_integration.py`.
 
 ### Phase 4 — Official Agent integration with P5
 
@@ -173,8 +365,8 @@ Expected flow:
 
 ```text
 P2 retrieves up to 200 candidates
-  -> 3A takes the configured top 40
-  -> heuristic or LLM reranking
+  -> HeuristicRanker considers the configured top 40
+  -> optional Gemini reranks the heuristic top 30
   -> 3A returns the top 10
 ```
 
@@ -216,15 +408,14 @@ and reproducible.
 
 ### Recommended execution order from here
 
-1. Obtain Person 2's real candidate output.
-2. Produce a local P2 → heuristic top-10 demonstration.
-3. Generate the first canonical 3A handoff JSON for 3B.
-4. Add and test the real provider adapter.
-5. Compare heuristic and LLM ordering locally.
-6. Coordinate the official Agent seam with P5.
-7. Give baseline and ranked results to 3B.
-8. Run the official evaluator and select the best measured strategy.
-9. Document limitations, latency, tokens, and cost.
+1. Optionally run the real Gemini smoke test after a local key is configured.
+2. Coordinate the official Agent seam with P5 (Phase 4).
+3. Obtain Person 2's real candidate output (Phase 5).
+4. Produce a local P2 → heuristic/Gemini top-10 comparison.
+5. Generate the first canonical 3A handoff JSON for 3B.
+6. Give baseline and ranked results to 3B.
+7. Run the official evaluator and select the best measured strategy.
+8. Document measured quality, latency, tokens, and any configured cost.
 
 ## Merge checklist
 
@@ -240,7 +431,7 @@ and reproducible.
 between rankers based on availability rather than hardcoding
 `HeuristicRanker`, `neeshops/ranking/README.md` updated.
 
-## First action
+## Next Phase 4 action (not part of Phase 3)
 
 Wire a config-driven ranker choice into `neeshops/agent.py`.
 

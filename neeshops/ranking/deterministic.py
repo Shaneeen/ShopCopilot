@@ -1,0 +1,172 @@
+"""R2/R3 deterministic rankers built from explicit extracted features."""
+from __future__ import annotations
+
+import time
+from dataclasses import asdict, dataclass
+from typing import Any, Mapping, Optional
+
+from neeshops.config.settings import load_strategy
+from neeshops.models.recommendation import Recommendation
+from neeshops.models.session import ConversationState
+from neeshops.ranking.base import Ranker
+from neeshops.ranking.features import ConstraintEvaluation, RankingFeatureExtractor, RankingFeatures
+from neeshops.ranking.signals import normalize_scores, reciprocal_rank_fusion
+from neeshops.retrieval.base import Candidate
+
+
+@dataclass(frozen=True)
+class RankingDiagnostic:
+    parent_asin: str
+    features: RankingFeatures
+    constraint_evaluation: ConstraintEvaluation
+    relevance_score: float
+    original_rank: int
+
+    def as_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+class ConstraintAwareRanker(Ranker):
+    """R2: rank by violations first, then configured local relevance."""
+
+    name = "r2_constraint_aware"
+
+    def __init__(
+        self,
+        strategy: Optional[dict[str, Any]] = None,
+        *,
+        extractor: Optional[RankingFeatureExtractor] = None,
+    ) -> None:
+        self._strategy = strategy or load_strategy()
+        self._cfg = self._strategy["ranking"]["deterministic"]
+        self._extractor = extractor or RankingFeatureExtractor()
+        self.last_diagnostics: dict[str, RankingDiagnostic] = {}
+        self.last_latency_ms = 0.0
+
+    def rank(
+        self,
+        candidates: list[Candidate],
+        catalog_lookup: dict[str, dict[str, Any]],
+        state: ConversationState,
+        top_k: int,
+    ) -> list[Recommendation]:
+        started = time.perf_counter()
+        self.last_diagnostics = {}
+        if top_k <= 0 or not candidates:
+            self.last_latency_ms = (time.perf_counter() - started) * 1000
+            return []
+
+        pool = _unique_candidates(candidates)[: int(self._cfg["rerank_limit"])]
+        retrieval_signals = self._retrieval_signals(pool)
+        scored: list[tuple[int, float, int, Candidate]] = []
+        for original_rank, (candidate, retrieval_signal) in enumerate(
+            zip(pool, retrieval_signals), start=1
+        ):
+            row = catalog_lookup.get(candidate.parent_asin, {})
+            features, evaluation = self._extractor.extract(
+                candidate,
+                row,
+                state,
+                retrieval_rank=original_rank,
+                retrieval_score_normalized=retrieval_signal,
+            )
+            relevance = self._aggregate(features)
+            self.last_diagnostics[candidate.parent_asin] = RankingDiagnostic(
+                candidate.parent_asin, features, evaluation, relevance, original_rank
+            )
+            scored.append((features.hard_constraint_violation_count, -relevance, original_rank, candidate))
+
+        scored.sort(key=lambda item: item[:3])
+        recommendations = [
+            Recommendation(
+                parent_asin=candidate.parent_asin,
+                score=_ordering_score(violations, -negative_relevance),
+                reason=self._reason(violations),
+                source=candidate.source,
+            )
+            for violations, negative_relevance, _, candidate in scored[:top_k]
+        ]
+        self.last_latency_ms = (time.perf_counter() - started) * 1000
+        return recommendations
+
+    def _retrieval_signals(self, candidates: list[Candidate]) -> list[float]:
+        method = str(self._cfg.get("retrieval_normalization", "raw"))
+        return normalize_scores([candidate.score for candidate in candidates], method)
+
+    def _aggregate(self, features: RankingFeatures) -> float:
+        weights: Mapping[str, float] = self._cfg["weights"]
+        enabled: Mapping[str, bool] = self._cfg.get("features_enabled", {})
+        values = {
+            "retrieval": features.retrieval_score_normalized,
+            "category": features.category_match,
+            "title_overlap": features.title_overlap,
+            "feature_overlap": features.feature_overlap,
+            "color": features.color_match,
+            "material": features.material_match,
+            "brand": features.brand_match,
+            "style": features.style_match,
+            "size": features.size_match,
+            "budget": features.budget_fit,
+            "personalization": features.personalization_boost,
+        }
+        return sum(
+            float(weights.get(name, 0.0)) * value
+            for name, value in values.items()
+            if enabled.get(name, True)
+        )
+
+    @staticmethod
+    def _reason(violations: int) -> str:
+        if violations == 0:
+            return "Matches the current stated requirements"
+        return "Closest available match after explicit requirement checks"
+
+
+class FusionAwareRanker(ConstraintAwareRanker):
+    """R3: R2 with normalized or genuine per-source fused retrieval signal."""
+
+    name = "r3_fusion_aware"
+
+    def __init__(
+        self,
+        strategy: Optional[dict[str, Any]] = None,
+        *,
+        source_rankings: Optional[Mapping[str, list[str]]] = None,
+        extractor: Optional[RankingFeatureExtractor] = None,
+    ) -> None:
+        super().__init__(strategy, extractor=extractor)
+        self._source_rankings = source_rankings
+
+    def _retrieval_signals(self, candidates: list[Candidate]) -> list[float]:
+        method = str(self._cfg.get("fusion_method", "minmax"))
+        if method != "rrf":
+            return normalize_scores([candidate.score for candidate in candidates], method)
+        if not self._source_rankings:
+            # Candidate.source labels do not contain source ranks; fall back to
+            # deterministic rank normalization rather than inventing fusion.
+            return normalize_scores([candidate.score for candidate in candidates], "rank")
+        raw = reciprocal_rank_fusion(
+            self._source_rankings, k=int(self._cfg.get("rrf_k", 60))
+        )
+        return normalize_scores([raw.get(candidate.parent_asin, 0.0) for candidate in candidates], "minmax")
+
+
+def _unique_candidates(candidates: list[Candidate]) -> list[Candidate]:
+    unique: list[Candidate] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if candidate.parent_asin and candidate.parent_asin not in seen:
+            unique.append(candidate)
+            seen.add(candidate.parent_asin)
+    return unique
+
+
+def _ordering_score(violations: int, relevance: float) -> float:
+    """Expose a score consistent with the lexicographic ordering key.
+
+    Relevance is compressed below one, so each violation remains a separate
+    tier rather than becoming another small weighted penalty.
+    """
+    non_negative_relevance = max(0.0, relevance)
+    bounded_relevance = non_negative_relevance / (1.0 + non_negative_relevance)
+    return bounded_relevance - violations

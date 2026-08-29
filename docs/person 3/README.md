@@ -7,7 +7,7 @@ blocking each other or fighting over the same files.
 
 | Sub-role | Owner scope | Folder |
 |---|---|---|
-| [Person 3A — Ranking Core](./3A_RANKING_CORE.md) | `HeuristicRanker`, `LLMReranker`, ranker selection in `neeshops/agent.py` | `neeshops/ranking/` |
+| [Person 3A — Ranking Core](./3A_RANKING_CORE.md) | R0–R3 deterministic experiments, `LLMReranker`, ranker selection in `neeshops/agent.py` | `neeshops/ranking/` |
 | [Person 3B — Personalisation & Evaluation](./3B_PERSONALIZATION_EVAL.md) | `personalization_boost`, personalization weighting, P3-D5 MRR comparison experiment | `neeshops/personalization/` |
 
 See [CHANGELOG.md](./CHANGELOG.md) for the running log of changes made
@@ -19,7 +19,8 @@ for the concurrency rules that let 3A and 3B work at the same time.
 The original deliverables cut cleanly along the two owned folders:
 
 - **3A** owns everything in `neeshops/ranking/` — the `Ranker` ABC,
-  `HeuristicRanker`, and the not-yet-implemented `LLMReranker`
+  retrieval/R1/R2/R3 strategies, experiment harness, and optional
+  provider-backed `LLMReranker`
   (P3-D1, P3-D3, P3-D4), plus wiring ranker selection into
   `neeshops/agent.py` (Definition of Done).
 - **3B** owns everything in `neeshops/personalization/` — the
