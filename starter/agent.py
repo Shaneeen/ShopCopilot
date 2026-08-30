@@ -69,12 +69,20 @@ class Agent:
         # schema (additionalProperties: false) — NeeShopsAgent's internal
         # response carries extra fields (route, per-item reason) that are
         # useful for our own logging/frontend but not part of the contract.
+        recs = [
+            {"parent_asin": rec["parent_asin"], "score": rec["score"]}
+            if "score" in rec and rec["score"] is not None
+            else {"parent_asin": rec["parent_asin"]}
+            for rec in result.get("recommendations", [])
+            if isinstance(rec, dict) and "parent_asin" in rec
+        ]
+        if top_k is not None and top_k >= 0:
+            recs = recs[:top_k]
+
         return {
-            "message": result["message"],
+            "message": str(result.get("message") or "Tell me a bit more about what you're looking for."),
             "ask_attribute": result.get("ask_attribute"),
-            "recommendations": [
-                {"parent_asin": rec["parent_asin"], "score": rec["score"]}
-                for rec in result["recommendations"]
-            ],
+            "recommendations": recs,
             "usage": result.get("usage", {"prompt_tokens": 0, "completion_tokens": 0}),
         }
+

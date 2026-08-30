@@ -18,7 +18,7 @@ FIXTURE_ROWS = [
 @pytest.fixture
 def catalog_path(tmp_path):
     path = tmp_path / "catalog.jsonl"
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         for row in FIXTURE_ROWS:
             f.write(json.dumps(row) + "\n")
     return path
