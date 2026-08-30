@@ -5,6 +5,7 @@ outcomes.
 
     python scripts/run_experiment.py --grid retrieval.browsing.semantic_weight 0.3 0.5 0.7 0.9
     python scripts/run_experiment.py --random 5
+    python scripts/run_experiment.py --targeted
 
 Uses the real official evaluator (`evaluator/local_evaluator.py`) via
 `starter.agent.Agent(catalog_path, strategy=...)` — the `strategy` kwarg is
@@ -14,6 +15,7 @@ never passes it.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -24,16 +26,6 @@ from neeshops.research.experiment_runner import ExperimentRunner
 from neeshops.research.optimizer import next_experiments, propose_grid, propose_random
 from neeshops.research.results_store import ResultsStore
 from starter.agent import Agent
-
-# Organiser's published weak-baseline reference (docs/baseline_results.json).
-# Prefer a freshly recorded run from `python scripts/evaluate.py` once the
-# catalog is installed — pass --baseline-file to point at one.
-PLACEHOLDER_BASELINE = {
-    "hit_rate_at_10": 0.125,
-    "mrr": 0.068034,
-    "mttc": 9.81,
-    "recommended_technical_score": 0.10671,
-}
 
 
 def _make_evaluate_fn(catalog_path: str):
@@ -46,7 +38,7 @@ def _make_evaluate_fn(catalog_path: str):
         # ExperimentRunner.PRIMARY_METRIC reads "technical_score"; the
         # official evaluator's key is "recommended_technical_score" — alias
         # it here rather than renaming either side's vocabulary.
-        result["technical_score"] = result["recommended_technical_score"]
+        result["technical_score"] = result.get("recommended_technical_score", 0.0)
         return result
 
     return _evaluate_fn
@@ -54,12 +46,14 @@ def _make_evaluate_fn(catalog_path: str):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--grid", nargs="+", metavar=("PARAM", "VALUES"))
-    parser.add_argument("--random", type=int, metavar="N")
+    parser.add_argument("--grid", nargs="+", metavar=("PARAM", "VALUES"), help="Parameter dot-path and candidate values")
+    parser.add_argument("--random", type=int, metavar="N", help="Propose N random parameter experiments")
     parser.add_argument("--targeted", action="store_true", help="Generate experiments targeting the weakest scenario in baseline")
-    parser.add_argument("--dataset", default="data/dev_split.jsonl")
-    parser.add_argument("--catalog", default="data/catalog.jsonl")
+    parser.add_argument("--dataset", default="data/dev_split.jsonl", help="Dataset split path")
+    parser.add_argument("--catalog", default="data/catalog.jsonl", help="Catalog jsonl path")
+    parser.add_argument("--baseline-file", type=Path, default=None, help="Path to a baseline JSON file (from scripts/evaluate.py)")
     parser.add_argument("--baseline-score", type=float, default=None, help="Explicit baseline score to beat (default: auto-evaluated on --dataset)")
+    parser.add_argument("--min-improvement", type=float, default=0.0, help="Minimum technical_score improvement required to accept")
     args = parser.parse_args()
 
     if not Path(args.catalog).exists():
@@ -70,28 +64,53 @@ def main() -> int:
         return 1
 
     eval_fn = _make_evaluate_fn(args.catalog)
-    runner = ExperimentRunner(evaluate_fn=eval_fn, results_store=ResultsStore())
+    runner = ExperimentRunner(
+        evaluate_fn=eval_fn,
+        results_store=ResultsStore(),
+        min_improvement=args.min_improvement,
+    )
 
-    if args.baseline_score is not None:
+    if args.baseline_file is not None:
+        if not args.baseline_file.exists():
+            print(f"Baseline file not found at {args.baseline_file}")
+            return 1
+        with open(args.baseline_file, "r", encoding="utf-8") as f:
+            baseline = json.load(f)
+        if "technical_score" not in baseline and "recommended_technical_score" in baseline:
+            baseline["technical_score"] = baseline["recommended_technical_score"]
+        print(f"Loaded baseline from {args.baseline_file}: technical_score={baseline.get('technical_score', 0.0):.6f}\n")
+    elif args.baseline_score is not None:
         baseline = {
             "technical_score": args.baseline_score,
             "recommended_technical_score": args.baseline_score,
             "scenario_metrics": {},
         }
+        print(f"Using explicit baseline technical_score: {args.baseline_score:.6f}\n")
     else:
         print(f"Measuring baseline on {args.dataset} using default strategy...")
         from neeshops.config.settings import load_strategy
         default_strat = load_strategy()
         baseline = eval_fn(default_strat, args.dataset)
-        print(f"Baseline technical_score on {args.dataset}: {baseline.get('technical_score'):.6f}\n")
+        print(f"Baseline technical_score on {args.dataset}: {baseline.get('technical_score', 0.0):.6f}\n")
 
     if args.grid:
-        param, *values = args.grid
-        experiments = propose_grid(param, [float(v) for v in values])
+        if len(args.grid) < 2:
+            parser.error("Pass --grid PARAM v1 v2 ... (at least one value required)")
+            return 2
+        param, *raw_values = args.grid
+        try:
+            values = [float(v) for v in raw_values]
+        except ValueError as e:
+            parser.error(f"Invalid float value in --grid: {e}")
+            return 2
+        experiments = propose_grid(param, values)
     elif args.random:
         experiments = propose_random(n=args.random)
     elif args.targeted:
-        experiments = next_experiments(baseline.get("scenario_metrics", {}))
+        scenario_metrics = baseline.get("scenario_metrics", {})
+        if not scenario_metrics:
+            print("Note: No scenario breakdown available in baseline; falling back to random sampling.")
+        experiments = next_experiments(scenario_metrics)
         print(f"Generated {len(experiments)} scenario-targeted experiment(s):")
         for e in experiments:
             print(f"  - [{e.name}] {e.hypothesis}")
@@ -103,8 +122,10 @@ def main() -> int:
     for experiment in experiments:
         record = runner.run(experiment, dataset_path=args.dataset, baseline_metrics=baseline)
         status = "ACCEPTED" if record["accepted"] else "rejected"
+        cand_score = record["metrics"].get("recommended_technical_score", 0.0)
+        base_score = baseline.get("technical_score", 0.0)
         print(f"[{status}] {experiment.name}: {experiment.parameters}")
-        print(f"  technical_score: {record['metrics'].get('recommended_technical_score')} (baseline: {baseline.get('technical_score'):.6f})")
+        print(f"  technical_score: {cand_score:.6f} (baseline: {base_score:.6f})")
         print(f"  latency: {record.get('latency_seconds')}s | tokens: {record.get('tokens', {}).get('total_tokens', 0)}")
 
     return 0

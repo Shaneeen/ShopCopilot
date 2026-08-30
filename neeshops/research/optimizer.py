@@ -136,12 +136,12 @@ def next_experiments(scenario_metrics: Optional[dict[str, Any]] = None) -> list[
             Experiment(
                 name="targeted::intent_override::candidate_limit=300",
                 hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Expanding candidate limit to 300 ensures pivoted keywords retrieve products despite early turn noise.",
-                parameters={"retrieval.candidate_limit": 300},
+                parameters={"retrieval.candidate_limit": 300.0},
             ),
             Experiment(
                 name="targeted::intent_override::min_candidates=3",
                 hypothesis=f"Intent Override weak (HitRate: {hit_rate:.1%}): Lowering candidate threshold before recommendation to 3 allows faster conversion on focused pivot constraints.",
-                parameters={"clarification.min_candidates_before_recommend": 3},
+                parameters={"clarification.min_candidates_before_recommend": 3.0},
             ),
         ])
     elif weakest_name == "boundary":
