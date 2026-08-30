@@ -23,8 +23,8 @@ def test_agent_handles_multiple_concurrent_sessions():
     agent.reset("a", user_profile={})
     agent.reset("b", user_profile={})
 
-    result_a = agent.respond("a", "blue jacket", turn=1, top_k=5)
-    result_b = agent.respond("b", "red boots", turn=1, top_k=5)
+    result_a = agent.respond("a", "blue jacket", turn=1, top_k=10)
+    result_b = agent.respond("b", "red boots", turn=1, top_k=10)
 
     assert result_a is not None
     assert result_b is not None

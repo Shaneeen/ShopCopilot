@@ -10,6 +10,12 @@ P2/P3 carry the heaviest new-implementation load (semantic retrieval, LLM
 reranking) since those are the two biggest unimplemented stubs in the
 current codebase.
 
+**Beginner route:** read `docs/archive/BEGINNER_START_HERE.md`, follow the
+shared checkpoints in `docs/archive/TWO_DAY_FULL_SCOPE_PLAN.md`, then work
+from your acceptance card in `docs/archive/WORKSTREAM_QUICKSTARTS.md`. This
+document remains the detailed ownership and backlog reference; the shorter
+guides do not remove any deliverable listed here.
+
 ---
 
 ## Person 1 — Conversation Intelligence & State
@@ -155,44 +161,32 @@ the real evaluator once the catalog is installed**, never estimated.
 merges both paths correctly; `neeshops/retrieval/README.md` updated.
 
 ### First action
-Install the real catalog locally (`data/README.md`) and run
-`python scripts/setup_catalog.py` to confirm the BM25 index actually
-builds cleanly against all 50,000 real rows (only ever tested against a
-3-row fixture in this environment so far) — then start on
-`SemanticRetriever`.
+The official catalog and BM25 index were validated against all 50,000 rows on
+2026-08-28. Inspect three real queries, record candidate recall for the
+initial run, then start on `SemanticRetriever`.
 
 ---
 
-## Person 3 — Ranking, Query Intelligence & Personalisation
+## Person 3A — Ranking Core
 
 ### Owned folders
-`neeshops/ranking/`, `neeshops/personalization/`.
+`neeshops/ranking/`.
 
 ### Allowed/shared interfaces
-Provides: `Ranker` (ABC), `HeuristicRanker`, `personalization_boost` (see
-`docs/neeshops/INTEGRATION_CONTRACTS.md` → "Retrieval ↔ Ranking", "Profile
-↔ Ranking"). Consumes: `list[Candidate]` from P2, `ConversationState.user_profile`.
+Provides: `Ranker` (ABC), `HeuristicRanker`, `LLMReranker` (see
+`docs/neeshops/INTEGRATION_CONTRACTS.md` → "Retrieval ↔ Ranking"). Consumes: `list[Candidate]` from P2, `personalization_boost` from 3B.
 
 ### Files to avoid modifying
-`neeshops/retrieval/`, `neeshops/conversation/`, `starter/agent.py`,
-`evaluator/`.
+`neeshops/retrieval/`, `neeshops/conversation/`, `neeshops/personalization/`, `starter/agent.py`, `evaluator/`.
 
 ### Responsibilities
-Candidate reranking, semantic ranking, optional LLM reranking, query
-rewriting where appropriate, soft user-profile signals, ranking
-explanation strings, ranking latency/token cost, fallback ranking when an
-external model is unavailable.
+Candidate reranking, semantic ranking core, optional LLM reranking, fallback ranking when an external model is unavailable, ranking explanation strings, ranking latency/token cost tracking.
 
 ### Deliverables
 
 - **P3-D1** — Deterministic baseline reranker exists.
   *Acceptance*: `HeuristicRanker` — **already done and tested**
   (`tests/test_ranking.py`).
-- **P3-D2** — Personalisation converts the official aggregate profile into
-  **soft** ranking features; explicit constraints take priority.
-  *Acceptance*: `personalization_boost()` + `ranking.personalization_weight`
-  (default 0.15) — **already done**; verified by
-  `tests/test_ranking.py::test_personalization_never_overrides_explicit_low_retrieval_score`.
 - **P3-D3** — If an LLM reranker is used: bounded candidate count in,
   token usage tracked, secrets from environment variables only, and a
   working fallback when unavailable.
@@ -202,15 +196,9 @@ external model is unavailable.
   unconditionally; this is the actual integration gap).
 - **P3-D4** — Ranker output is a valid, ordered `parent_asin` list.
   *Acceptance*: **already done** for `HeuristicRanker`.
-- **P3-D5** — Compare ranking strategy against retrieval-only output.
-  *Acceptance*: a script or experiment (coordinate with P4) that runs the
-  evaluator with `HeuristicRanker` vs. an identity ranker (pass-through
-  retrieval order) and reports the MRR delta.
 
 ### Success metrics
-MRR, Top-10 ordering quality, latency, token usage/cost if an LLM is used
-— all measured, never estimated. Report actual deltas against
-retrieval-only ordering.
+MRR, Top-10 ordering quality, latency, token usage/cost if an LLM is used.
 
 ### Merge checklist
 - [ ] `pytest tests/test_ranking.py tests/test_agent_smoke.py` passes
@@ -225,8 +213,50 @@ between rankers based on availability rather than hardcoding
 ### First action
 Wire a config-driven ranker choice into `neeshops/agent.py`
 (`NeeShopsAgent.__init__` currently hardcodes `ranker or
-HeuristicRanker(...)`) so P3 has a real integration point to build
+HeuristicRanker(...)`) so P3A has a real integration point to build
 `LLMReranker` toward, before writing any LLM prompt code.
+
+---
+
+## Person 3B — Personalisation & Evaluation
+
+### Owned folders
+`neeshops/personalization/`.
+
+### Allowed/shared interfaces
+Provides: `personalization_boost` (see
+`docs/neeshops/INTEGRATION_CONTRACTS.md` → "Profile ↔ Ranking"). Consumes: `ConversationState.user_profile`.
+
+### Files to avoid modifying
+`neeshops/retrieval/`, `neeshops/conversation/`, `neeshops/ranking/` (except coordinates to hooks), `starter/agent.py`, `evaluator/`.
+
+### Responsibilities
+Soft user-profile signals conversion, maintaining personalisation weights, comparing ranking strategy against retrieval-only order, reporting MRR and Hit Rate deltas, tracking evaluation runs.
+
+### Deliverables
+
+- **P3-D2** — Personalisation converts the official aggregate profile into
+  **soft** ranking features; explicit constraints take priority.
+  *Acceptance*: `personalization_boost()` + `ranking.personalization_weight`
+  (default 0.15) — **already done**; verified by
+  `tests/test_ranking.py::test_personalization_never_overrides_explicit_low_retrieval_score`.
+- **P3-D5** — Compare ranking strategy against retrieval-only output.
+  *Acceptance*: a script or experiment (coordinate with P4) that runs the
+  evaluator with `HeuristicRanker` vs. an identity ranker (pass-through
+  retrieval order) and reports the MRR delta.
+
+### Success metrics
+Personalisation correctness (constraints override), MRR delta from ranking.
+
+### Merge checklist
+- [ ] `pytest tests/test_ranking.py` passes
+- [ ] Personalisation-never-overrides-explicit-constraints test remains green
+
+### Definition of Done
+`personalization_boost()` is functional and covered by tests; A/B MRR comparison script runs and logs results in `docs/neeshops/EXPERIMENTS.md`.
+
+### First action
+Ensure the personalization test matches current baseline parameters, then coordinate with P4 to establish the Identity Ranker evaluation baseline.
 
 ---
 
@@ -260,10 +290,11 @@ ever proposes different values for parameters already declared safe in
 - **P4-D1** — Reproduce the official weak baseline (`Hit Rate@10 0.125`,
   `MRR 0.068034`, `MTTC 9.81`, `TechnicalScore 0.10671`) on the real
   public set.
-  *Acceptance*: `python scripts/evaluate.py` output matches
-  `docs/baseline_results.json` within reasonable numerical tolerance.
-  **Not yet done in this environment — the real catalog isn't installed.
-  This is the actual first milestone (M1).**
+  *Acceptance*: a clean upstream weak-starter run matches
+  `docs/baseline_results.json` within reasonable numerical tolerance, while
+  the modified NeeShops initial candidate is recorded separately. The
+  NeeShops 200-session initial score is now recorded; clean upstream
+  reproduction remains open.
 - **P4-D2** — Deterministic internal dev/holdout split.
   *Acceptance*: `scripts/create_dev_split.py` — **already implemented**,
   not yet run against the real 200-session set here.
@@ -277,8 +308,8 @@ ever proposes different values for parameters already declared safe in
   captured yet — extend if needed.
 - **P4-D4** — Run controlled A/B experiments.
   *Acceptance*: `scripts/run_experiment.py --grid ...` /
-  `--random N` — **already implemented**, needs a real catalog to
-  actually execute meaningfully.
+  `--random N` — **already implemented**; now establish a comparable baseline
+  on the same 160-session development split before accepting any result.
 - **P4-D5** — Research optimisation proposes/selects safe configuration
   changes without modifying the evaluator.
   *Acceptance*: `propose_grid`/`propose_random` — done;
@@ -305,10 +336,9 @@ experiment cycle (propose → run → accept/reject) recorded in
 `docs/neeshops/EXPERIMENTS.md` with actual evaluator output.
 
 ### First action
-Install the real catalog (`data/README.md`) and run
-`python scripts/evaluate.py` to get the **first real baseline
-reproduction** — this unblocks every other workstream's "measure the
-actual delta" requirement.
+Reproduce the organizer's weak starter from a clean upstream checkout, then
+measure the default NeeShops strategy on `data/dev_split.jsonl`. Store both
+with unambiguous labels; only same-dataset comparisons may drive experiments.
 
 ---
 
@@ -367,14 +397,32 @@ below).
   *Acceptance*: root `README.md`'s NeeShops section — already documents
   setup/test/eval commands; verify a clean-checkout teammate can follow it
   without asking questions.
-- **P5-D6** — Demo flow: multi-turn Agent session, internal decisions/logs,
-  results, evaluator metrics.
-  *Acceptance*: not yet built — `neeshops/utils/logging.py`'s structured
-  JSON-line events (`agent.respond`, `retrieval.hybrid`, `state.apply_turn`,
-  `experiment.complete`, etc.) are the raw material; a simple script that
-  runs a session and pretty-prints the log trace + final evaluator metrics
-  would satisfy the "demo may show API interaction / evaluator / Agent
-  trace" deliverable requirement without any frontend work.
+- **P5-D6 — Agent Trace Viewer.** Demo flow: multi-turn Agent session,
+  internal decisions/logs, results, evaluator metrics — made *visible*,
+  not just logged.
+  *What it is*: run a real session through `starter.agent.Agent`, capture
+  the structured JSON-line events `neeshops/utils/logging.py` already
+  emits per stage (`state.reset`, `state.apply_turn`, `retrieval.hybrid`,
+  `agent.respond`, ...), and render them as a readable per-turn trace —
+  intent detected, constraints extracted, retrieval route + candidate
+  counts, clarification decision, final ranked recommendations with their
+  `reason`. This is the frontend's existing "Agent Run Inspector" mockup
+  (`frontend/Main.dc.html`, currently sample data only) wired to a real
+  session instead of fake data.
+  *Why it's worth doing*: it's read-only tooling over logs that already
+  exist — **zero risk to the scored Agent/evaluator path** — and it
+  directly answers "prove this isn't a black box," which is genuine
+  Innovation/Impact material and exactly what the demo video can show per
+  the official deliverables ("API interaction, evaluator, inference
+  results, developer dashboard, metrics, Agent trace" — no shopping
+  frontend required).
+  *Acceptance*: a script (e.g. `scripts/generate_trace_report.py`) that
+  runs a session and produces either a readable console trace or a static
+  HTML report reusing the frontend's visual design; committed and runnable
+  by any teammate; referenced from the README as part of the demo
+  instructions.
+  *Not required for*: M0–M6. This is a submission-polish item for M7 —
+  build it once core engineering is stable, not before.
 - **P5-D7** — Documentation records final team contributions.
   *Acceptance*: add a "Team Contributions" section to root `README.md`
   before submission.
@@ -434,7 +482,7 @@ together to avoid two people redesigning the same seam independently.
 ## M0 — Backbone Ready
 - [x] Official evaluator preserved, byte-identical to upstream
 - [x] Official `starter.agent.Agent` import works
-- [x] Tests execute (28/28 passing as of this audit)
+- [x] Tests execute (32/32 passing as of the 2026-08-28 beginner-readiness update)
 - [x] Folder ownership documented (this file + `docs/neeshops/FOLDER_GUIDE.md`)
 - [x] Five developers can branch independently (module boundaries + interfaces documented)
 
@@ -442,12 +490,13 @@ together to avoid two people redesigning the same seam independently.
 verdict and evidence.
 
 ## M1 — Baseline Reproduced
-- [ ] Official catalog installed (`data/catalog.jsonl`, 50k rows)
-- [ ] `python3 -m evaluator.local_evaluator` runs to completion on the
+- [x] Official catalog installed and validated locally (`data/catalog.jsonl`, 50k rows)
+- [x] `python3 -m evaluator.local_evaluator` runs to completion on the
       real public set
 - [ ] Baseline reproduced within reasonable numerical tolerance of
-      `docs/baseline_results.json`
-- [ ] Results recorded in `docs/neeshops/PROJECT_OVERVIEW.md`
+      `docs/baseline_results.json` using the clean upstream weak starter
+- [x] Current NeeShops initial results recorded separately in
+      `docs/neeshops/PROJECT_OVERVIEW.md`
 
 Owner: P4. **Blocking for every other milestone's "measured" claims.**
 
@@ -500,9 +549,9 @@ Owner: P5.
 
 Owner: P5, with input from all.
 
-No calendar dates are set here — the repository has no prior scheduling
-information to draw from; the team should timebox these against the
-actual submission deadline.
+The milestone definitions intentionally remain date-independent. For the
+team's two-day full-scope timebox and integration order, use
+`docs/archive/TWO_DAY_FULL_SCOPE_PLAN.md`.
 
 ---
 
@@ -536,8 +585,7 @@ feature/agent-integration             P5
 ## Remotes
 
 ```text
-origin      → your team's repository (not yet configured — add with
-              `git remote add origin <url>` once the team repo exists)
+origin      → https://github.com/Shaneeen/ShopCopilot.git (team repo — push here)
 upstream    → https://github.com/TechJam2026/techjam-conversational-search.git
               (fetch-only; never push here)
 ```
@@ -545,3 +593,31 @@ upstream    → https://github.com/TechJam2026/techjam-conversational-search.git
 Keep it this way: pull organiser updates with `git fetch upstream` and
 merge/cherry-pick deliberately (never `git push upstream`); push team work
 only to `origin`.
+
+---
+
+# Stretch Goals / Bonus Backlog
+
+**Not required for a working submission.** Nobody is assigned one of
+these by default — they exist for whoever finishes their core deliverables
+early and wants to grab something extra. Pick one, post in the group chat
+so two people don't build the same thing, do it in its own branch, and PR
+it like anything else. None of these should ever delay M0–M6 — if core
+work and a stretch goal both need attention, core work wins.
+
+| Idea | What it is | Roughly whose area | Why it's worth doing (if you have time) |
+|---|---|---|---|
+| **Agent Trace Viewer** | See P5-D6 above — this is the flagship stretch goal, already spec'd | P5, but anyone can build it | Best visible payoff for the demo video/judges relative to effort |
+| Reliability harness | A script that deliberately breaks things (no catalog, no LLM key, malformed `user_message`, empty candidate pool) and asserts the Agent always returns a valid contract-conformant response | P5 | Cheap proof of robustness — good Feasibility/Technical Execution talking point |
+| CI config | GitHub Actions running `pytest` on every PR | P5 | Catches a broken merge before it reaches `main`; not needed for a small team moving fast, but free credibility |
+| Scenario-targeted `next_experiments()` | Make `neeshops/research/optimizer.py::next_experiments()` actually read `scenario_metrics` and target the weakest scenario instead of random sampling | P4 | Turns the research loop from "random search" into something you can honestly call intelligent in the writeup |
+| Query rewriting for Browsing | Light rewriting of vague Browsing messages ("something nice for a casual weekend") into a richer retrieval query before hitting BM25/semantic | P2 or P3 | Directly targets Browsing Hit Rate@10, which the weak baseline is worst at |
+| Size/style/feature metadata filters | Extend `neeshops/retrieval/filters.py::DEFAULT_FILTERS` beyond budget/category/color/material/brand | P2 | Rounds out constraint coverage without new architecture |
+| Latency/cost report per turn | Extend the structured logs to summarize p50/p95 `agent.respond` latency and total token usage across a full evaluator run | P4 or P5 | Feasibility & Practicality judging criterion cares about this explicitly |
+| Frontend ↔ live Agent wiring | A tiny local API so `frontend/` can send a real message to a real `NeeShopsAgent` and show a real response, instead of static mock data | P5, only if everything else is done | Nice demo polish; explicitly optional per `docs/neeshops/PROJECT_OVERVIEW.md` — never a required deliverable |
+| Team-contributions writeup automation | A script that summarizes `git log --author` per person into the README's contributions section | Anyone | Saves 10 minutes at submission time, zero risk |
+
+If you think of something not on this list, the bar is: **does it improve
+a real, measurable thing (Hit Rate@10 / MRR / MTTC / reliability /
+judge-visible clarity), and can you build it without touching someone
+else's in-progress work?** If yes to both, go for it and post about it.

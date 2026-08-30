@@ -18,11 +18,17 @@ Organiser provides:
 
 ## Baseline Acceptance Test
 
-The official evaluator and starter are now vendored directly under
-`evaluator/` and were the base `starter/agent.py` was adapted from (see
-git history — the migration replaced its body with a thin call into
-`neeshops/`, keeping the retrieval semantics equivalent). Before any
-tuning work begins, confirm all four hold:
+The official evaluator is vendored under `evaluator/`. The original starter
+was replaced by a thin adapter into NeeShops. The current Agent adds state,
+clarification, score normalization, filtering, ranking, and personalisation,
+so it is **not** an exact reproduction harness for the original stateless,
+field-weighted BM25 starter. Keep these two starting points separate:
+
+- organizer weak-starter reference: reproduce from a clean checkout/tag of
+  the official participant repository;
+- NeeShops initial candidate: run this repository's current Agent.
+
+Before tuning begins, confirm all four hold:
 
 1. Catalog installed: `data/catalog.jsonl` exists (see `data/README.md` —
    download from the GitHub Release, not committed).
@@ -30,7 +36,7 @@ tuning work begins, confirm all four hold:
    without error and returns non-empty recommendations.
 3. Evaluator completes: `python3 -m evaluator.local_evaluator` runs to
    completion and writes `results.json`.
-4. Results are approximately:
+4. The clean official starter is approximately:
 
    ```text
    Hit Rate@10   0.125
@@ -43,13 +49,10 @@ tuning work begins, confirm all four hold:
 
 ```bash
 git clone <this repo> && cd <this repo>
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# Install the catalog (see data/README.md — GitHub Release download,
-# verify against SHA256SUMS) and the public sessions are already checked
-# in at data/public_set.jsonl:
-#   data/catalog.jsonl
+python3 -m venv .venv && source .venv/bin/activate
+python -m pip install -r requirements.txt
+python scripts/download_catalog.py
+python scripts/check_readiness.py
 
 python scripts/create_dev_split.py     # our deterministic 80/20 dev/holdout split
 pytest                                 # official tests/test_evaluator.py + our supplementary tests
@@ -57,12 +60,10 @@ python scripts/run_baseline.py         # fast smoke check of the adapter
 python3 -m evaluator.local_evaluator   # full official evaluation, per the official README
 ```
 
-If step 4's numbers are meaningfully off from the organiser's published
-baseline, treat that as a bug in `starter/agent.py`'s adapter or in
-`neeshops/retrieval/bm25.py`'s catalog field handling, never as a reason to
-touch `evaluator/local_evaluator.py` itself — the retrieval implementation
-is intended to stay equivalent to a plain BM25 baseline at this stage,
-before any tuning begins.
+If the **clean upstream starter** differs meaningfully from the published
+baseline, investigate environment/data differences and never modify the
+evaluator. A NeeShops score difference is expected because it is a different
+Agent; record it as a separate candidate with its exact dataset and strategy.
 
 ## Avoiding public-set overfitting
 

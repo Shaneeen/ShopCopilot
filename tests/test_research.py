@@ -63,6 +63,20 @@ def test_runner_rejects_when_candidate_does_not_beat_baseline(tmp_path):
     assert record["accepted"] is False
 
 
+def test_runner_rejects_a_tie_even_when_minimum_improvement_is_zero(tmp_path):
+    experiment = Experiment(
+        name="tie", hypothesis="x", parameters={"retrieval.candidate_limit": 100}
+    )
+    runner = ExperimentRunner(
+        evaluate_fn=lambda strategy, dataset_path: {"technical_score": 0.1},
+        results_store=ResultsStore(path=tmp_path / "results.jsonl"),
+    )
+    record = runner.run(
+        experiment, dataset_path="unused", baseline_metrics={"technical_score": 0.1}
+    )
+    assert record["accepted"] is False
+
+
 def test_results_store_persists_and_filters_accepted(tmp_path):
     store = ResultsStore(path=tmp_path / "results.jsonl")
     store.record(

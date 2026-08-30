@@ -81,6 +81,5 @@ python scripts/run_experiment.py --grid retrieval.browsing.semantic_weight 0.3 0
   environment — `docs/neeshops/EXPERIMENTS.md` is empty by design, not
   oversight.
 - `next_experiments()` doesn't yet target weak scenarios.
-- No internal dev/holdout generalisation check has been run yet
-  (`scripts/create_dev_split.py` exists but hasn't been exercised against
-  real data here).
+- The deterministic 160/40 files have been generated successfully; no
+  dev/holdout generalisation comparison has been run yet.

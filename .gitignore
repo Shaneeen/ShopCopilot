@@ -2,6 +2,8 @@ __pycache__/
 *.py[cod]
 .DS_Store
 .env
+.env.local
+!.env.example
 results.json
 data/catalog.jsonl
 data/releases/
@@ -18,6 +20,8 @@ tests/test_organizer_pipeline.py
 *.log
 
 # --- NeeShops additions (development environment / generated output) ---
+evaluation/results/bench_*.json
+evaluation/results/instrumented_results.json
 .venv/
 venv/
 data/*.fts.db
@@ -29,3 +33,22 @@ artifacts/
 *.egg-info/
 .vscode/
 .idea/
+data/semantic*
+data/embeddings/
+*.npy
+*.pkl
+*.faiss
+*.index
+*.pptx
+*.pdf
+pptx_dump.txt
+p1.md
+p2.md
+p3.md
+p4.md
+p5.md
+phase2.md
+data/test_catalog.jsonl
+p2_push/README_FOR_AI.md
+.commandcode/
+.obsidian/

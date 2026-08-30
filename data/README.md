@@ -8,9 +8,28 @@ Each session contains a safe aggregate `user_profile` and public labels for loca
 
 ## `catalog.jsonl`
 
-Download `catalog.jsonl.gz` from the GitHub Release and decompress it as `catalog.jsonl` in this directory. Expected row count: 50,000.
+The simplest cross-platform setup from the repository root is:
+
+```bash
+python scripts/download_catalog.py
+python scripts/check_readiness.py
+```
+
+The download script retrieves `catalog.jsonl.gz` and `SHA256SUMS` from the
+[official Participant Kit Release](https://github.com/TechJam2026/techjam-conversational-search/releases/tag/participant-kit),
+verifies the published checksum, decompresses the file as
+`data/catalog.jsonl`, and validates 50,000 unique product IDs. It refuses to
+overwrite an existing catalog.
+
+For a manual install, download both release assets, verify
+`catalog.jsonl.gz`, decompress it, and place the result at exactly
+`data/catalog.jsonl`. Expected row count: 50,000.
 
 Never place API keys, private evaluation data, or participant outputs in this directory.
+
+The upstream source is [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/),
+but use the competition's frozen release catalog for scoring rather than
+building a different 50,000-product sample yourself.
 
 ---
 

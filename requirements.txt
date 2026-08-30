@@ -8,14 +8,20 @@
 python-dotenv>=1.0.0
 pydantic>=2.6.0
 pytest>=8.0.0
+requests>=2.31.0
+google-genai>=1.22.0
 
 # BM25 / catalog storage in neeshops/retrieval/bm25.py uses stdlib sqlite3
 # (FTS5), same as the official starter — no extra dependency needed there.
 
+# Semantic retrieval (neeshops/retrieval/semantic.py): hashed TF-IDF +
+# numpy cosine — numpy is the single added dependency for the P2 semantic
+# path. Missing numpy degrades gracefully (semantic unavailable, BM25-only).
+numpy>=1.26.0
+
 # Optional, only needed once semantic retrieval / LLM reranking are
 # switched on via feature flags in .env — keep commented out until a
 # workstream actually needs them, so the baseline install stays fast:
+# Optional semantic retrieval dependencies remain disabled until needed:
 # sentence-transformers>=2.7.0
 # faiss-cpu>=1.8.0
-# anthropic>=0.40.0
-# openai>=1.40.0

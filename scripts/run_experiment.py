@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run one or more experiments through neeshops.research against the dev
-split, compare to a recorded baseline, and print/store accept-reject
-outcomes.
+split. First measure the unchanged default strategy on that same dataset,
+then print/store each candidate's accept-reject outcome.
 
     python scripts/run_experiment.py --grid retrieval.browsing.semantic_weight 0.3 0.5 0.7 0.9
     python scripts/run_experiment.py --random 5
@@ -22,11 +22,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from evaluator.local_evaluator import catalog_index, evaluate, load_jsonl
+from neeshops.config.settings import load_strategy
 from neeshops.research.experiment_runner import ExperimentRunner
 from neeshops.research.optimizer import next_experiments, propose_grid, propose_random
 from neeshops.research.results_store import ResultsStore
 from starter.agent import Agent
-
 
 def _make_evaluate_fn(catalog_path: str):
     catalog_ids, categories, products = catalog_index(catalog_path)
@@ -54,6 +54,7 @@ def main() -> int:
     parser.add_argument("--baseline-file", type=Path, default=None, help="Path to a baseline JSON file (from scripts/evaluate.py)")
     parser.add_argument("--baseline-score", type=float, default=None, help="Explicit baseline score to beat (default: auto-evaluated on --dataset)")
     parser.add_argument("--min-improvement", type=float, default=0.0, help="Minimum technical_score improvement required to accept")
+    parser.add_argument("--seed", type=int, default=42, help="seed for --random proposals")
     args = parser.parse_args()
 
     if not Path(args.catalog).exists():
@@ -105,7 +106,7 @@ def main() -> int:
             return 2
         experiments = propose_grid(param, values)
     elif args.random:
-        experiments = propose_random(n=args.random)
+        experiments = propose_random(n=args.random, seed=args.seed)
     elif args.targeted:
         scenario_metrics = baseline.get("scenario_metrics", {})
         if not scenario_metrics:

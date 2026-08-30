@@ -1,6 +1,11 @@
 # NeeShops — Project Overview
 
-Read this first. For requirements, see
+New to the project? Read `docs/archive/BEGINNER_START_HERE.md` first,
+then follow `docs/archive/TWO_DAY_FULL_SCOPE_PLAN.md` and your section of
+`docs/archive/WORKSTREAM_QUICKSTARTS.md`. Those guides preserve the full
+scope and turn this reference material into ordered beginner tasks.
+
+For requirements, see
 `docs/neeshops/TRACK4_REQUIREMENTS.md`; for module detail, see
 `docs/neeshops/FOLDER_GUIDE.md`; for interfaces, see
 `docs/neeshops/INTEGRATION_CONTRACTS.md`; for the job split, see
@@ -83,11 +88,11 @@ without a cited test or run.
 
 | Area | Status | Current implementation | Next milestone | Owner |
 |---|---|---|---|---|
-| Official contract adapter (`starter/agent.py`) | **FUNCTIONAL** | Response shape verified byte-for-byte against `docs/agent_api_contract.json`; `tests/test_agent_contract.py` (3 tests) passes | Run against real catalog (M1) | P5 |
+| Official contract adapter (`starter/agent.py`) | **FUNCTIONAL** | `tests/test_agent_contract.py` uses a searchable fixture, requires non-empty recommendations, and verifies exact allowed top-level/item fields | Keep schema test green through integration | P5 |
 | Conversation state / Intent Override / no-preference | **FUNCTIONAL** | `tests/test_state.py` (4), `tests/test_intent_override.py` (4) pass | Extend field extraction coverage | P1 |
 | Buying/Browsing routing | **SCAFFOLDED** | Heuristic keyword scorer, sticky route; no dedicated test yet, no evaluator-measured accuracy | Add per-scenario routing tests; measure vs. 40/40/15/5 mix (needs M1) | P1 |
 | Clarification engine | **FUNCTIONAL** | Rule-based ask/recommend decision; dead-end bug (small-but-nonzero pool → neither question nor recommendation) fixed and exercised by `tests/test_intent_override.py` | Measure MTTC impact once evaluator runs (M1) | P1 |
-| BM25 retrieval | **FUNCTIONAL** (fixture-tested) | `tests/test_retrieval.py` (3) passes against a 3-row fixture catalog matching the real schema; **never run against the real 50k catalog** | Install real catalog, confirm index builds and retrieves sensibly | P2 |
+| BM25 retrieval | **FUNCTIONAL** | Fixture tests pass; official 50,000-row catalog checksum/row count validated; disk index built; real smoke queries returned 200 candidates | Measure candidate recall and restore official field weighting deliberately | P2 |
 | Semantic retrieval | **NOT STARTED** | Interface stub, `NotImplementedError`, disabled by default flag | Implement (P2-D3) | P2 |
 | Metadata filters | **SCAFFOLDED** | Budget/category filter against real fields; material/color/brand are soft text-containment fallbacks (real catalog lacks discrete fields) | Extend for size/style; measure precision impact | P2 |
 | Hybrid retrieval merge | **FUNCTIONAL** | `candidate_merge.merge_weighted()` unit-testable, exercised in end-to-end smoke test | Re-verify once semantic retrieval is real | P2 |
@@ -95,9 +100,9 @@ without a cited test or run.
 | LLM reranking | **NOT STARTED** | Interface stub, disabled by default flag, no fallback wiring in `neeshops/agent.py` yet | Implement + wire fallback (P3-D3) | P3 |
 | Personalisation | **FUNCTIONAL** | Keyword-tag-overlap boost; soft-signal behaviour explicitly tested | Consider a learned signal later (not required for Track 4) | P3 |
 | Research/experiment framework | **FUNCTIONAL** | `tests/test_research.py` (5, added this audit) — safe-parameter enforcement, strategy building, accept/reject wiring, results persistence, all pass without a real catalog | Run a real experiment cycle once M1 is done | P4 |
-| Dev/holdout split tooling | **SCAFFOLDED** | `scripts/create_dev_split.py` implemented, never executed against the real 200-session set in this environment | Run once catalog + public set are both installed | P4 |
-| Official evaluator integration (mechanical) | **VALIDATED** | A full 10-turn session was run through the real `evaluator.local_evaluator.evaluate()` against a schema-accurate fixture catalog — completed with zero exceptions and a valid `results.json` (see Current score below) | Run against the real catalog for real scores (M1) | P5 |
-| Official evaluator integration (scored) | **VALIDATED** | Real 50k catalog + 200 public sessions executed and scored against both baseline and candidate | Begin iterative experiments (M2-M5) | P4 |
+| Dev/holdout split tooling | **FUNCTIONAL** | `scripts/create_dev_split.py` implemented for deterministic 160/40 output | Record dataset identity in every comparison | P4 |
+| Official evaluator integration (mechanical) | **VALIDATED** | Full 200-session public evaluator completed without exceptions on the official catalog on 2026-08-28 | Preserve through every merge | P5 |
+| Official evaluator integration (scored) | **VALIDATED (initial)** | Current default deterministic NeeShops candidate measured on all 200 public sessions; see Current score | Establish comparable dev-split baseline and run experiments | P4 |
 | Frontend prototype | **SCAFFOLDED / OPTIONAL** | Static clickable HTML demo, fully decoupled from the Agent | Not a scored deliverable — see "Frontend classification" below | P5 (only if ahead of schedule) |
 
 ## Current score
@@ -110,7 +115,7 @@ without a cited test or run.
   Efficiency:     0.119
   TechnicalScore: 0.10671
   ```
-- **NeeShops initial candidate** (`candidate_initial`, recorded via `scripts/evaluate.py --label candidate_initial` on real 50k catalog + 200 public sessions):
+- **Current deterministic NeeShops initial score** (`candidate_initial`, recorded via `scripts/evaluate.py --label candidate_initial` on real 50k catalog + 200 public sessions, default strategy, semantic retrieval and LLM reranking disabled):
   ```text
   Hit Rate@10:    0.285     (+16.0% / 2.28x vs baseline)
   MRR:            0.188581  (+0.120581 / 2.77x vs baseline)
@@ -118,16 +123,22 @@ without a cited test or run.
   Efficiency:     0.245     (+105.8% vs baseline)
   TechnicalScore: 0.248074  (+132.5% vs baseline)
   ```
+  Scenario Hit Rate@10 was Buying `0.3875`, Browsing `0.2375`, Intent
+  Override `0.1`, and Boundary `0.4`. This is a current-candidate measurement,
+  **not** a reproduction of the organizer's original weak-starter baseline.
+  Generated `results.json` is gitignored; rerun the documented command to
+  reproduce it after a clean catalog setup.
 - **Artifacts**:
   - `artifacts/experiments/baseline_weak_starter.json`
   - `artifacts/experiments/candidate_initial_1787969131.json`
 
 ## Immediate milestone
 
-1. **Reproduce the organiser baseline** — install the real catalog
-   (`data/README.md`), run `python3 -m evaluator.local_evaluator`,
-   confirm the numbers land near `docs/baseline_results.json`. (P4, blocks
-   everything else that claims a measured delta.)
+1. **Establish comparable baselines** — reproduce the organizer's published
+   weak starter from a clean upstream checkout, and separately record the
+   current NeeShops strategy on the same development split. Do not expect the
+   modified stateful/hybrid/ranked NeeShops Agent to equal the original
+   stateless weighted-BM25 score.
 2. **Keep the official evaluator working** — `evaluator/` stays
    byte-identical to `upstream/main` forever; verify with
    `git diff upstream/main -- evaluator/` before every merge to `main`.
@@ -147,6 +158,20 @@ official Agent and evaluator are fully usable with `frontend/` deleted
 entirely. No workstream is primarily responsible for it — P5 may wire a
 minimal developer/demo view *only if* core engineering (M1–M6) is ahead of
 schedule. See `frontend/README.md`.
+
+The one exception is the **Agent Trace Viewer** (P5-D6, see
+`docs/neeshops/TEAM_WORKSTREAMS.md`) — it reuses the frontend's existing
+"Agent Run Inspector" mockup wired to a real session's logs. It's a demo
+tool, not the frontend becoming a real workstream: it's read-only, has no
+effect on the scored Agent, and is a submission-polish (M7) item, not a
+prerequisite for M0–M6.
+
+## Stretch goals
+
+Optional, judge-visible extras anyone can pick up once their core
+deliverables are done — see "Stretch Goals / Bonus Backlog" at the end of
+`docs/neeshops/TEAM_WORKSTREAMS.md`. Nothing there is required for a
+working submission.
 
 ## Future / experimental (explicitly out of scope for Track 4)
 

@@ -47,7 +47,10 @@ class Agent:
         retriever = HybridRetriever(bm25=bm25, strategy=strategy)
         catalog_lookup = load_catalog_lookup(catalog_path)
         self._impl = NeeShopsAgent(
-            retriever=retriever, catalog_lookup=catalog_lookup, strategy=strategy
+            retriever=retriever,
+            catalog_lookup=catalog_lookup,
+            strategy=strategy,
+            catalog_path=catalog_path,
         )
 
     def reset(self, session_id: str, user_profile: dict) -> None:
