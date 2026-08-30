@@ -255,6 +255,28 @@ def test_ablation_can_disable_retrieval_and_metadata_features():
     assert ranked[0].parent_asin == "B"
 
 
+def test_ablation_isolates_coverage_from_the_sort_key_not_just_the_score():
+    """Regression for a bug where coverage/salience/full_match_bonus were
+    added to the aggregate score AND used as an unconditional secondary
+    sort key, so disabling "coverage" in features_enabled still let it
+    dominate ordering ahead of every explicitly enabled feature."""
+    strategy = deterministic_strategy()
+    enabled = strategy["ranking"]["deterministic"]["features_enabled"]
+    for key in enabled:
+        enabled[key] = key == "retrieval"
+    catalog = {
+        # A has zero constraint-token coverage but a much higher retrieval
+        # score; B has full coverage but the lowest retrieval score.
+        "A": {"title": "plain product"},
+        "B": {"title": "comfort"},
+    }
+    candidates = [Candidate("A", 1.0, "bm25"), Candidate("B", 0.0, "bm25")]
+    ranked = ConstraintAwareRanker(strategy).rank(
+        candidates, catalog, profile_state("comfort"), 2
+    )
+    assert ranked[0].parent_asin == "A"
+
+
 def test_output_contract_top_k_unique_and_candidate_only():
     candidates = SYNTHETIC_BOOT_CANDIDATES + [SYNTHETIC_BOOT_CANDIDATES[1]]
     ranked = ConstraintAwareRanker().rank(

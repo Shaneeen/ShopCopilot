@@ -49,6 +49,7 @@ SAFE_PARAMETERS = {
     "ranking.coverage_salience_weight",
     "ranking.full_match_bonus",
     "ranking.browsing_popularity_bump",
+    "ranking.overlap_dampening_threshold",
     # ranking.deterministic
     "ranking.deterministic.rerank_limit",
     "ranking.deterministic.retrieval_normalization",
@@ -79,6 +80,9 @@ SAFE_PARAMETERS = {
     "ranking.deterministic.features_enabled.budget",
     "ranking.deterministic.features_enabled.personalization",
     "ranking.deterministic.features_enabled.inferred",
+    "ranking.deterministic.features_enabled.coverage",
+    "ranking.deterministic.features_enabled.full_match_bonus",
+    "ranking.deterministic.features_enabled.popularity",
     # ranking.llm (tier-2 rerank, default off)
     "ranking.llm.provider",
     "ranking.llm.model",
