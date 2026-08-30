@@ -61,6 +61,20 @@ MISS_TYPES = (
     "override_not_yet_delivered",
 )
 
+# Binary miss taxonomy for the rank-vs-pool hypothesis (docs/V3.md §6.2.1):
+# a "pool" miss means the target NEVER entered the 200-candidate pool this
+# session; a "rank" miss means it was in the pool but never surfaced in the
+# top-10. rank_fix_ceiling = current Hit + rank_misses/N — the Hit@10 the
+# current pool could reach with a perfect ranker (pool misses untouched).
+TAXONOMY = ("pool", "rank")
+
+
+def _miss_taxonomy(session: dict) -> str:
+    """Map the detailed miss_type to the binary pool/rank taxonomy."""
+    if session["pool_hit_turns"] == 0:
+        return "pool"
+    return "rank"
+
 
 def build_agent(catalog_path: Path) -> NeeShopsAgent:
     """The same wiring starter.Agent does, exposing the full NeeShopsAgent."""
@@ -219,6 +233,7 @@ def run_session(
         "sample_id": sample["sample_id"],
         "scenario_type": sample["scenario_type"],
         "hit": hit,
+        "miss_taxonomy": _miss_taxonomy({"pool_hit_turns": pool_hit_turns}) if not hit else None,
         "first_hit_turn": hit_turn,
         "best_rank": best_rank,
         "reciprocal_rank": 0.0 if best_rank is None else 1.0 / best_rank,
@@ -256,6 +271,11 @@ def summarize_panel(sessions: list[dict]) -> dict:
     for s in sessions:
         if s["miss_type"] is not None:
             miss_counts[s["miss_type"]] += 1
+    taxonomy_counts: dict[str, int] = {name: 0 for name in TAXONOMY}
+    for s in sessions:
+        if s["miss_taxonomy"] is not None:
+            taxonomy_counts[s["miss_taxonomy"]] += 1
+    rank_fix_ceiling = float(panel["hit_rate_at_10"]) + taxonomy_counts["rank"] / n
     and_sizes = [
         s["final_and_set_size"]
         for s in sessions
@@ -284,6 +304,8 @@ def summarize_panel(sessions: list[dict]) -> dict:
             "p50_latency_ms": round(percentile([s["latency_ms"] for s in sessions], 50), 1),
             "p95_latency_ms": round(percentile([s["latency_ms"] for s in sessions], 95), 1),
             "miss_decomposition": miss_counts,
+            "miss_taxonomy": taxonomy_counts,
+            "rank_fix_ceiling": round(rank_fix_ceiling, 6),
         }
     )
     return panel
