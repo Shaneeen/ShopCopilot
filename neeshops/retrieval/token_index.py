@@ -318,8 +318,11 @@ class TokenIndex:
         price_cap: Optional[float] = None,
         limit: int = 200,
     ) -> list[str]:
-        """Docs satisfying the most groups first, ties by popularity, then
-        asin — deterministic partial-match ordering for pool padding."""
+        """Docs satisfying the most groups first, ties by coverage×IDF, then
+        coverage×weighted-popularity, then asin — deterministic partial-match
+        ordering for pool padding. Mirrors the ranker's sort
+        (violations, -coverage, -relevance, -popularity, asin) so pool order
+        agrees with what the ranker rewards (docs/V3.md §6.2.1)."""
         if not groups or not limit:
             return []
         counts = np.zeros(self._n_docs, dtype=np.int32)
@@ -332,11 +335,40 @@ class TokenIndex:
             candidates = self._price_filter(candidates, price_cap)
         if not len(candidates):
             return []
+        coverage = self._idf_weighted_coverage(candidates, groups)
+        popularity = self._popularity
         order = sorted(
             candidates,
-            key=lambda i: (-int(counts[i]), -float(self._popularity[i]), self._asins[i]),
+            key=lambda i: (
+                -coverage[i],
+                -float(popularity[i]),
+                self._asins[i],
+            ),
         )
         return [self._asins[i] for i in order[:limit]]
+
+    def _idf_weighted_coverage(
+        self, candidates: np.ndarray, groups: list[set[str]]
+    ) -> np.ndarray:
+        """coverage = Σ idf·[group ⊆ doc] / Σ idf over the given groups,
+        keyed by doc id (full-length array) — the same definition the
+        ranker's coverage feature uses (ranking/features.py group_coverage,
+        equal group weights)."""
+        coverage = np.zeros(self._n_docs, dtype=np.float64)
+        denominator = 0.0
+        for group in groups:
+            idf = max((self.idf(token) for token in group), default=0.0)
+            if not idf:
+                continue
+            denominator += idf
+            ids = self._group_ids(group)
+            if len(ids):
+                in_group = np.isin(candidates, ids)
+                if in_group.any():
+                    coverage[candidates[in_group]] += idf
+        if denominator > 0:
+            coverage /= denominator
+        return coverage
 
 
 _SHARED_INDEXES: dict[str, TokenIndex] = {}
