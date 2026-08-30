@@ -1,8 +1,8 @@
 # NeeShops — Project Overview
 
-New to the project? Read `docs/neeshops/BEGINNER_START_HERE.md` first,
-then follow `docs/neeshops/TWO_DAY_FULL_SCOPE_PLAN.md` and your section of
-`docs/neeshops/WORKSTREAM_QUICKSTARTS.md`. Those guides preserve the full
+New to the project? Read `docs/archive/BEGINNER_START_HERE.md` first,
+then follow `docs/archive/TWO_DAY_FULL_SCOPE_PLAN.md` and your section of
+`docs/archive/WORKSTREAM_QUICKSTARTS.md`. Those guides preserve the full
 scope and turn this reference material into ordered beginner tasks.
 
 For requirements, see

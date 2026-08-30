@@ -3,6 +3,33 @@
 
   "retrieval": {
     "candidate_limit": 200,
+    "strategy": "hybrid",
+    "rrf_k": 60,
+    "guarantee": {
+      "enabled": true,
+      "slots": 200,
+      "rerank_floor": 40,
+      "plausible_set_limit": 200
+    },
+    "min_pool_topup": 40,
+    "multi_query": {
+      "enabled": true,
+      "weights": {
+        "accumulated": 1.0,
+        "latest": 1.0,
+        "constraints": 1.0
+      }
+    },
+    "empty_query_fallback": true,
+    "bm25_field_weights": {
+      "parent_asin": 1.0,
+      "title": 8.0,
+      "categories": 5.0,
+      "features": 2.0,
+      "details": 1.0,
+      "store": 2.0,
+      "description": 1.0
+    },
     "buying": {
       "bm25_weight": 0.7,
       "semantic_weight": 0.3
@@ -15,17 +42,85 @@
 
   "ranking": {
     "rerank_limit": 40,
-    "personalization_weight": 0.15
+    "personalization_weight": 0.15,
+    "coverage_weight": 2.0,
+    "coverage_salience_weight": 0.5,
+    "full_match_bonus": 0.5,
+    "browsing_popularity_bump": 0.05,
+    "deterministic": {
+      "rerank_limit": 40,
+      "retrieval_normalization": "minmax",
+      "fusion_method": "minmax",
+      "rrf_k": 60,
+      "budget_tolerance": 1.10,
+      "weights": {
+        "retrieval": 0.40,
+        "category": 0.12,
+        "title_overlap": 0.08,
+        "feature_overlap": 0.08,
+        "color": 0.06,
+        "material": 0.06,
+        "brand": 0.06,
+        "style": 0.03,
+        "size": 0.04,
+        "budget": 0.04,
+        "personalization": 0.03,
+        "inferred": 0.05
+      },
+      "features_enabled": {
+        "retrieval": true,
+        "category": true,
+        "title_overlap": true,
+        "feature_overlap": true,
+        "color": true,
+        "material": true,
+        "brand": true,
+        "style": true,
+        "size": true,
+        "budget": true,
+        "personalization": true,
+        "inferred": true
+      }
+    },
+    "llm": {
+      "provider": "openrouter",
+      "model": "openai/gpt-4o-mini",
+      "secondary_provider": "gemini",
+      "secondary_model": "gemini-3.7-flash",
+      "rerank_limit": 30,
+      "minimum_constraints": 2,
+      "timeout_seconds": 5,
+      "gate_margin": 0.15,
+      "gate_twins": 10,
+      "blend_epsilon": 0.15
+    }
   },
 
   "clarification": {
-    "max_questions_per_session": 2,
-    "min_candidates_before_recommend": 5,
-    "ask_if_candidates_above": 60
+    "strategy": "adaptive",
+    "max_questions_per_session": 4,
+    "other_max_asks": 2,
+    "min_candidates_before_recommend": 10,
+    "ask_if_candidates_above": 60,
+    "last_question_turn": 9,
+    "margin_stop": 0.15,
+    "entropy_top_k": 40,
+    "entropy_plausible_limit": 20000,
+    "entropy_row_cap": 400
+  },
+
+  "intent": {
+    "route_flip_erase_weight": 0.3,
+    "inferred_decay": 0.9
+  },
+
+  "filters": {
+    "budget_tolerance": 1.10,
+    "min_pool_keep": 10
   },
 
   "feature_flags": {
-    "enable_semantic_retrieval": false,
+    "enable_semantic_retrieval": true,
     "enable_llm_reranker": false
   }
 }

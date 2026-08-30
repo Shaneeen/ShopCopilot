@@ -1,6 +1,7 @@
-hi whatever
-
 # TechJam Conversational E-Commerce Search Challenge
+
+
+
 
 Build an AI shopping agent that asks useful follow-up questions and recommends the customer's hidden target product within at most 10 turns.
 
@@ -81,8 +82,6 @@ TechnicalScore = 0.50 × HitRate@10 + 0.30 × MRR + 0.20 × Efficiency
 Efficiency = clip((11 - MTTC) / 10, 0, 1)
 ```
 
-`TechnicalScore` is an objective input to the `Technical Execution` assessment. It is not a separate judging criterion and does not represent the entire `Technical Execution` score.
-
 Only exact `parent_asin` equality produces a hit. Core metrics are also reported by scenario.
 
 ## Model Choice and Cost
@@ -104,6 +103,7 @@ evaluator/local_evaluator.py      public-set simulator and scorer
 ## Judging and Submission Policy
 
 - Participant submission requirements: `docs/submission_rules.md`
+- Participant release checklist: `docs/participant_release_checklist.md`
 - Organizer-only final judging controls: `organizer/JUDGING_RUNBOOK.md`
 - Organizer private release checklist: `organizer/private_release_checklist.md`
 - Judging day operations SOP: `organizer/JUDGING_DAY_SOP.md`
@@ -124,29 +124,22 @@ touching the official contract.
 
 ## What we built
 
-`starter/agent.py` is now a thin adapter (unchanged interface — still
-`Agent(catalog_path)`, `reset()`, `respond()`) that delegates to our own
-`neeshops/` package: conversation state (intent-override + no-preference
-semantics), buying/browsing routing, a clarification engine, hybrid
-BM25+semantic retrieval (semantic currently a disabled interface stub),
-metadata filtering, a heuristic reranker with human-readable
-recommendation reasons, a soft personalisation signal, and a controlled
-research/experimentation framework for tuning retrieval weights against
-the evaluator's metrics. Full architecture: `docs/neeshops/ARCHITECTURE.md`.
+`starter/agent.py` is a thin adapter (unchanged `Agent(catalog_path)`,
+`reset()`, `respond()` contract) delegating to `neeshops/`: conversation
+state + buying/browsing routing + adaptive clarification, **hybrid
+BM25 (field-weighted, FTS5) + semantic (hashed TF-IDF + numpy cosine)**
+with strategy knob (`bm25_only`/`semantic_only`/`hybrid`/`fused` RRF k=60)
+and provenance-stamped merge, metadata filtering, **constraint-aware reranking
+(R2/R3) + personalization boost (soft, weight 0.15) + optional LLM reranker
+(Gemini/fake)**, and a controlled research/experimentation framework.
+Detail: `docs/neeshops/ARCHITECTURE.md`; P2 measured gains: `docs/archive/p2readme.md`;
+P3 ranking: `neeshops/ranking/README.md` + `docs/archive/person3/`.
 
-**New teammates start here**:
-`docs/neeshops/BEGINNER_START_HERE.md` →
-`docs/neeshops/TWO_DAY_FULL_SCOPE_PLAN.md` →
-`docs/neeshops/WORKSTREAM_QUICKSTARTS.md` (read your assigned section).
-These guides keep the full project scope but turn it into ordered, testable
-steps. Use the overview, requirements, folder guide, full workstream plan,
-and integration contracts as detailed references.
-
-Official online sources:
-
-- Participant repository: https://github.com/TechJam2026/techjam-conversational-search
-- Participant Kit Release: https://github.com/TechJam2026/techjam-conversational-search/releases/tag/participant-kit
-- Amazon Reviews 2023: https://amazon-reviews-2023.github.io/
+**Start here**: `docs/neeshops/PROJECT_OVERVIEW.md` (living status +
+architecture diagrams) → `docs/neeshops/TRACK4_REQUIREMENTS.md`
+(competition source of truth) → `docs/neeshops/FOLDER_GUIDE.md` (what
+every folder is for) → `docs/neeshops/TEAM_WORKSTREAMS.md` (the 5-person
+job split) → `docs/neeshops/INTEGRATION_CONTRACTS.md` (module boundaries).
 
 ## Repository layout (additions)
 
@@ -161,42 +154,77 @@ docs/neeshops/        our architecture, team workstreams, experiment log, compet
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-python -m pip install -r requirements.txt
-python scripts/download_catalog.py  # official release + checksum + 50k-row validation
-python scripts/check_readiness.py    # explains any missing setup item
+pip install -r requirements.txt   # only needed for neeshops/ — the official baseline itself is stdlib-only
 cp .env.example .env              # optional, only for LLM-backed features (disabled by default)
 ```
 
 ## Running things
 
 ```bash
-# Official evaluation (after check_readiness reports ready)
-python3 -m evaluator.local_evaluator
-
-# Our tests (official evaluator tests + our supplementary tests)
-pytest
-
-# Fast local smoke check of the adapter, without the full evaluator
-python scripts/run_baseline.py
-
-# Our dev/holdout split + experiment tooling (see docs/neeshops/EXPERIMENTS.md)
+PYTHONPATH=. python -m evaluator.local_evaluator  # official scoring → results.json
+pytest -q                                          # v2: 248 passed, 1 deselected
+python scripts/run_oracle_eval.py --strategy both --cases 30 --seed 7  # P2 oracle A/B
+python scripts/instrumented_eval.py                # v2 panel: miss decomposition, gates, latency
+python scripts/pool_miss_forensics.py --cases 300 --seed 7             # recall forensics
+python scripts/bench_v1.py --cases 100 --workers 1 --arms no-llm       # tier bench (workers=1: GIL-bound)
+python scripts/run_baseline.py                     # fast adapter smoke check
 python scripts/create_dev_split.py
 python scripts/run_experiment.py --random 3
+python scripts/interactive_demo.py                 # http://127.0.0.1:8787 — funnel, provenance tiles
 ```
 
 ## Team workstreams
 
-Five streams, each owning its own module folder to minimise merge
+Six streams (with Person 3 split into 3A Ranking Core and 3B Personalisation & Evaluation), each owning its own module folder to minimise merge
 conflicts: conversation & agent intelligence, retrieval & search, ranking
-& personalisation, research agent & evaluation, and integration/demo/DX.
+core, personalisation & evaluation, research agent & evaluation, and integration/demo/DX.
 Full breakdown: `docs/neeshops/TEAM_WORKSTREAMS.md`.
 
-## Status
+## Status (v2 restructure 2026-08-30 — recall-first guarantee pool)
 
-Architecture-first migration onto the official base. Semantic retrieval
-and LLM reranking remain disabled interface stubs; the research agent's
-optimizer is a simple grid/random search. The initial deterministic NeeShops
-candidate was scored against the official 50k catalog and 200 public sessions
-on 2026-08-28; see `docs/neeshops/PROJECT_OVERVIEW.md`. See
-`docs/neeshops/COMPETITION_NOTES.md` for the reproduction checklist and
-`docs/neeshops/EXPERIMENTS.md` for the (currently empty) experiment log.
+*Scores — official evaluator (200 public sessions, 50k catalog, `results.json`).*
+
+| Suite | Metric | **v2 (2026-08-30)** | 08-29 rework (prev) | Organiser weak |
+|---|---|---|---|---|
+| **Public set** (official evaluator) | Hit@10 / MRR / MTTC / Technical | **0.870 / 0.4455 / 3.465 / 0.7193** | 0.805 / 0.402 / 3.93 / 0.665 | 0.125 / 0.068 / 9.81 / 0.107 |
+| By scenario (HR@10) | buying / browsing / intent-override / boundary | **0.875 / 0.900 / 0.800 / 0.800** | 0.913 / 0.725 / 0.800 / 0.60 | — |
+
+The v2 restructure (`docs/IMPLEMENTATION_V2.md` for the full decision log): an exact
+Boolean-AND **guarantee pool** over a new in-memory token index (the simulator's
+constraint values are verbatim tokens of the target's own text, so the AND set
+contains the target by construction — pool membership ~84% of scored turns),
+coverage×IDF×salience ranking with minmax-normalized retrieval, gates-not-caps
+clarification with a hard turn-guard (recommendations on EVERY turn; no questions
+after turn 9), over-generality detection → set-splitting questions, stale-slot +
+inferred-attribute state lifecycle, fast token-set filters, and the instrumentation
+panel with per-session miss decomposition. Tests: **248 passed, 1 deselected**.
+
+## Status (staging-main 2026-08-29 — P2+P3 integrated)
+
+*Branches:* `main` (organiser) → `staging-main` pre-synced → `yu_le_p2`
+(retrieval strategies, RRF, provenance, deterministic merge, demo diagnostics)
++ `shaneen-Person3_combined` (constraint-aware ranking R2/R3, personalization,
+LLM reranker Gemini/fake). Merge unions: `.gitignore` (P2 semantic ignores +
+P3 `.obsidian`) / `requirements.txt` (`numpy` + `google-genai`). Full suite
+**162 passed, 1 deselected** (after the 08-29 rework); oracle `30/7` reproduces
+§1; readiness all PASS.
+
+*Scores — official evaluator (200 public sessions, 50k catalog, `results.json`).
+Baseline references: organiser weak starter `0.125/0.068/9.81/0.107`; NeeShops
+2026-08-28 initial `0.285/0.189/8.55/0.248` (see
+`docs/neeshops/PROJECT_OVERVIEW.md`).*
+
+| Suite | Metric | 2026-08-29 rework (current) | staging-main 08-29 (prev) | Organiser weak |
+|---|---|---|---|---|
+| **Public set** (official evaluator, 200 sessions) | Hit@10 / MRR / MTTC / Technical | **0.805 / 0.402 / 3.93 / 0.665** | 0.49 / 0.284 / 7.25 / 0.405 | 0.125 / 0.068 / 9.81 / 0.107 |
+| By scenario (HR@10) | buying / browsing / intent-override / boundary | **0.913 / 0.725 / 0.800 / 0.60** | 0.40 / 0.513 / 0.633 / 0.60 | — |
+| **Oracle** (random catalog targets, 30/7) | Hit / MRR / MTTC · Pool@200 | **0.767 / 0.389 / 3.90 · 68.2%** | 0.600 / 0.239 / 5.77 · 14.3% | — |
+| **Bench v1.0** (100 cases, no-LLM, seed 7) | hard / insane hit | **0.933 / 0.340** | 0.833 / 0.240 | — |
+
+The 2026-08-29 rework: wildcard-first clarification (`other` questions whose
+compound answers yield 2 constraints/turn), 3-angle multi-query RRF retrieval
+(target-in-pool@200 14.3% → 68.2%), demote-not-drop metadata filters
+(filter-killed-target → 0), and `ConstraintAwareRanker` wired as the default
+ranker — stage-by-stage rationale in `docs/archive/p2readme.md §7b`, bench before/after in
+`evaluation/BENCH_V1.0.md §5.1`. Tests: **162 passed, 1 deselected**.
+Latency 60–270 ms/turn ≪ budget.

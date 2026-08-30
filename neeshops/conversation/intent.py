@@ -9,7 +9,7 @@ orchestration.
 """
 from __future__ import annotations
 
-from neeshops.utils.tokens import keywords
+from neeshops.utils.tokens import tokenize
 
 BUYING_SIGNALS = {
     "buy", "need", "want", "looking", "under", "budget", "size", "gift",
@@ -26,8 +26,13 @@ def detect_route(message: str, previous_route: str | None, constraint_count: int
 
     A route, once set, is sticky unless the new message gives a strong
     signal the other way — this avoids route flip-flopping turn to turn.
+
+    Signal matching runs on the RAW tokens, not `keywords()`: the
+    conversational signal words ("looking", "need", "for") are themselves
+    stopwords, so stripping them first erased every buying signal from the
+    standard opener and mis-routed it as browsing.
     """
-    tokens = set(keywords(message))
+    tokens = set(tokenize(message))
     has_price = "$" in message or any(t.isdigit() for t in tokens)
     buying_score = len(tokens & BUYING_SIGNALS) + (2 if has_price else 0) + constraint_count
     browsing_score = len(tokens & BROWSING_SIGNALS)
