@@ -1,4 +1,5 @@
 """R2/R3 unit and contract tests over synthetic P2-like inputs."""
+
 from __future__ import annotations
 
 import math
@@ -59,14 +60,18 @@ def test_missing_metadata_is_unknown_not_a_violation():
 
 
 def test_catalog_feature_text_can_prove_a_match_but_not_a_mismatch():
-    matched, matched_evaluation = _extract({
-        "title": "Black ankle boot",
-        "features": ["Genuine leather upper"],
-    })
-    unknown, unknown_evaluation = _extract({
-        "title": "Black ankle boot",
-        "features": ["Comfortable upper"],
-    })
+    matched, matched_evaluation = _extract(
+        {
+            "title": "Black ankle boot",
+            "features": ["Genuine leather upper"],
+        }
+    )
+    unknown, unknown_evaluation = _extract(
+        {
+            "title": "Black ankle boot",
+            "features": ["Comfortable upper"],
+        }
+    )
 
     assert matched.material_match == 1
     assert matched_evaluation.statuses["material"] is MatchStatus.MATCH
@@ -97,7 +102,9 @@ def test_unknown_metadata_is_not_destroyed_relative_to_explicit_mismatch():
         Candidate("SYNTHETIC_BLACK", 0.9, "bm25"),
         Candidate("SPARSE", 0.2, "semantic"),
     ]
-    ranked = ConstraintAwareRanker().rank(candidates, SYNTHETIC_BOOT_CATALOG, boot_state(), 2)
+    ranked = ConstraintAwareRanker().rank(
+        candidates, SYNTHETIC_BOOT_CATALOG, boot_state(), 2
+    )
     assert [item.parent_asin for item in ranked] == ["SPARSE", "SYNTHETIC_BLACK"]
 
 
@@ -107,7 +114,9 @@ def test_current_state_only_enforces_intent_override():
         Candidate("LEATHER_BROWN", 0.8, "bm25"),
     ]
     current = boot_state(color="brown")
-    ranked = ConstraintAwareRanker().rank(candidates, SYNTHETIC_BOOT_CATALOG, current, 2)
+    ranked = ConstraintAwareRanker().rank(
+        candidates, SYNTHETIC_BOOT_CATALOG, current, 2
+    )
 
     assert ranked[0].parent_asin == "LEATHER_BROWN"
     assert "black" not in str(current.constraints.values()).lower()
@@ -144,22 +153,35 @@ def test_relevance_then_asin_breaks_ties_deterministically():
         "LOW": {"title": "plain shoe"},
         "HIGH": {"title": "black leather shoe", "features": ["black leather"]},
     }
-    state = ConversationState(session_id="ties", constraints={"feature": "black leather"})
+    state = ConversationState(
+        session_id="ties", constraints={"feature": "black leather"}
+    )
     candidates = [Candidate("LOW", 0.5, "bm25"), Candidate("HIGH", 0.5, "bm25")]
     ranker = ConstraintAwareRanker()
-    assert [r.parent_asin for r in ranker.rank(candidates, catalog, state, 2)] == ["HIGH", "LOW"]
+    assert [r.parent_asin for r in ranker.rank(candidates, catalog, state, 2)] == [
+        "HIGH",
+        "LOW",
+    ]
 
     # v2 sort contract: violations → coverage → relevance → popularity →
     # parent_asin. Fully tied candidates break by asin (deterministic).
     tied = [Candidate("B", 0.5, "bm25"), Candidate("A", 0.5, "bm25")]
-    first = [r.parent_asin for r in ranker.rank(tied, {}, ConversationState(session_id="s"), 2)]
-    second = [r.parent_asin for r in ranker.rank(tied, {}, ConversationState(session_id="s"), 2)]
+    first = [
+        r.parent_asin
+        for r in ranker.rank(tied, {}, ConversationState(session_id="s"), 2)
+    ]
+    second = [
+        r.parent_asin
+        for r in ranker.rank(tied, {}, ConversationState(session_id="s"), 2)
+    ]
     assert first == second == ["A", "B"]
 
 
 def test_diagnostics_are_inspectable_and_not_public_contract_fields():
     ranker = ConstraintAwareRanker()
-    ranked = ranker.rank(SYNTHETIC_BOOT_CANDIDATES, SYNTHETIC_BOOT_CATALOG, boot_state(), 1)
+    ranked = ranker.rank(
+        SYNTHETIC_BOOT_CANDIDATES, SYNTHETIC_BOOT_CATALOG, boot_state(), 1
+    )
     diagnostic = ranker.last_diagnostics[ranked[0].parent_asin]
     assert diagnostic.features.material_match == 1
     assert diagnostic.relevance_score >= 0
@@ -221,6 +243,7 @@ def test_fusion_ranker_without_source_ranks_falls_back_to_rank_normalization():
 
 def test_ablation_can_disable_retrieval_and_metadata_features():
     strategy = deterministic_strategy()
+    strategy["ranking"]["deterministic"]["weights"]["personalization"] = 0.03
     enabled = strategy["ranking"]["deterministic"]["features_enabled"]
     for key in enabled:
         enabled[key] = key == "personalization"
@@ -234,7 +257,9 @@ def test_ablation_can_disable_retrieval_and_metadata_features():
 
 def test_output_contract_top_k_unique_and_candidate_only():
     candidates = SYNTHETIC_BOOT_CANDIDATES + [SYNTHETIC_BOOT_CANDIDATES[1]]
-    ranked = ConstraintAwareRanker().rank(candidates, SYNTHETIC_BOOT_CATALOG, boot_state(), 3)
+    ranked = ConstraintAwareRanker().rank(
+        candidates, SYNTHETIC_BOOT_CATALOG, boot_state(), 3
+    )
     ids = [item.parent_asin for item in ranked]
     assert len(ids) == 3
     assert len(ids) == len(set(ids))
