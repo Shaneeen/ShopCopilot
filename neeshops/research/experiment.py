@@ -44,6 +44,7 @@ SAFE_PARAMETERS = {
     "retrieval.bm25_field_weights.description",
     # ranking (top-level)
     "ranking.rerank_limit",
+    "ranking.rerank_floor_buying",
     "ranking.personalization_weight",
     "ranking.coverage_weight",
     "ranking.coverage_salience_weight",

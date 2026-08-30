@@ -413,7 +413,15 @@ class NeeShopsAgent:
         if len(and_ids) <= entropy_limit:
             info["plausible_ids"] = list(and_ids)
         pre_pad = len(and_ids)
+        # The guarantee floor is route-dependent: buying pads the pool wider
+        # (ranking.rerank_floor_buying) because buying targets are crowded
+        # out of the top-10 among full-coverage AND members; other routes
+        # keep the default floor.
         floor = int(guarantee_cfg.get("rerank_floor", 40))
+        if view_state.route == "buying":
+            floor = int(
+                self.strategy.get("ranking", {}).get("rerank_floor_buying", floor)
+            )
         if len(and_ids) < floor:
             pad = self.token_index.coverage_rank(
                 groups, price_cap, limit=floor * 4

@@ -42,6 +42,7 @@
 
   "ranking": {
     "rerank_limit": 40,
+    "rerank_floor_buying": 60,
     "personalization_weight": 0.15,
     "coverage_weight": 2.0,
     "coverage_salience_weight": 0.5,
