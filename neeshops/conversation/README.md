@@ -32,42 +32,108 @@ ClarificationEngine.decide(state, candidates, turn) -> {
 
 Called only by `neeshops/agent.py`.
 
-## Current implementation
+## **Current implementation**
 
 - `state.py`: in-memory dict of `ConversationState` keyed by `session_id`.
   `apply_turn` **overrides** constraint values field-by-field (never
-  appends) — this is the Intent Override mechanism (Track 4 requirement
-  4). `NO_PREFERENCE` is just a stored constraint value — the
-  clarification engine skips any field already set (see `is_unset`).
-- `intent.py`: sticky heuristic scoring buying vs. browsing keyword
+  appends) — a new explicit value replaces the previous value. `NO_PREFERENCE`
+  is stored as a constraint value and is never asked again by the
+  clarification engine.
+
+- `intent.py`: sticky heuristic scoring Buying vs. Browsing keyword
   signals + presence of a price + constraint count.
-- `constraints.py`: keyword/regex extraction. **Only `color`, `budget`,
-  and no-preference phrases are populated today** — `material`, `size`,
-  `style`, `brand`, `feature`, `use_case` are declared but not yet
-  extracted from text.
+
+- `constraints.py`: keyword/regex extraction for all declared constraint
+  fields:
+  `category`, `material`, `color`, `size`, `style`, `brand`, `budget`,
+  `feature`, and `use_case`. Also supports richer budget wording and
+  no-preference phrases. Extracted values are returned as override-ready
+  `{field: value}` updates.
+
 - `clarification.py`: asks when the candidate pool is too broad or too
-  thin (below `clarification.min_candidates_before_recommend` and there's
-  still question budget left), otherwise recommends from whatever exists
-  once the budget (`clarification.max_questions_per_session`) runs out —
-  this avoids a dead-end turn with neither a question nor a
-  recommendation.
+  thin while there is still question budget remaining. It skips fields
+  that have already been answered, previously asked, or marked
+  `NO_PREFERENCE`. Once the question budget is exhausted, it recommends
+  from available candidates rather than asking additional questions.
 
-## How to extend
+- `tests/`: covers constraint extraction, Buying/Browsing routing, intent
+  overrides, state persistence, clarification boundaries, no-preference
+  handling, repeated-question prevention, and question-budget behaviour.
 
-Add more extraction patterns to `extract_constraints()` — it already
-returns override-ready `{field: value}` updates, and `StateManager`
-already applies them correctly. Don't touch `apply_turn`'s override
-semantics without re-running `tests/test_intent_override.py`.
+## **How to extend**
 
-## How to test
+### Adding or improving constraint extraction
+
+Add or refine extraction patterns in `extract_constraints()` in
+`neeshops/conversation/constraints.py`.
+
+The extractor currently supports:
+- `category`
+- `material`
+- `color`
+- `size`
+- `style`
+- `brand`
+- `budget`
+- `feature`
+- `use_case`
+- `NO_PREFERENCE` values
+
+New extraction logic should return `{field: value}` updates. Do not merge
+new values with previous values inside the extractor — `StateManager.apply_turn`
+handles the field-by-field override semantics.
+
+### Adding new constraint fields
+
+If a new constraint field is required:
+1. Add the field to `CONSTRAINT_FIELDS` in
+   `neeshops/models/session.py`.
+2. Add extraction logic in `constraints.py`.
+3. Add a corresponding clarification question in
+   `clarification.py`.
+4. Add extraction, state, override, and clarification tests as appropriate.
+
+### Modifying intent routing
+
+Routing logic lives in `neeshops/conversation/intent.py`. Keep Buying and
+Browsing routing logic separate from retrieval and ranking implementations.
+
+### Modifying clarification behaviour
+
+Clarification logic lives in `neeshops/conversation/clarification.py`.
+Changes should preserve the following behaviours:
+- answered attributes are not asked again;
+- previously asked attributes are not repeated;
+- `NO_PREFERENCE` attributes are never asked again;
+- the configured question budget is respected.
+
+
+## **How to test**
+
+Run the full test suite:
 
 ```bash
-pytest tests/test_state.py tests/test_intent_override.py tests/test_agent_smoke.py tests/test_agent_contract.py
+python3 -m pytest -q \
+tests/test_state.py \
+tests/test_constraints.py \
+tests/test_intent.py \
+tests/test_intent_override.py \
+tests/test_clarification.py \
+tests/test_agent_smoke.py
 ```
 
-## Known TODOs
 
-- Populate `material`/`size`/`style`/`brand`/`feature`/`use_case`
-  extraction (highest leverage for Hit Rate@10 on Buying scenarios).
-- `detect_route` has never been measured against the official 40/40/15/5
-  scenario mix — only unit-tested in isolation.
+### 3. Replace `Known TODOs`
+
+```markdown
+## **Known TODOs**
+
+- Verify with the Integration workstream that updated conversation state is
+  applied **before retrieval on the same turn**, so newly extracted
+  constraints and overrides affect retrieval immediately.
+
+- Evaluate `detect_route` against the official 40/40/15/5 scenario mix once
+  simulator sessions are available.
+
+- Inspect failed Boundary/Override evaluator sessions when available and
+  refine edge-case state transitions or wording based on observed failures.

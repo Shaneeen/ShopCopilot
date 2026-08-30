@@ -15,6 +15,7 @@ that make clarification answers actually compound into retrieval:
 
 Workstream 1 owns this module; Workstream 2 consumes it for filtering.
 """
+
 from __future__ import annotations
 
 import re
@@ -26,25 +27,115 @@ from neeshops.utils.tokens import tokenize
 # No-preference phrases. "don't have a(n)" / "no additional" cover the
 # evaluator customer's "I don't have an additional preference for X."
 _NO_PREFERENCE_PATTERNS = [
-    "no preference", "don't care", "doesn't matter", "any is fine",
-    "anything is fine", "not picky", "no particular", "either is fine",
-    "don't have a", "don't have an", "no additional", "not quite right",
-    "use your judgment", "use your judgement", "no strong", "surprise me",
+    "no preference",
+    "don't care",
+    "doesn't matter",
+    "any is fine",
+    "anything is fine",
+    "not picky",
+    "no particular",
+    "either is fine",
+    "don't have a",
+    "don't have an",
+    "no additional",
+    "not quite right",
+    "use your judgment",
+    "use your judgement",
+    "no strong",
+    "surprise me",
 ]
+_NO_PREFERENCE_FIELD_RE = re.compile(
+    r"\b(?:any|whatever)\s+"
+    r"(category|material|color|size|style|brand|budget|feature|use[_ ]?case)"
+    r"\s+(?:is|are)\s+fine\b",
+    re.IGNORECASE,
+)
+_BRAND_WORDS = {
+    "nike",
+    "adidas",
+    "puma",
+    "reebok",
+    "north face",
+    "zara",
+    "h&m",
+    "uniqlo",
+}
+_CATEGORY_WORDS = {
+    "shoes",
+    "hat",
+    "shirt",
+    "jacket",
+    "dress",
+    "pants",
+    "jeans",
+    "sweater",
+    "coat",
+    "bag",
+    "sneakers",
+    "boots",
+}
+_FEATURE_WORDS = {
+    "waterproof",
+    "breathable",
+    "lightweight",
+    "durable",
+    "comfortable",
+    "warm",
+    "stylish",
+}
+_USE_CASE_WORDS = {"wedding", "party", "work", "sports", "hiking", "travel"}
 
 _COLOR_WORDS = {
-    "black", "white", "red", "blue", "green", "yellow", "pink", "purple",
-    "brown", "grey", "gray", "beige", "navy", "orange", "cream", "tan",
-    "gold", "silver", "wine", "burgundy",
+    "black",
+    "white",
+    "red",
+    "blue",
+    "green",
+    "yellow",
+    "pink",
+    "purple",
+    "brown",
+    "grey",
+    "gray",
+    "beige",
+    "navy",
+    "orange",
+    "cream",
+    "tan",
+    "gold",
+    "silver",
+    "wine",
+    "burgundy",
 }
 
 # Same vocabulary the official evaluator uses to build intent cards, plus a
 # few common catalog materials — multi-word phrases are matched first.
 _MATERIAL_WORDS = (
-    "stainless steel", "spandex", "polyester", "cotton", "nylon", "leather",
-    "wool", "silk", "rayon", "denim", "suede", "canvas", "linen", "velvet",
-    "satin", "fleece", "cashmere", "mesh", "rubber", "plastic", "bamboo",
-    "ceramic", "fabric", "silver", "gold",
+    "stainless steel",
+    "spandex",
+    "polyester",
+    "cotton",
+    "nylon",
+    "leather",
+    "wool",
+    "silk",
+    "rayon",
+    "denim",
+    "suede",
+    "canvas",
+    "linen",
+    "velvet",
+    "satin",
+    "fleece",
+    "cashmere",
+    "mesh",
+    "rubber",
+    "plastic",
+    "bamboo",
+    "ceramic",
+    "fabric",
+    "silver",
+    "gold",
 )
 
 # One compiled alternation (longest phrases first) — value_from_text runs
@@ -52,21 +143,38 @@ _MATERIAL_WORDS = (
 # up as seconds per clarification turn.
 _MATERIAL_RE = re.compile(
     "|".join(
-        re.escape(word)
-        for word in sorted(_MATERIAL_WORDS, key=len, reverse=True)
+        re.escape(word) for word in sorted(_MATERIAL_WORDS, key=len, reverse=True)
     ),
     re.I,
 )
 
 _STYLE_WORDS = {
-    "casual", "formal", "dressy", "vintage", "retro", "sporty", "athletic",
-    "boho", "bohemian", "classic", "modern", "elegant", "trendy", "cozy",
-    "western", "tactical", "outdoor", "gothic", "punk", "preppy",
+    "casual",
+    "formal",
+    "dressy",
+    "vintage",
+    "retro",
+    "sporty",
+    "athletic",
+    "boho",
+    "bohemian",
+    "classic",
+    "modern",
+    "elegant",
+    "trendy",
+    "cozy",
+    "western",
+    "tactical",
+    "outdoor",
+    "gothic",
+    "punk",
+    "preppy",
 }
 
 _SIZE_RE = re.compile(
     r"\b(xxs|xs|s|m|l|xl|xxl|xxxl|small|medium|large|x-large|xx-large"
-    r"|size\s?\d+(?:\.\d)?)\b", re.I
+    r"|size\s?\d+(?:\.\d)?)\b",
+    re.I,
 )
 
 _PRICE_RE = re.compile(r"\$?\s?(\d+(?:\.\d+)?)\s*(?:dollars)?")
@@ -77,9 +185,13 @@ _UNDER_RE = re.compile(
 _LOOKING_FOR_RE = re.compile(r"looking for ([^.!?,;]+)", re.I)
 # Covers both the opening "A key requirement is: X" and the evaluator's
 # mid-session override "What I need is: X".
-_REQUIREMENT_RE = re.compile(r"(?:key requirement is|what i need is):?\s*([^.!?;]+)", re.I)
+_REQUIREMENT_RE = re.compile(
+    r"(?:key requirement is|what i need is):?\s*([^.!?;]+)", re.I
+)
 _REPLY_PREFIX_RE = re.compile(r"^(?:for that,?\s*)?what matters is:?\s*", re.I)
-_OVERRIDE_RE = re.compile(r"ignore (?:my|the|your) (?:earlier|previous|original) preference", re.I)
+_OVERRIDE_RE = re.compile(
+    r"ignore (?:my|the|your) (?:earlier|previous|original) preference", re.I
+)
 
 _SLOT_VALUE_LIMIT = 80
 _CATEGORY_VALUE_LIMIT = 60
@@ -103,7 +215,53 @@ def _clean_value(text: str, limit: int = _SLOT_VALUE_LIMIT) -> str:
 
 
 def _has_no_preference(text: str) -> bool:
-    return any(phrase in text for phrase in _NO_PREFERENCE_PATTERNS)
+    if any(phrase in text for phrase in _NO_PREFERENCE_PATTERNS):
+        return True
+    if "don't mind" in text or "dont mind" in text:
+        return True
+    if _NO_PREFERENCE_FIELD_RE.search(text):
+        return True
+    if re.search(r"\bany\b.*\bis fine\b", text):
+        return True
+    return False
+
+
+def _find_brand(text: str) -> Optional[str]:
+    lowered = text.lower()
+    for brand in _BRAND_WORDS:
+        if brand in lowered:
+            return brand.split()[-1]
+    m = re.search(r"\b(nike|adidas|puma|reebok)\b", lowered)
+    return m.group(1) if m else None
+
+
+def _find_category(text: str) -> Optional[str]:
+    lowered = text.lower()
+    for cat in _CATEGORY_WORDS:
+        if re.search(r"\b" + re.escape(cat) + r"\b", lowered):
+            return cat
+    return None
+
+
+def _find_feature(text: str) -> Optional[str]:
+    lowered = text.lower()
+    for feat in _FEATURE_WORDS:
+        if feat in lowered:
+            return feat
+    return None
+
+
+def _find_use_case(text: str) -> Optional[str]:
+    lowered = text.lower()
+    for uc in _USE_CASE_WORDS:
+        if re.search(r"\b" + re.escape(uc) + r"\b", lowered):
+            if uc == "running" and "running shoes" in lowered:
+                continue
+            return uc
+    m = re.search(r"for a (\w+)", lowered)
+    if m and m.group(1) in _USE_CASE_WORDS:
+        return m.group(1)
+    return None
 
 
 def _first_number(text: str) -> Optional[float]:
@@ -131,7 +289,13 @@ def _find_style(text: str) -> Optional[str]:
 
 def _find_size(text: str) -> Optional[str]:
     match = _SIZE_RE.search(text)
-    return match.group(1).lower() if match else None
+    if not match:
+        return None
+    val = match.group(1).lower()
+    if val.startswith("size"):
+        m = re.search(r"\d+(?:\.\d+)?", val)
+        return m.group(0) if m else val
+    return val
 
 
 def value_from_text(field: str, text: str) -> Optional[str]:
@@ -238,7 +402,11 @@ def _classify_requirement(value: str) -> dict:
     return {"feature": _clean_value(value)}
 
 
-_CATEGORY_GENERIC = {"clothing", "clothing shoes & jewelry", "clothing, shoes & jewelry"}
+_CATEGORY_GENERIC = {
+    "clothing",
+    "clothing shoes & jewelry",
+    "clothing, shoes & jewelry",
+}
 
 # Searchable-text corpus per product, built once per process — the entropy
 # engine calls value_from_row for every (field, row) in a plausible set, and
@@ -346,7 +514,9 @@ def extract_constraints(
         looking = _LOOKING_FOR_RE.search(message)
         if looking:
             value = _clean_value(looking.group(1), _CATEGORY_VALUE_LIMIT)
-            tokens = [t for t in value.split() if t.lower() not in _CATEGORY_STOP_TOKENS]
+            tokens = [
+                t for t in value.split() if t.lower() not in _CATEGORY_STOP_TOKENS
+            ]
             value = " ".join(tokens)
             if value:
                 out["category"] = value
@@ -366,6 +536,30 @@ def extract_constraints(
         material = _find_material(text)
         if material:
             out["material"] = material
+    if "style" not in out:
+        style = _find_style(text)
+        if style:
+            out["style"] = style
+    if "size" not in out:
+        size = _find_size(text)
+        if size:
+            out["size"] = size
+    if "brand" not in out:
+        brand = _find_brand(text)
+        if brand:
+            out["brand"] = brand
+    if "category" not in out:
+        category = _find_category(text)
+        if category:
+            out["category"] = category
+    if "feature" not in out:
+        feature = _find_feature(text)
+        if feature:
+            out["feature"] = feature
+    if "use_case" not in out:
+        use_case = _find_use_case(text)
+        if use_case:
+            out["use_case"] = use_case
 
     return out
 

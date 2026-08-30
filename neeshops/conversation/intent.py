@@ -7,21 +7,45 @@ Stage-1: a lightweight heuristic. Kept as its own module (rather than inline
 in the agent) so it can be swapped for a classifier later without touching
 orchestration.
 """
+
 from __future__ import annotations
 
 from neeshops.utils.tokens import tokenize
 
 BUYING_SIGNALS = {
-    "buy", "need", "want", "looking", "under", "budget", "size", "gift",
-    "for", "$",
+    "buy",
+    "need",
+    "want",
+    "looking",
+    "under",
+    "budget",
+    "size",
+    "gift",
+    "for",
+    "$",
 }
 BROWSING_SIGNALS = {
-    "browse", "browsing", "explore", "inspire", "ideas", "something",
-    "surprise", "unexpected", "refresh", "upgrade",
+    "browse",
+    "browsing",
+    "explore",
+    "inspire",
+    "inspiration",
+    "ideas",
+    "something",
+    "surprise",
+    "unexpected",
+    "refresh",
+    "upgrade",
+    "casual",
+    "weekend",
+    "nice",
+    "preference",
 }
 
 
-def detect_route(message: str, previous_route: str | None, constraint_count: int) -> str:
+def detect_route(
+    message: str, previous_route: str | None, constraint_count: int
+) -> str:
     """Return "buying" or "browsing".
 
     A route, once set, is sticky unless the new message gives a strong
@@ -32,13 +56,22 @@ def detect_route(message: str, previous_route: str | None, constraint_count: int
     stopwords, so stripping them first erased every buying signal from the
     standard opener and mis-routed it as browsing.
     """
+    lowered = message.lower()
+    if "preference" in lowered or "don't have" in lowered or "dont have" in lowered:
+        if constraint_count == 0 and not (
+            "$" in message or any(t.isdigit() for t in set(tokenize(message)))
+        ):
+            return "browsing"
     tokens = set(tokenize(message))
     has_price = "$" in message or any(t.isdigit() for t in tokens)
-    buying_score = len(tokens & BUYING_SIGNALS) + (2 if has_price else 0) + constraint_count
+    buying_score = (
+        len(tokens & BUYING_SIGNALS) + (2 if has_price else 0) + constraint_count
+    )
     browsing_score = len(tokens & BROWSING_SIGNALS)
-
     if buying_score == 0 and browsing_score == 0:
         return previous_route or "browsing"
-    if buying_score >= browsing_score:
+    if buying_score > browsing_score:
+        return "buying"
+    if buying_score == browsing_score and constraint_count > 0:
         return "buying"
     return "browsing"
