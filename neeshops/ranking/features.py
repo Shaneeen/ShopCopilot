@@ -61,6 +61,12 @@ class RankingFeatures:
     """Normalized popularity (rating × log1p reviews), browsing bump input."""
     inferred_boost: float = 0.0
     """Agreement-inferred attribute matches × their decayed weight."""
+    active_constraint_count: int = 0
+    """Count of explicit, non-empty constraint slots this turn. With very
+    few active constraints (typically browsing's single generic category),
+    title/feature overlap are near-duplicates of that one constraint rather
+    than independent evidence — see ConstraintAwareRanker's overlap
+    dampening, gated on this count."""
 
 
 class RankingFeatureExtractor:
@@ -144,6 +150,7 @@ class RankingFeatureExtractor:
             salience=salience,
             popularity=popularity,
             inferred_boost=inferred_boost,
+            active_constraint_count=len(constraints),
         )
         return features, evaluation
 

@@ -47,6 +47,7 @@
     "coverage_salience_weight": 0.5,
     "full_match_bonus": 0.5,
     "browsing_popularity_bump": 0.05,
+    "overlap_dampening_threshold": 2,
     "deterministic": {
       "rerank_limit": 40,
       "retrieval_normalization": "minmax",
@@ -64,7 +65,7 @@
         "style": 0.03,
         "size": 0.04,
         "budget": 0.04,
-        "personalization": 0.0,
+        "personalization": 0.05,
         "inferred": 0.05
       },
       "features_enabled": {
@@ -79,7 +80,10 @@
         "size": true,
         "budget": true,
         "personalization": false,
-        "inferred": true
+        "inferred": true,
+        "coverage": true,
+        "full_match_bonus": true,
+        "popularity": true
       }
     },
     "llm": {
