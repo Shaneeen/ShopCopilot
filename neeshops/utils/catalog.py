@@ -4,6 +4,7 @@ filtering, ranking and personalization.
 Kept separate from retrieval/bm25.py (which builds the FTS5 *search* index)
 since not every caller needs the SQLite index — this is just a dict.
 """
+
 from __future__ import annotations
 
 import json
@@ -15,6 +16,8 @@ from neeshops.utils.logging import get_logger, log_event
 
 _logger = get_logger("neeshops.catalog")
 
+_CATALOG_CACHE: dict[str, dict[str, dict[str, Any]]] = {}
+
 
 def load_catalog_lookup(path: Optional[Path] = None) -> dict[str, dict[str, Any]]:
     """Return {} (not an error) if the catalog isn't installed yet — the
@@ -23,6 +26,11 @@ def load_catalog_lookup(path: Optional[Path] = None) -> dict[str, dict[str, Any]
     scripts/setup_catalog.py. See data/README.md.
     """
     catalog_path = path or get_settings().catalog_path
+    cache_key = str(catalog_path.resolve()) if catalog_path else ""
+    if cache_key and cache_key in _CATALOG_CACHE:
+        cached = _CATALOG_CACHE[cache_key]
+        if cached:
+            return cached
     if not catalog_path.exists():
         _logger.warning(
             "Catalog not found at %s — filters/personalization will no-op "
@@ -43,4 +51,6 @@ def load_catalog_lookup(path: Optional[Path] = None) -> dict[str, dict[str, Any]
                 lookup[asin] = row
 
     log_event("catalog.loaded", path=str(catalog_path), product_count=len(lookup))
+    if cache_key:
+        _CATALOG_CACHE[cache_key] = lookup
     return lookup

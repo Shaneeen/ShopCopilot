@@ -280,6 +280,17 @@ def build_bench_cases(
 _LOOKUP_CACHE: dict[str, dict] = {}
 
 
+def _heuristic_worker(task):
+    catalog_str, case, label, verbose, model_name = task
+    catalog = Path(catalog_str)
+    strategy = load_strategy()
+    agent = _make_agent(catalog, strategy, HeuristicRanker(strategy=strategy))
+    res = run_case(agent, case, label, verbose=verbose)
+    res["est_cost_usd"] = est_cost(model_name, res["total_pt"], res["total_ct"])
+    res["model"] = model_name
+    return res
+
+
 def _make_agent(catalog: Path, strategy: dict, ranker):
     from neeshops.agent import NeeShopsAgent
     from neeshops.retrieval.bm25 import BM25Retriever
@@ -549,20 +560,41 @@ def main() -> int:
             res["model"] = model_name
             return res
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as ex:
-            future_to_case = {ex.submit(_run_one, case): case for case in bench}
-            done = 0
-            for fut in concurrent.futures.as_completed(future_to_case):
-                case = future_to_case[fut]
-                try:
-                    res = fut.result()
-                except Exception as e:
-                    print(f"  [ERR] {case.id} {e}")
-                    continue
-                cases_out.append(res)
-                done += 1
-                if not args.verbose and done % 20 == 0:
-                    print(f"  ... {done}/{len(bench)} cases done")
+        is_cpu_arm = "heuristic" in label or label.startswith("no-llm")
+        if is_cpu_arm:
+            with concurrent.futures.ProcessPoolExecutor(max_workers=args.workers) as ex:
+                tasks = [
+                    (str(catalog), case, label, args.verbose, model_name)
+                    for case in bench
+                ]
+                future_to_case = {ex.submit(_heuristic_worker, t): t[1] for t in tasks}
+                done = 0
+                for fut in concurrent.futures.as_completed(future_to_case):
+                    case = future_to_case[fut]
+                    try:
+                        res = fut.result()
+                    except Exception as e:
+                        print(f"  [ERR] {case.id} {e}")
+                        continue
+                    cases_out.append(res)
+                    done += 1
+                    if not args.verbose and done % 20 == 0:
+                        print(f"  ... {done}/{len(bench)} cases done")
+        else:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as ex:
+                future_to_case = {ex.submit(_run_one, case): case for case in bench}
+                done = 0
+                for fut in concurrent.futures.as_completed(future_to_case):
+                    case = future_to_case[fut]
+                    try:
+                        res = fut.result()
+                    except Exception as e:
+                        print(f"  [ERR] {case.id} {e}")
+                        continue
+                    cases_out.append(res)
+                    done += 1
+                    if not args.verbose and done % 20 == 0:
+                        print(f"  ... {done}/{len(bench)} cases done")
 
         # Keep original bench order for reporting
         order = {c.id: i for i, c in enumerate(bench)}

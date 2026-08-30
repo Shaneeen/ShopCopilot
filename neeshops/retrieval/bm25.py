@@ -10,6 +10,7 @@ the published baseline (0.125 / 0.068034): `title`, `categories`,
 remove_diacritics 2` tokenizer. Diverge from this deliberately, not
 accidentally.
 """
+
 from __future__ import annotations
 
 import sqlite3
@@ -54,11 +55,7 @@ class BM25Retriever(Retriever):
         settings = get_settings()
         self.catalog_path = catalog_path or settings.catalog_path
         self.index_path = index_path or self.catalog_path.with_suffix(".fts.db")
-        # The connection is shared across sessions/threads (e.g. a threaded
-        # HTTP frontend), so serialize access and relax SQLite's per-thread
-        # check — all query execution goes through `_search_locked`.
-        self._conn_lock = threading.Lock()
-        self._conn: Optional[sqlite3.Connection] = None
+        self._local = threading.local()
         self._strategy = strategy  # lazy-loaded when unset; see set_strategy
         self._popular: Optional[list[str]] = None  # empty-query fallback, built lazily
 
@@ -76,24 +73,24 @@ class BM25Retriever(Retriever):
         return self.catalog_path.exists()
 
     def _ensure_index(self) -> sqlite3.Connection:
-        if self._conn is not None:
-            return self._conn
+        conn = getattr(self._local, "conn", None)
+        if conn is not None:
+            return conn
         if not self.index_path.exists():
             self._build_index()
-        self._conn = sqlite3.connect(self.index_path, check_same_thread=False)
-        return self._conn
+        conn = sqlite3.connect(self.index_path, check_same_thread=False)
+        self._local.conn = conn
+        return conn
 
     def _search_locked(self, terms: list[str], top_k: int) -> list[tuple]:
-        """Run the FTS query under the connection lock (thread-safe)."""
-        with self._conn_lock:
-            conn = self._ensure_index()
-            cur = conn.execute(
-                f"SELECT parent_asin, bm25(products{self._bm25_args()}) AS rank "
-                "FROM products WHERE products MATCH ? "
-                "ORDER BY rank, parent_asin LIMIT ?",
-                (self._match_expression(terms), top_k),
-            )
-            return cur.fetchall()
+        conn = self._ensure_index()
+        cur = conn.execute(
+            f"SELECT parent_asin, bm25(products{self._bm25_args()}) AS rank "
+            "FROM products WHERE products MATCH ? "
+            "ORDER BY rank, parent_asin LIMIT ?",
+            (self._match_expression(terms), top_k),
+        )
+        return cur.fetchall()
 
     def _build_index(self) -> None:
         """Build the FTS5 index from data/catalog.jsonl. Run once, cached to
@@ -138,7 +135,9 @@ class BM25Retriever(Retriever):
         conn.close()
         log_event("bm25.index_built", path=str(self.index_path))
 
-    def search(self, query: str, state: ConversationState, top_k: int) -> list[Candidate]:
+    def search(
+        self, query: str, state: ConversationState, top_k: int
+    ) -> list[Candidate]:
         if not query.strip():
             # No usable keywords (fake prompt / near-empty context) — serve a
             # stable popularity-ranked slice instead of nothing, so
@@ -163,11 +162,15 @@ class BM25Retriever(Retriever):
         except sqlite3.OperationalError:
             # Malformed FTS query (e.g. reserved characters) — fail soft.
             return []
-        return [Candidate(parent_asin=r[0], score=-r[1], source=self.name) for r in rows]
+        return [
+            Candidate(parent_asin=r[0], score=-r[1], source=self.name) for r in rows
+        ]
 
     def _popular_fallback(self, top_k: int) -> list[Candidate]:
-        if not self._strategy_cfg().get("retrieval", {}).get(
-            "empty_query_fallback", True
+        if (
+            not self._strategy_cfg()
+            .get("retrieval", {})
+            .get("empty_query_fallback", True)
         ):
             return []
         if self._popular is None:

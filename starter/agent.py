@@ -12,6 +12,7 @@ Constructor signature matches the organiser's original weak baseline
 `evaluator/local_evaluator.py` instantiates it positionally as
 `Agent(args.catalog)`.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -20,7 +21,7 @@ from typing import Any, Optional, Union
 from neeshops.agent import NeeShopsAgent
 from neeshops.retrieval.bm25 import BM25Retriever
 from neeshops.retrieval.hybrid import HybridRetriever
-from neeshops.utils.catalog import load_catalog_lookup
+from neeshops.retrieval.shared import load_catalog_lookup
 
 
 class Agent:
@@ -80,9 +81,11 @@ class Agent:
             recs = recs[:top_k]
 
         return {
-            "message": str(result.get("message") or "Tell me a bit more about what you're looking for."),
+            "message": str(
+                result.get("message")
+                or "Tell me a bit more about what you're looking for."
+            ),
             "ask_attribute": result.get("ask_attribute"),
             "recommendations": recs,
             "usage": result.get("usage", {"prompt_tokens": 0, "completion_tokens": 0}),
         }
-
