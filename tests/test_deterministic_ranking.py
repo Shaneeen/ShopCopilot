@@ -120,7 +120,10 @@ def test_personalization_can_move_close_candidates():
     }
     candidates = [Candidate("PLAIN", 0.5, "bm25"), Candidate("COMFORT", 0.5, "bm25")]
     state = profile_state("comfort")
-    ranked = ConstraintAwareRanker().rank(candidates, catalog, state, 2)
+    strategy = deterministic_strategy()
+    strategy["ranking"]["deterministic"]["weights"]["personalization"] = 0.03
+    strategy["ranking"]["deterministic"]["features_enabled"]["personalization"] = True
+    ranked = ConstraintAwareRanker(strategy).rank(candidates, catalog, state, 2)
     assert ranked[0].parent_asin == "COMFORT"
 
 

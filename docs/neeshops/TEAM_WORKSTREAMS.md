@@ -237,23 +237,27 @@ Soft user-profile signals conversion, maintaining personalisation weights, compa
 
 - **P3-D2** — Personalisation converts the official aggregate profile into
   **soft** ranking features; explicit constraints take priority.
-  *Acceptance*: `personalization_boost()` + `ranking.personalization_weight`
-  (default 0.15) — **already done**; verified by
-  `tests/test_ranking.py::test_personalization_never_overrides_explicit_low_retrieval_score`.
+  *Acceptance*: `personalization_boost()` plus the deployed deterministic
+  personalisation feature weight (measured safe default `0.0`) — **done**; verified by
+  `tests/test_deterministic_ranking.py` and `tests/personalization/`.
 - **P3-D5** — Compare ranking strategy against retrieval-only output.
-  *Acceptance*: a script or experiment (coordinate with P4) that runs the
-  evaluator with `HeuristicRanker` vs. an identity ranker (pass-through
-  retrieval order) and reports the MRR delta.
+  *Acceptance*: `scripts/evaluate_ranking_ab.py` reports retrieval-only,
+  current-ranker-without-personalisation, and current-ranker-with-
+  personalisation arms. This separates the overall ranking delta from the
+  Person 3B personalisation-only MRR delta — **done**.
 
 ### Success metrics
 Personalisation correctness (constraints override), MRR delta from ranking.
 
 ### Merge checklist
-- [ ] `pytest tests/test_ranking.py` passes
-- [ ] Personalisation-never-overrides-explicit-constraints test remains green
+- [x] `pytest tests/personalization tests/test_ranking.py tests/test_deterministic_ranking.py` passes
+- [x] Personalisation-never-overrides-explicit-constraints tests remain green
 
 ### Definition of Done
-`personalization_boost()` is functional and covered by tests; A/B MRR comparison script runs and logs results in `docs/neeshops/EXPERIMENTS.md`.
+`personalization_boost()` is functional and covered by tests; P3-D5 uses the
+deployed ranker and isolates the personalisation delta; the demo accepts real
+profile tags; usage and evaluation instructions live in
+`neeshops/personalization/README.md`.
 
 ### First action
 Ensure the personalization test matches current baseline parameters, then coordinate with P4 to establish the Identity Ranker evaluation baseline.

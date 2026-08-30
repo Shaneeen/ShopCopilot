@@ -12,6 +12,7 @@ import copy
 import csv
 import json
 import logging
+import os
 import random
 import statistics
 import sys
@@ -19,18 +20,28 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Iterable
 
+if __name__ == "__main__" and os.environ.get("PYTHONHASHSEED") != "0":
+    environment = dict(os.environ)
+    environment["PYTHONHASHSEED"] = "0"
+    os.execve(sys.executable, [sys.executable, *sys.argv], environment)
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from evaluator.local_evaluator import (  # noqa: E402
-    TOP_K, catalog_index, coarse_category, evaluate, initial_message,
+    TOP_K, catalog_index, coarse_category, initial_message,
     load_jsonl, materialize_hidden_fields,
 )
 from neeshops.config.settings import load_strategy  # noqa: E402
 from neeshops.personalization.profile import explain_personalization  # noqa: E402
-from scripts.evaluate_ranking_ab import IdentityRanker, _make_agent  # noqa: E402
-from neeshops.ranking.heuristic import HeuristicRanker  # noqa: E402
+from scripts.evaluate_ranking_ab import (  # noqa: E402
+    evaluate_isolated,
+    strategy_with_personalization,
+)
 
-DEFAULT_WEIGHTS = (0.0, 0.025, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40)
+# V2's deterministic feature weights are deliberately small. Keep the
+# default sweep centred around the shipped 0.03 instead of the legacy
+# HeuristicRanker's much larger 0.15 scale.
+DEFAULT_WEIGHTS = (0.0, 0.01, 0.02, 0.03, 0.05, 0.10)
 
 
 def _rank_value(rank: int | None) -> int:
@@ -157,7 +168,7 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     if not rows:
         return
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader(); writer.writerows(rows)
 
 
@@ -186,7 +197,7 @@ def main() -> int:
     parser.add_argument("--catalog", default="data/catalog.jsonl")
     parser.add_argument("--output-dir", default="evaluation/results")
     parser.add_argument("--weights", nargs="+", type=float, default=DEFAULT_WEIGHTS)
-    parser.add_argument("--rerank-limit", type=int, default=50)
+    parser.add_argument("--rerank-limit", type=int)
     parser.add_argument("--bootstrap-iterations", type=int, default=1000)
     args = parser.parse_args()
     dataset_path, catalog_path = Path(args.dataset), Path(args.catalog)
@@ -195,15 +206,31 @@ def main() -> int:
     output_dir = Path(args.output_dir); output_dir.mkdir(parents=True, exist_ok=True)
     logging.getLogger("neeshops").setLevel(logging.WARNING)
     samples = load_jsonl(dataset_path)
-    catalog_ids, categories, products = catalog_index(catalog_path)
-    strategy = copy.deepcopy(load_strategy()); strategy["ranking"]["rerank_limit"] = args.rerank_limit
-    print(f"Running retrieval-order baseline for {len(samples)} sessions...")
-    baseline = evaluate(_make_agent(IdentityRanker(), catalog_path, strategy), samples, catalog_ids, categories, products)
+    _catalog_ids, categories, products = catalog_index(catalog_path)
+    strategy = copy.deepcopy(load_strategy())
+    rerank_limit = (
+        int(args.rerank_limit)
+        if args.rerank_limit is not None
+        else int(strategy["ranking"]["deterministic"]["rerank_limit"])
+    )
+    print(f"Running current-ranker no-personalisation baseline for {len(samples)} sessions...")
+    baseline_strategy = strategy_with_personalization(strategy, 0.0, rerank_limit)
+    baseline = evaluate_isolated(
+        "current", dataset_path, catalog_path, baseline_strategy
+    )
+    # Always include the no-personalisation control in candidate selection,
+    # even when the caller requests only one non-zero weight.
+    weights = list(dict.fromkeys([0.0, *args.weights]))
     summaries, all_pairs = [], {}
-    for weight in args.weights:
+    for weight in weights:
         print(f"Evaluating personalisation weight {weight:g}...")
-        current_strategy = copy.deepcopy(strategy); current_strategy["ranking"]["personalization_weight"] = weight
-        result = evaluate(_make_agent(HeuristicRanker(current_strategy), catalog_path, current_strategy), samples, catalog_ids, categories, products)
+        if weight == 0:
+            result = baseline
+        else:
+            current_strategy = strategy_with_personalization(strategy, weight, rerank_limit)
+            result = evaluate_isolated(
+                "current", dataset_path, catalog_path, current_strategy
+            )
         pairs = _pair_sessions(baseline, result, samples, products, categories)
         diagnostics = movement_diagnostics(pairs)
         summary = {
@@ -221,8 +248,10 @@ def main() -> int:
     _write_csv(output_dir / "personalization_weight_sweep.csv", flat_summaries)
     _write_csv(output_dir / "personalization_breakdowns.csv", breakdowns)
     (output_dir / "personalization_case_analysis.md").write_text(_case_markdown(pairs, selected_weight), encoding="utf-8")
-    payload = {"dataset": str(dataset_path), "rank_observation_note": "Ranks beyond top 10 are unavailable; movement uses 11 as a capped sentinel.",
-               "selection_note": "Highest dev MRR candidate; review preservation/regret before integration.", "recommended_candidate_weight": selected_weight,
+    payload = {"dataset": str(dataset_path), "ranker": "r2_constraint_aware", "rerank_limit": rerank_limit,
+               "baseline": "same ranker with personalization disabled",
+               "rank_observation_note": "Ranks beyond top 10 are unavailable; movement uses 11 as a capped sentinel.",
+               "selection_note": "Highest dev MRR including the zero-weight control; review confidence, preservation, and regret before changing production.", "recommended_candidate_weight": selected_weight,
                "weight_sweep": summaries, "selected_weight_breakdowns": breakdowns, "selected_weight_sessions": pairs}
     (output_dir / "personalization_evaluation.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     lines = ["# Personalisation weight sweep", "", "Ranks beyond top 10 are unavailable and are represented as 11 only for capped movement diagnostics.", "",
