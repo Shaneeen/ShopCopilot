@@ -36,6 +36,7 @@ from typing import Any, Callable
 from neeshops.config.settings import load_strategy
 from neeshops.models.session import ConversationState
 from neeshops.retrieval.base import Candidate
+from neeshops.retrieval.token_index import index_tokenize
 from neeshops.utils.tokens import tokenize
 
 FilterFn = Callable[[dict[str, Any], ConversationState], bool]
@@ -128,6 +129,22 @@ def _text_satisfies(value: Any, product_row: dict[str, Any]) -> bool:
     return value_text in text
 
 
+def _tokens_satisfy(value: Any, asin: str, token_index: Any) -> bool:
+    """Fast path: O(1) membership checks against the precomputed doc token
+    set (see retrieval/token_index.py). Same all-tokens-must-appear
+    semantics as the legacy check on the token level; unknown ASINs fail
+    open like missing rows. Constraint values are verbatim product tokens
+    (pre-cleaned inputs), so exact token matching is the correct semantics.
+    """
+    doc_tokens = token_index.doc_tokens(asin)
+    if doc_tokens is None:
+        return True
+    tokens = index_tokenize(value)
+    if not tokens:
+        return True
+    return all(t in doc_tokens for t in tokens)
+
+
 def text_contains_filter(field: str) -> FilterFn:
     """Legacy single-constraint filter kept for explicit filter lists and
     unit tests — passes when `field`'s constraint value appears across the
@@ -172,6 +189,7 @@ def apply_filters(
     catalog_lookup: dict[str, dict[str, Any]],
     state: ConversationState,
     filters: list[FilterFn] | None = None,
+    token_index: Any | None = None,
 ) -> list[Candidate]:
     """Narrow/order candidates by the conversation's constraints.
 
@@ -179,6 +197,11 @@ def apply_filters(
     described in the module docstring. An explicit `filters` list runs
     those functions as classic hard filters (fail-open on missing lookup
     rows), kept for experiments and unit tests.
+
+    `token_index` (optional) switches Pass 3's per-candidate text checks to
+    O(1) token-set membership against the precomputed index instead of
+    re-flattening full product text every turn. Same semantics, ~1000x
+    fewer string scans.
     """
     if filters is not None:
         out = []
@@ -187,6 +210,13 @@ def apply_filters(
             if row is None or all(f(row, state) for f in filters):
                 out.append(c)
         return out
+
+    soft_values = _soft_constraint_values(state)
+
+    def _text_ok(asin: str, row: dict[str, Any], value: Any) -> bool:
+        if token_index is not None:
+            return _tokens_satisfy(value, asin, token_index)
+        return _text_satisfies(value, row)
 
     # Pass 1: budget is the only structured hard drop.
     budgeted: list[tuple[int, Candidate, dict[str, Any] | None]] = []
@@ -217,8 +247,8 @@ def apply_filters(
             continue
         if not hard_category and not category_filter(row, state):
             misses += 1
-        for _field, value in _soft_constraint_values(state):
-            if not _text_satisfies(value, row):
+        for _field, value in soft_values:
+            if not _text_ok(c.parent_asin, row, value):
                 misses += 1
         scored.append((misses, idx, c))
     scored.sort(key=lambda item: (item[0], item[1]))

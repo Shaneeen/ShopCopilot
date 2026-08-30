@@ -43,6 +43,16 @@ class Turn(BaseModel):
     engine uses this to stop asking once replies stop carrying information."""
 
 
+class InferredSlot(BaseModel):
+    """An attribute value inferred from top-10 pool agreement (pillar III:
+    Personalized Context Distillation, short-term). Bonus-only in ranking —
+    NEVER a filter — and decayed with age so stale inferences fade."""
+
+    value: Any
+    weight: float = 1.0
+    updated_turn: int = 0
+
+
 class UserProfile(BaseModel):
     """Organiser-provided anonymised profile. See
     neeshops/personalization/profile.py for how this becomes soft signals —
@@ -64,6 +74,16 @@ class ConversationState(BaseModel):
     constraints: dict[str, Any] = Field(default_factory=dict)
     """e.g. {"color": "black", "budget": 120}. A value of NO_PREFERENCE means
     the user was asked and explicitly doesn't care — never ask again."""
+
+    stale: dict[str, Any] = Field(default_factory=dict)
+    """Slots erased by an intent override / route flip (pillar II: Intent
+    Override — slot erasure and rewriting). Excluded from filter demotion,
+    weighted 0.3 in ranking coverage, recoverable when re-affirmed."""
+
+    inferred: dict[str, InferredSlot] = Field(default_factory=dict)
+    """Agreement-inferred attributes: when the top-10 pool agrees on a value
+    for an un-asked attribute, it's recorded here as a decaying bonus-only
+    signal (never a filter, never overriding explicit constraints)."""
 
     asked_attributes: list[str] = Field(default_factory=list)
     """Attributes we've already asked about this session (whether or not the

@@ -10,9 +10,9 @@ P2/P3 carry the heaviest new-implementation load (semantic retrieval, LLM
 reranking) since those are the two biggest unimplemented stubs in the
 current codebase.
 
-**Beginner route:** read `docs/neeshops/BEGINNER_START_HERE.md`, follow the
-shared checkpoints in `docs/neeshops/TWO_DAY_FULL_SCOPE_PLAN.md`, then work
-from your acceptance card in `docs/neeshops/WORKSTREAM_QUICKSTARTS.md`. This
+**Beginner route:** read `docs/archive/BEGINNER_START_HERE.md`, follow the
+shared checkpoints in `docs/archive/TWO_DAY_FULL_SCOPE_PLAN.md`, then work
+from your acceptance card in `docs/archive/WORKSTREAM_QUICKSTARTS.md`. This
 document remains the detailed ownership and backlog reference; the shorter
 guides do not remove any deliverable listed here.
 
@@ -551,7 +551,7 @@ Owner: P5, with input from all.
 
 The milestone definitions intentionally remain date-independent. For the
 team's two-day full-scope timebox and integration order, use
-`docs/neeshops/TWO_DAY_FULL_SCOPE_PLAN.md`.
+`docs/archive/TWO_DAY_FULL_SCOPE_PLAN.md`.
 
 ---
 

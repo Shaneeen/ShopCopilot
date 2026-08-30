@@ -313,7 +313,12 @@ def test_candidate_limit_is_respected(catalog_path, index_paths, build, monkeypa
 def test_semantic_set_strategy_enables_without_env_flag(catalog_path, index_paths, build, monkeypatch):
     build()
     configure(monkeypatch, enabled=False, catalog_path=catalog_path)
-    semantic = SemanticRetriever(index_path=index_paths[0], meta_path=index_paths[1])
+    # Start from an explicitly disabled strategy (the shipped default now
+    # enables semantic, so the OFF baseline must be constructed, not assumed).
+    disabled = {"feature_flags": {"enable_semantic_retrieval": False}}
+    semantic = SemanticRetriever(
+        index_path=index_paths[0], meta_path=index_paths[1], strategy=disabled
+    )
     assert semantic.is_available() is False
 
     semantic.set_strategy({"feature_flags": {"enable_semantic_retrieval": True}})

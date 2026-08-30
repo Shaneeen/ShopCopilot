@@ -27,7 +27,9 @@ class RankingDiagnostic:
 
 
 class ConstraintAwareRanker(Ranker):
-    """R2: rank by violations first, then configured local relevance."""
+    """R2: rank by violations first, then constraint coverage (IDF-weighted
+    — rare tokens decide ties), then weighted local relevance, then
+    popularity, with a deterministic asin tie-break."""
 
     name = "r2_constraint_aware"
 
@@ -36,11 +38,22 @@ class ConstraintAwareRanker(Ranker):
         strategy: Optional[dict[str, Any]] = None,
         *,
         extractor: Optional[RankingFeatureExtractor] = None,
+        token_index: Any = None,
     ) -> None:
         self._strategy = strategy or load_strategy()
         self._cfg = self._strategy["ranking"]["deterministic"]
+        rank_cfg = self._strategy["ranking"]
+        self._coverage_weight = float(rank_cfg.get("coverage_weight", 2.0))
+        self._coverage_salience_weight = float(
+            rank_cfg.get("coverage_salience_weight", 0.5)
+        )
+        self._full_match_bonus = float(rank_cfg.get("full_match_bonus", 0.5))
+        self._browsing_popularity_bump = float(
+            rank_cfg.get("browsing_popularity_bump", 0.05)
+        )
         self._extractor = extractor or RankingFeatureExtractor(
-            budget_tolerance=float(self._cfg.get("budget_tolerance", 1.10))
+            budget_tolerance=float(self._cfg.get("budget_tolerance", 1.10)),
+            token_index=token_index,
         )
         self.last_diagnostics: dict[str, RankingDiagnostic] = {}
         self.last_latency_ms = 0.0
@@ -60,7 +73,7 @@ class ConstraintAwareRanker(Ranker):
 
         pool = _unique_candidates(candidates)[: int(self._cfg["rerank_limit"])]
         retrieval_signals = self._retrieval_signals(pool)
-        scored: list[tuple[int, float, int, Candidate]] = []
+        scored: list[tuple[int, float, float, float, str, Candidate]] = []
         for original_rank, (candidate, retrieval_signal) in enumerate(
             zip(pool, retrieval_signals), start=1
         ):
@@ -73,20 +86,31 @@ class ConstraintAwareRanker(Ranker):
                 retrieval_score_normalized=retrieval_signal,
             )
             relevance = self._aggregate(features)
+            if state.route == "browsing" and self._browsing_popularity_bump:
+                relevance += self._browsing_popularity_bump * features.popularity
             self.last_diagnostics[candidate.parent_asin] = RankingDiagnostic(
                 candidate.parent_asin, features, evaluation, relevance, original_rank
             )
-            scored.append((features.hard_constraint_violation_count, -relevance, original_rank, candidate))
+            scored.append(
+                (
+                    features.hard_constraint_violation_count,
+                    -features.coverage,
+                    -relevance,
+                    -features.popularity,
+                    candidate.parent_asin,
+                    candidate,
+                )
+            )
 
-        scored.sort(key=lambda item: item[:3])
+        scored.sort(key=lambda item: item[:5])
         recommendations = [
             Recommendation(
                 parent_asin=candidate.parent_asin,
-                score=_ordering_score(violations, -negative_relevance),
+                score=_ordering_score(violations, negative_relevance),
                 reason=self._reason(violations),
                 source=candidate.source,
             )
-            for violations, negative_relevance, _, candidate in scored[:top_k]
+            for violations, _neg_coverage, negative_relevance, _neg_popularity, _asin, candidate in scored[:top_k]
         ]
         self.last_latency_ms = (time.perf_counter() - started) * 1000
         return recommendations
@@ -110,12 +134,20 @@ class ConstraintAwareRanker(Ranker):
             "size": features.size_match,
             "budget": features.budget_fit,
             "personalization": features.personalization_boost,
+            "inferred": features.inferred_boost,
         }
-        return sum(
+        relevance = sum(
             float(weights.get(name, 0.0)) * value
             for name, value in values.items()
             if enabled.get(name, True)
         )
+        # Coverage × IDF × salience: among partial matches and twins, a hit
+        # on a rare token is far more decisive than a hit on a common one.
+        relevance += self._coverage_weight * features.coverage
+        relevance += self._coverage_salience_weight * features.salience
+        if features.coverage >= 0.999:
+            relevance += self._full_match_bonus
+        return relevance
 
     @staticmethod
     def _reason(violations: int) -> str:

@@ -4,12 +4,17 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Optional
 
 from neeshops.models.session import NO_PREFERENCE, ConversationState
 from neeshops.personalization.profile import personalization_boost
 from neeshops.retrieval.base import Candidate
+from neeshops.retrieval.token_index import FIELD_SALIENCE, constraint_token_groups, index_tokenize
 from neeshops.utils.tokens import tokenize
+
+# Weight of stale (erased) constraint groups in coverage — mirrors
+# conversation.state.STALE_SLOT_WEIGHT / config intent.route_flip_erase_weight.
+STALE_GROUP_WEIGHT = 0.3
 
 
 class MatchStatus(str, Enum):
@@ -47,15 +52,29 @@ class RankingFeatures:
     budget_fit: float
     hard_constraint_violation_count: int
     personalization_boost: float
+    coverage: float = 0.0
+    """IDF-weighted fraction of active constraint groups satisfied (stale
+    groups count at 0.3) — the primary twin tie-breaker."""
+    salience: float = 0.0
+    """Mean field salience of the satisfied constraints (title beats store)."""
+    popularity: float = 0.0
+    """Normalized popularity (rating × log1p reviews), browsing bump input."""
+    inferred_boost: float = 0.0
+    """Agreement-inferred attribute matches × their decayed weight."""
 
 
 class RankingFeatureExtractor:
     """Extract deterministic features without mutating candidate or state."""
 
-    def __init__(self, budget_tolerance: float = 1.0) -> None:
+    def __init__(
+        self,
+        budget_tolerance: float = 1.0,
+        token_index: Any = None,
+    ) -> None:
         # >1.0 keeps products marginally above "budget around $X"-style soft
         # caps in the MATCH tier instead of marking them as violations.
         self._budget_tolerance = float(budget_tolerance)
+        self._token_index = token_index
 
     def extract(
         self,
@@ -103,6 +122,10 @@ class RankingFeatureExtractor:
         title_tokens = set(tokenize(_text(row.get("title"))))
         feature_tokens = set(tokenize(_join_values(row.get("features"))))
 
+        coverage, salience = self._coverage_and_salience(candidate.parent_asin, row, state)
+        popularity = self._popularity(candidate.parent_asin)
+        inferred_boost = self._inferred_boost(candidate.parent_asin, row, state)
+
         features = RankingFeatures(
             retrieval_score_normalized=_finite_or_zero(retrieval_score_normalized),
             retrieval_rank=retrieval_rank,
@@ -117,8 +140,100 @@ class RankingFeatureExtractor:
             budget_fit=_match_value(statuses.get("budget")),
             hard_constraint_violation_count=len(hard_violations),
             personalization_boost=personalization_boost(dict(row), state.user_profile),
+            coverage=coverage,
+            salience=salience,
+            popularity=popularity,
+            inferred_boost=inferred_boost,
         )
         return features, evaluation
+
+    # -- coverage × IDF × salience ------------------------------------------
+
+    def _coverage_and_salience(
+        self, asin: str, row: Mapping[str, Any], state: ConversationState
+    ) -> tuple[float, float]:
+        """coverage = Σ w·idf·[group satisfied] / Σ w·idf over active
+        constraint groups (weight 1.0) and stale groups (weight 0.3 — weak
+        signal after an intent override, never a demotion). Salience is the
+        mean best-field salience of the SATISFIED active constraints."""
+        active = constraint_token_groups(state.constraints)
+        stale_map = getattr(state, "stale", None) or {}
+        stale = constraint_token_groups(stale_map)
+        if not active and not stale:
+            return 0.0, 0.0
+
+        doc_tokens: Optional[frozenset[str]]
+        if self._token_index is not None:
+            doc_tokens = self._token_index.doc_tokens(asin)
+        else:
+            doc_tokens = None
+        row_tokens = _row_token_sets(row)
+
+        groups = active + stale
+        weights = [1.0] * len(active) + [STALE_GROUP_WEIGHT] * len(stale)
+        if self._token_index is not None:
+            coverage = self._token_index.group_coverage(asin, groups, weights)
+        else:
+            numerator = denominator = 0.0
+            for group, weight in zip(groups, weights):
+                idf = max((self._token_index_idf(t) for t in group), default=0.0)
+                denominator += weight * idf
+                if any(t in row_tokens.get("all", frozenset()) for t in group):
+                    numerator += weight * idf
+            coverage = numerator / denominator if denominator > 0 else 0.0
+
+        satisfied_salience: list[float] = []
+        # Field → constraint-value mapping for salience (active only).
+        for field, value in state.constraints.items():
+            if field == "budget" or value is None or value == NO_PREFERENCE:
+                continue
+            if isinstance(value, str) and not value.strip():
+                continue
+            tokens = frozenset(index_tokenize(value))
+            if not tokens:
+                continue
+            if doc_tokens is not None:
+                satisfied = tokens <= doc_tokens
+            else:
+                satisfied = tokens <= row_tokens.get("all", frozenset())
+            if satisfied:
+                satisfied_salience.append(_field_salience(tokens, row_tokens))
+        salience = (
+            sum(satisfied_salience) / len(satisfied_salience)
+            if satisfied_salience
+            else 0.0
+        )
+        return coverage, salience
+
+    def _token_index_idf(self, token: str) -> float:
+        if self._token_index is None:
+            return 1.0
+        return self._token_index.idf(token)
+
+    def _popularity(self, asin: str) -> float:
+        if self._token_index is None:
+            return 0.0
+        return self._token_index.popularity(asin)
+
+    def _inferred_boost(
+        self, asin: str, row: Mapping[str, Any], state: ConversationState
+    ) -> float:
+        inferred = getattr(state, "inferred", None) or {}
+        if not inferred:
+            return 0.0
+        if self._token_index is not None:
+            doc = self._token_index.doc_tokens(asin)
+            if doc is None:
+                return 0.0
+        else:
+            doc = frozenset(_row_token_sets(row).get("all", frozenset()))
+        boosts = [
+            slot.weight
+            for slot in inferred.values()
+            if slot.value is not None
+            and frozenset(index_tokenize(slot.value)) <= doc
+        ]
+        return sum(boosts) / len(inferred) if boosts else 0.0
 
 
 def _meaningful_constraints(state: ConversationState) -> dict[str, Any]:
@@ -127,6 +242,32 @@ def _meaningful_constraints(state: ConversationState) -> dict[str, Any]:
         for key, value in state.constraints.items()
         if value is not None and value != NO_PREFERENCE and _has_value(value)
     }
+
+
+_ROW_FIELDS = tuple(field for field, _ in FIELD_SALIENCE)
+
+
+def _row_token_sets(row: Mapping[str, Any]) -> dict[str, frozenset[str]]:
+    """Per-field token sets (plus an "all" union) — the no-index fallback
+    for coverage/salience/inferred checks and the salience lookup."""
+    out: dict[str, frozenset[str]] = {}
+    union: set[str] = set()
+    for field_name in _ROW_FIELDS:
+        tokens = frozenset(tokenize(_join_values(row.get(field_name))))
+        out[field_name] = tokens
+        union.update(tokens)
+    out["all"] = frozenset(union)
+    return out
+
+
+def _field_salience(
+    tokens: frozenset[str], row_tokens: Mapping[str, frozenset[str]]
+) -> float:
+    """Salience of the highest-ranked field containing ALL the tokens."""
+    for field_name, salience in FIELD_SALIENCE:
+        if tokens <= row_tokens.get(field_name, frozenset()):
+            return salience
+    return 0.0
 
 
 def _has_value(value: Any) -> bool:

@@ -110,7 +110,7 @@ openrouter:nemotron:free               0.56   0.406  1855.3  491.5   8250.7  134
 
 Rework = wildcard-first clarification (`other`, compound `;`-answers) + 3-angle
 multi-query RRF retrieval + demote-not-drop filters + `ConstraintAwareRanker`
-as default ranker (see `p2readme.md §7b`). Run:
+as default ranker (see `docs/archive/p2readme.md §7b`). Run:
 `python scripts/bench_v1.py --cases 100 --seed 7 --json <out>` (serial).
 
 | Tier (n) | Before — hit / MRR (§5) | After — hit / MRR | Δ hit |

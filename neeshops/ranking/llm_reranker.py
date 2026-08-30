@@ -23,6 +23,8 @@ from neeshops.ranking.providers import (
     RankingProviderError,
 )
 from neeshops.retrieval.base import Candidate
+from neeshops.retrieval.token_index import TokenIndex, constraint_token_groups
+from neeshops.ranking.signals import normalize_scores
 
 RerankClient = Callable[[dict[str, Any], float], Mapping[str, Any]]
 
@@ -73,6 +75,7 @@ class LLMReranker(Ranker):
         strategy: Optional[dict[str, Any]] = None,
         enabled: Optional[bool] = None,
         timeout_seconds: Optional[float] = None,
+        token_index: Optional[TokenIndex] = None,
     ) -> None:
         if provider is not None and client is not None:
             raise ValueError("Pass provider or client, not both")
@@ -81,6 +84,15 @@ class LLMReranker(Ranker):
         ranking_cfg = self._strategy["ranking"]
         llm_cfg = ranking_cfg.get("llm", {})
         settings = get_settings()
+        # v2 gates (docs/IMPLEMENTATION_V2.md §P5): trigger only when the
+        # Boolean AND set is big enough to hold true twins, or the
+        # deterministic margin is too thin to trust — expect ≤30% of turns.
+        self.gate_margin = float(llm_cfg.get("gate_margin", 0.15))
+        self.gate_twins = int(llm_cfg.get("gate_twins", 10))
+        # Epsilon blend: deterministic + ε·llm — the LLM can only break
+        # ties, never sink a full-coverage item.
+        self.blend_epsilon = float(llm_cfg.get("blend_epsilon", 0.15))
+        self._token_index = token_index
 
         default_llm = load_strategy()["ranking"]["llm"]
         env_rerank = os.getenv("NEESHOPS_LLM_RERANK_LIMIT")
@@ -202,6 +214,8 @@ class LLMReranker(Ranker):
             return baseline[:top_k]
         if len(baseline) < 2:
             return baseline[:top_k]
+        if not self._gate_wants_rerank(baseline, state):
+            return self._fallback_result("gate_not_triggered", baseline, top_k)
         if self._provider is None:
             return self._fallback_result("provider_error", baseline, top_k)
         unavailable_reason = self._provider.availability_reason()
@@ -252,6 +266,24 @@ class LLMReranker(Ranker):
         }
         ordered_ids = self._valid_ordered_ids(result.ordered_ids, shortlist_by_id)
 
+        # Epsilon blend: deterministic (min-max over the shortlist) plus
+        # ε·llm_rank_score — the LLM contributes at most ε to the ordering,
+        # so it can only break ties, never sink a deterministic winner.
+        det_norm = normalize_scores([item.score for item in shortlist], "minmax")
+        llm_rank_of = {asin: i for i, asin in enumerate(ordered_ids)}
+        shortlist_ids = [item.parent_asin for item in shortlist]
+        blended: list[tuple[float, str]] = []
+        for i, asin in enumerate(shortlist_ids):
+            llm_rank = llm_rank_of.get(asin)
+            llm_score = (
+                (len(ordered_ids) - 1 - llm_rank) / max(len(ordered_ids) - 1, 1)
+                if llm_rank is not None
+                else 0.0
+            )
+            blended.append((det_norm[i] + self.blend_epsilon * llm_score, asin))
+        blended.sort(key=lambda pair: (-pair[0], pair[1]))
+        ordered_ids = [asin for _score, asin in blended]
+
         seen = set(ordered_ids)
         ordered_ids.extend(
             item.parent_asin for item in shortlist if item.parent_asin not in seen
@@ -268,6 +300,27 @@ class LLMReranker(Ranker):
         self.last_usage = _unknown_usage()
         self.last_latency_ms = 0.0
         self.last_fallback_reason = None
+
+    def _gate_wants_rerank(
+        self, baseline: list[Recommendation], state: ConversationState
+    ) -> bool:
+        """Trigger the paid call only on genuine ambiguity: many plausible
+        twins (AND set > gate_twins) or a thin deterministic margin
+        (< gate_margin). Missing evidence (no token index / no constraint
+        groups) counts as ambiguous so the tier stays available; positive
+        evidence of a pinned, clearly-separated pool skips the call."""
+        twins_hit: Optional[bool] = None
+        if self._token_index is not None:
+            groups = constraint_token_groups(state.constraints)
+            if groups:
+                twins_hit = self._token_index.set_size(groups, None) > self.gate_twins
+        margin_hit: Optional[bool] = None
+        if len(baseline) >= 2:
+            top, second = baseline[0].score, baseline[1].score
+            margin_hit = (top - second) / max(abs(top), 1e-9) < self.gate_margin
+        if twins_hit is False and margin_hit is False:
+            return False
+        return True
 
     def _fallback_result(
         self,

@@ -21,6 +21,7 @@ tests/test_organizer_pipeline.py
 
 # --- NeeShops additions (development environment / generated output) ---
 evaluation/results/bench_*.json
+evaluation/results/instrumented_results.json
 .venv/
 venv/
 data/*.fts.db
@@ -46,6 +47,8 @@ p2.md
 p3.md
 p4.md
 p5.md
+phase2.md
 data/test_catalog.jsonl
 p2_push/README_FOR_AI.md
+.commandcode/
 .obsidian/

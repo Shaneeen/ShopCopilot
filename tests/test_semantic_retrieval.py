@@ -115,7 +115,14 @@ def test_hybrid_merges_semantic_when_enabled(catalog_path, index_paths, build, m
 def test_disabled_falls_back_to_bm25(catalog_path, index_paths, build, monkeypatch):
     build()
     configure(monkeypatch, enabled=False, catalog_path=catalog_path)
-    semantic = SemanticRetriever(index_path=index_paths[0], meta_path=index_paths[1])
+    # The shipped default strategy now enables semantic (v2), so a
+    # disabled instance must opt out explicitly via its strategy.
+    disabled_strategy = {"feature_flags": {"enable_semantic_retrieval": False}}
+    semantic = SemanticRetriever(
+        index_path=index_paths[0],
+        meta_path=index_paths[1],
+        strategy=disabled_strategy,
+    )
     assert semantic.is_available() is False
     assert semantic.search("black canvas sneaker", make_state(), top_k=5) == []
 

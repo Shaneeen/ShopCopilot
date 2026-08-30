@@ -90,7 +90,10 @@ def _engine(catalog_lookup, ask_above=3):
 
 def test_wildcard_asked_first_with_and_without_catalog():
     """The open "what else matters?" question yields up to two constraints
-    of any type per answer, so it goes first regardless of catalog data."""
+    of any type per answer, so it goes first regardless of catalog data.
+    (v2 gate order: the small-pool gate blocks ALL asks below
+    min_candidates_before_recommend, so both parts use a pool large enough
+    for any question to fire.)"""
     engine = _engine(CATALOG)
     candidates = [FakeCandidate(a) for a in CATALOG]
     decision = engine.decide(_state_with_history(None), candidates, turn=1)
@@ -98,7 +101,9 @@ def test_wildcard_asked_first_with_and_without_catalog():
     assert decision["question"]
 
     engine = _engine({})
-    decision = engine.decide(_state_with_history(None), [FakeCandidate("A1")], turn=1)
+    decision = engine.decide(
+        _state_with_history(None), [FakeCandidate(a) for a in CATALOG], turn=1
+    )
     assert decision["ask_attribute"] == "other"
 
 

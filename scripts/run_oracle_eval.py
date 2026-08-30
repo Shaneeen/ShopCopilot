@@ -45,6 +45,7 @@ from evaluator.local_evaluator import (  # noqa: E402
     intent_card,
 )
 from neeshops.config.settings import load_strategy  # noqa: E402
+from neeshops.conversation.constraints import extract_constraints  # noqa: E402
 from neeshops.retrieval.filters import apply_filters  # noqa: E402
 from starter.agent import Agent  # noqa: E402
 
@@ -81,18 +82,33 @@ def sample_targets(rows: list[dict], n: int, seed: int) -> list[dict]:
 
 
 def pool_diagnostics(agent: Agent, session_id: str, message: str, target: str) -> dict:
-    """Replicate the agent's own retrieval for this message (pre-turn state)
-    and report where the target stands in the 200-candidate contract."""
+    """Replicate the agent's own candidate pipeline for this message (pre-
+    turn state) and report where the target stands in the 200-candidate
+    contract: raw retrieval rank, post-guarantee/post-filter pool rank."""
     impl = agent._impl
     state = impl.state_manager.get(session_id)
-    queries = impl.build_retrieval_queries(state, message)
-    pool = impl.retriever.search_multi(
-        queries, state, impl.strategy["retrieval"]["candidate_limit"]
+    slot = state.history[-1].asked_attribute if state.history else None
+    extracted = extract_constraints(message, slot=slot)
+    preview = impl._preview_state(state, extracted)
+    queries = impl.build_retrieval_queries(state, message, extracted)
+    limit = int(impl.strategy["retrieval"].get("candidate_limit", 200))
+    hybrid = impl.retriever.search_multi(queries, state, top_k=limit)
+    retrieval_rank = next(
+        (i + 1 for i, c in enumerate(hybrid) if c.parent_asin == target), None
     )
+    info = impl._guarantee_info(preview)
+    pool = impl._priority_union(hybrid, info, limit)
+    pool = apply_filters(pool, impl.catalog_lookup, preview, token_index=impl.token_index)
+    pool = impl._topup_pool(pool, preview, info, limit)
     pool_rank = next((i + 1 for i, c in enumerate(pool) if c.parent_asin == target), None)
-    filtered = apply_filters(pool, impl.catalog_lookup, state)
-    filtered_rank = next((i + 1 for i, c in enumerate(filtered) if c.parent_asin == target), None)
-    return {"pool_size": len(pool), "pool_rank": pool_rank, "filtered_rank": filtered_rank}
+    return {
+        "pool_size": len(pool),
+        "retrieval_rank": retrieval_rank,
+        "pool_rank": pool_rank,
+        "filtered_rank": pool_rank,
+        "and_set_size": info.get("and_set_size"),
+        "over_generality": info.get("over_generality", False),
+    }
 
 
 def run_case(agent: Agent, target_row: dict, case_idx: int, verbose: bool) -> dict:

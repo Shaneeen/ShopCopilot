@@ -58,7 +58,7 @@ evaluator/ (official) → starter/agent.py (frozen adapter shape)
 
 ## Team ownership boundaries
 
-Six workstreams, each owning a folder to minimise merge conflicts (`docs/neeshops/TEAM_WORKSTREAMS.md`); Person 3 is split into **3A (Ranking Core, `neeshops/ranking/`)** and **3B (Personalisation & Evaluation, `neeshops/personalization/`, `scripts/evaluate*.py`, `scripts/run_experiment.py`)** — their division of labor, shared integration seam (`personalization_boost()` hook called by `HeuristicRanker`), and git workflow are in `HOW_A_AND_B_WORK_TOGETHER.md`. A ranker (3A) must fall back to `HeuristicRanker` rather than raising or returning empty results if `LLMReranker` is unavailable.
+Six workstreams, each owning a folder to minimise merge conflicts (`docs/neeshops/TEAM_WORKSTREAMS.md`); Person 3 is split into **3A (Ranking Core, `neeshops/ranking/`)** and **3B (Personalisation & Evaluation, `neeshops/personalization/`, `scripts/evaluate*.py`, `scripts/run_experiment.py`)** — their division of labor, shared integration seam (`personalization_boost()` hook called by `HeuristicRanker`), and git workflow are in `docs/archive/HOW_A_AND_B_WORK_TOGETHER.md` (archived). A ranker (3A) must fall back to `HeuristicRanker` rather than raising or returning empty results if `LLMReranker` is unavailable.
 
 Current branch (`shaneen/person-3b-personalization`) is Person 3B's workstream — avoid modifying `neeshops/retrieval/`, `neeshops/conversation/`, `neeshops/ranking/` (except the personalization hook), `starter/agent.py`, or `evaluator/` from here; coordinate via `docs/neeshops/INTEGRATION_CONTRACTS.md` instead.
 

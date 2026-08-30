@@ -136,7 +136,7 @@ def test_personalization_cannot_override_explicit_brand_constraint():
     assert ranked[0].parent_asin == "ADIDAS"
 
 
-def test_relevance_then_original_rank_break_ties_deterministically():
+def test_relevance_then_asin_breaks_ties_deterministically():
     catalog = {
         "LOW": {"title": "plain shoe"},
         "HIGH": {"title": "black leather shoe", "features": ["black leather"]},
@@ -146,10 +146,12 @@ def test_relevance_then_original_rank_break_ties_deterministically():
     ranker = ConstraintAwareRanker()
     assert [r.parent_asin for r in ranker.rank(candidates, catalog, state, 2)] == ["HIGH", "LOW"]
 
+    # v2 sort contract: violations → coverage → relevance → popularity →
+    # parent_asin. Fully tied candidates break by asin (deterministic).
     tied = [Candidate("B", 0.5, "bm25"), Candidate("A", 0.5, "bm25")]
     first = [r.parent_asin for r in ranker.rank(tied, {}, ConversationState(session_id="s"), 2)]
     second = [r.parent_asin for r in ranker.rank(tied, {}, ConversationState(session_id="s"), 2)]
-    assert first == second == ["B", "A"]
+    assert first == second == ["A", "B"]
 
 
 def test_diagnostics_are_inspectable_and_not_public_contract_fields():

@@ -1,8 +1,8 @@
 # Folder Guide
 
 This is a reference map. Beginners should first read
-`docs/neeshops/BEGINNER_START_HERE.md`, then use their assigned section in
-`docs/neeshops/WORKSTREAM_QUICKSTARTS.md`. Return here when you need deeper
+`docs/archive/BEGINNER_START_HERE.md`, then use their assigned section in
+`docs/archive/WORKSTREAM_QUICKSTARTS.md`. Return here when you need deeper
 module detail.
 
 Grounded in the actual code as of this migration. "Safe to modify?" means

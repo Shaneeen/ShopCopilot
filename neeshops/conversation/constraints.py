@@ -47,6 +47,17 @@ _MATERIAL_WORDS = (
     "ceramic", "fabric", "silver", "gold",
 )
 
+# One compiled alternation (longest phrases first) — value_from_text runs
+# per (field, row) over plausible sets; 25 substring scans per call showed
+# up as seconds per clarification turn.
+_MATERIAL_RE = re.compile(
+    "|".join(
+        re.escape(word)
+        for word in sorted(_MATERIAL_WORDS, key=len, reverse=True)
+    ),
+    re.I,
+)
+
 _STYLE_WORDS = {
     "casual", "formal", "dressy", "vintage", "retro", "sporty", "athletic",
     "boho", "bohemian", "classic", "modern", "elegant", "trendy", "cozy",
@@ -63,7 +74,7 @@ _UNDER_RE = re.compile(
     r"\b(?:under|below|less than|cheaper than|max(?:imum)?|around|about)\b|\bbudget\b"
 )
 
-_LOOKING_FOR_RE = re.compile(r"looking for ([^.!?;]+)", re.I)
+_LOOKING_FOR_RE = re.compile(r"looking for ([^.!?,;]+)", re.I)
 # Covers both the opening "A key requirement is: X" and the evaluator's
 # mid-session override "What I need is: X".
 _REQUIREMENT_RE = re.compile(r"(?:key requirement is|what i need is):?\s*([^.!?;]+)", re.I)
@@ -78,8 +89,17 @@ _CATEGORY_STOP_TOKENS = {"a", "an", "the", "some", "new", "nice", "good", "pleas
 
 def _clean_value(text: str, limit: int = _SLOT_VALUE_LIMIT) -> str:
     value = re.sub(r"\s+", " ", text).strip(" -;,.\t\n")
-    value = value[:limit].rstrip(" -;,.")
-    return value
+    if len(value) > limit:
+        cut = value[:limit]
+        # Never cut mid-word: a truncated token ("valentines" -> "valentin")
+        # becomes a foreign token that excludes the target from the Boolean
+        # AND set. Backtrack to the last word boundary instead.
+        if value[limit].isalnum() and cut and cut[-1].isalnum():
+            space = cut.rfind(" ")
+            if space > 0:
+                cut = cut[:space]
+        value = cut
+    return value.rstrip(" -;,.\t\n")
 
 
 def _has_no_preference(text: str) -> bool:
@@ -98,9 +118,9 @@ def _find_color(text: str) -> Optional[str]:
 
 def _find_material(text: str) -> Optional[str]:
     lowered = text.lower()
-    for material in _MATERIAL_WORDS:  # multi-word phrases first
-        if material in lowered:
-            return material
+    match = _MATERIAL_RE.search(lowered)
+    if match:
+        return match.group(0)
     return None
 
 
@@ -168,6 +188,13 @@ def _parse_compound_reply(text: str) -> dict:
     black."), so each fragment is classified with the same vocabulary
     `_classify_requirement` uses (budget / color: prefix / material / color /
     size, else feature — a text-containment constraint).
+
+    Fragments classifying into the SAME field are merged (joined with ';')
+    in first-seen order: a card value like "Solid colors: 100% Cotton;
+    Heather Grey: 90% Cotton, 10% Polyester" contains ';' itself, and the
+    fragments are one logical value — merging reconstructs it so its every
+    token constrains the Boolean AND (first-wins would drop the tokens that
+    pin the guarantee pool). Budget keeps its first number.
     """
     body = _REPLY_PREFIX_RE.sub("", text)
     out: dict = {}
@@ -176,8 +203,14 @@ def _parse_compound_reply(text: str) -> dict:
         if not fragment:
             continue
         for field, value in _classify_requirement(fragment).items():
-            if value and value != NO_PREFERENCE:
+            if not value or value == NO_PREFERENCE:
+                continue
+            if field == "budget":
                 out.setdefault(field, value)
+            elif field not in out:
+                out[field] = value
+            elif value not in out[field]:
+                out[field] = f"{out[field]}; {value}"
     return out
 
 
@@ -207,6 +240,26 @@ def _classify_requirement(value: str) -> dict:
 
 _CATEGORY_GENERIC = {"clothing", "clothing shoes & jewelry", "clothing, shoes & jewelry"}
 
+# Searchable-text corpus per product, built once per process — the entropy
+# engine calls value_from_row for every (field, row) in a plausible set, and
+# re-joining the full row text per call dominated the turn latency.
+_CORPUS_CACHE: dict[str, str] = {}
+_CORPUS_CACHE_LIMIT = 60000
+
+
+def _row_corpus(row: dict) -> str:
+    asin = str(row.get("parent_asin") or "")
+    if asin:
+        corpus = _CORPUS_CACHE.get(asin)
+        if corpus is not None:
+            return corpus
+    corpus = " ".join(
+        str(row.get(f, "")) for f in ("title", "features", "details", "description")
+    )
+    if asin and len(_CORPUS_CACHE) < _CORPUS_CACHE_LIMIT:
+        _CORPUS_CACHE[asin] = corpus
+    return corpus
+
 
 def value_from_row(field: str, row: dict) -> Optional[str]:
     """The value `field` takes for one catalog row, in the same value
@@ -235,10 +288,7 @@ def value_from_row(field: str, row: dict) -> Optional[str]:
             details = row.get("details") or {}
             store = details.get("Manufacturer") or details.get("Brand")
         return str(store).strip().lower() if store else None
-    corpus = " ".join(
-        str(row.get(f, "")) for f in ("title", "features", "details", "description")
-    )
-    return value_from_text(field, corpus)
+    return value_from_text(field, _row_corpus(row))
 
 
 def extract_constraints(

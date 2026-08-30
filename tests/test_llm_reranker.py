@@ -86,7 +86,10 @@ def test_valid_provider_order_is_used_and_real_usage_is_recorded():
     )
     ranker = LLMReranker(provider, strategy=_strategy(), enabled=True)
 
-    recs = ranker.rank(_candidates(), SYNTHETIC_CATALOG, _state(), 3)
+    # Equal deterministic scores: the epsilon blend degenerates to the
+    # provider's ranking — the exact case an LLM tier exists for.
+    candidates = [Candidate(f"B{i:03}", 1.0, "bm25+semantic") for i in range(5)]
+    recs = ranker.rank(candidates, SYNTHETIC_CATALOG, _state(), 3)
 
     assert [rec.parent_asin for rec in recs] == ["B002", "B000", "B001"]
     assert ranker.last_usage == {"prompt_tokens": 12, "completion_tokens": 4}
@@ -161,7 +164,10 @@ def test_unknown_duplicates_and_omissions_are_validated_then_filled():
     provider = FakeRankingProvider(["UNKNOWN", "B002", "B002", "", "B000"])
     ranker = LLMReranker(provider, strategy=_strategy(), enabled=True)
 
-    recs = ranker.rank(_candidates(), SYNTHETIC_CATALOG, _state(), 5)
+    # Equal deterministic scores → the epsilon blend exposes the provider's
+    # (validated, deduped) order, with unranked items filled after.
+    candidates = [Candidate(f"B{i:03}", 1.0, "bm25+semantic") for i in range(5)]
+    recs = ranker.rank(candidates, SYNTHETIC_CATALOG, _state(), 5)
 
     assert [rec.parent_asin for rec in recs] == ["B002", "B000", "B001", "B003", "B004"]
 

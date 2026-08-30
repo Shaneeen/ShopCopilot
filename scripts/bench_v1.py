@@ -226,7 +226,10 @@ def build_bench_cases(
             return [
                 f"I'm looking for a {cat}, something comfortable",
                 f"{' '.join(kws[:3])} — {feats[0][:40] if feats else 'good quality'}",
-                f"Prefer {brand + ' ' if brand else ''}{kws[1] if len(kws) > 1 else cat}, under ${int(price) + 5 if isinstance(price, (int, float)) else 40}",
+                # Exact price (mirrors the official evaluator's "budget
+                # around $X"): price+5 broke the 1.10x budget tolerance for
+                # targets under $50 and hard-dropped them from the pool.
+                f"Prefer {brand + ' ' if brand else ''}{kws[1] if len(kws) > 1 else cat}, under ${int(price) if isinstance(price, (int, float)) else 40}",
             ]
         if diff == "hard":
             return [
@@ -274,6 +277,9 @@ def build_bench_cases(
     return bench
 
 
+_LOOKUP_CACHE: dict[str, dict] = {}
+
+
 def _make_agent(catalog: Path, strategy: dict, ranker):
     from neeshops.agent import NeeShopsAgent
     from neeshops.retrieval.bm25 import BM25Retriever
@@ -282,7 +288,14 @@ def _make_agent(catalog: Path, strategy: dict, ranker):
 
     bm25 = BM25Retriever(catalog_path=catalog)
     retriever = HybridRetriever(bm25=bm25, strategy=strategy)
-    lookup = load_catalog_lookup(catalog)
+    # One catalog parse per path for the whole bench (the lookup is read-
+    # only downstream; building a fresh agent per case must not re-parse
+    # 50k JSONL rows every time).
+    key = str(catalog.resolve())
+    lookup = _LOOKUP_CACHE.get(key)
+    if lookup is None:
+        lookup = load_catalog_lookup(catalog)
+        _LOOKUP_CACHE[key] = lookup
     impl = NeeShopsAgent(
         retriever=retriever, ranker=ranker, catalog_lookup=lookup, strategy=strategy
     )
@@ -309,15 +322,21 @@ def _make_agent(catalog: Path, strategy: dict, ranker):
 
 
 def make_agent_factories(
-    catalog: Path, live: bool, model: str, secondary: str
+    catalog: Path, live: bool, model: str, secondary: str, arms: str = "all"
 ) -> dict[str, tuple[Any, str]]:
     factories: dict[str, tuple[Any, str]] = {}
+
+    def _want(name: str) -> bool:
+        if arms == "all":
+            return True
+        return name in {a.strip() for a in arms.split(",")}
 
     def heuristic_factory():
         strategy = load_strategy()
         return _make_agent(catalog, strategy, HeuristicRanker(strategy=strategy))
 
-    factories["no-llm (heuristic)"] = (heuristic_factory, "heuristic")
+    if _want("no-llm"):
+        factories["no-llm (heuristic)"] = (heuristic_factory, "heuristic")
 
     def fake_factory():
         strategy = load_strategy()
@@ -333,7 +352,8 @@ def make_agent_factories(
             ),
         )
 
-    factories["fake-llm (simulated openrouter text)"] = (fake_factory, "fake")
+    if _want("fake-llm"):
+        factories["fake-llm (simulated openrouter text)"] = (fake_factory, "fake")
 
     if live:
         if (
@@ -462,6 +482,11 @@ def main() -> int:
     )
     ap.add_argument("--verbose", action="store_true")
     ap.add_argument("--json", default="evaluation/results/bench_v1.json")
+    ap.add_argument(
+        "--arms",
+        default="all",
+        help="comma subset of arms to run: no-llm,fake-llm (default all)",
+    )
     args = ap.parse_args()
 
     catalog = Path(args.catalog)
@@ -485,7 +510,11 @@ def main() -> int:
     )
     lookup = load_lookup(catalog)
     factories = make_agent_factories(
-        catalog, live=args.live, model=args.model, secondary=args.secondary
+        catalog,
+        live=args.live,
+        model=args.model,
+        secondary=args.secondary,
+        arms=args.arms,
     )
     all_results: dict[str, Any] = {
         "cases": [c.__dict__ for c in bench],
