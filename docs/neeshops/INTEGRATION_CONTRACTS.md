@@ -79,8 +79,7 @@ override semantics live in exactly one place (`StateManager.apply_turn`).
 
 ## Profile ↔ Ranking (personalisation)
 
-**Owner**: P3 (both `neeshops/personalization/` and its only caller,
-`neeshops/ranking/heuristic.py`).
+**Owner**: P3 (both `neeshops/personalization/` and its ranking callers).
 
 | | |
 |---|---|
@@ -89,10 +88,12 @@ override semantics live in exactly one place (`StateManager.apply_turn`).
 | Expected types | `profile.preference_tags` is the only field currently used; empty list → `0.0` |
 | Failure behaviour | Never raises; missing product text fields → `0.0` |
 | Owner | P3 |
-| Contract | This is a **soft** signal — `HeuristicRanker` blends it at
-  `ranking.personalization_weight` (default `0.15`) against the retrieval
-  score, so an explicit user constraint always dominates (Track 4
-  requirement 7; see `tests/test_ranking.py::test_personalization_never_overrides_explicit_low_retrieval_score`) |
+| Contract | This is a **soft** signal. The deployed `ConstraintAwareRanker`
+  weights it at `ranking.deterministic.weights.personalization` after sorting
+  by explicit hard-constraint violations. It defaults off (`0.0`) because
+  the accepted dev-set run found no Hit@10 gain at `0.03`. The legacy
+  heuristic uses `ranking.personalization_weight`; evaluation tooling keeps
+  both keys synchronized. See `tests/test_deterministic_ranking.py`. |
 
 ---
 

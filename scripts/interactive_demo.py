@@ -23,6 +23,29 @@ os.environ.setdefault("NEESHOPS_LOG_LEVEL", "ERROR")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 PORT = 8787
+PROFILE_FIELDS = {
+    "purchase_frequency",
+    "average_prior_rating",
+    "rating_style",
+    "preference_tags",
+    "summary",
+}
+
+
+def normalize_demo_profile(value: object) -> dict:
+    """Validate the optional demo profile before passing it to the agent."""
+    if value in (None, {}):
+        return {"preference_tags": []}
+    if not isinstance(value, dict):
+        raise ValueError("user_profile must be an object")
+    profile = {key: item for key, item in value.items() if key in PROFILE_FIELDS}
+    tags = profile.get("preference_tags", [])
+    if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
+        raise ValueError("preference_tags must be a list of strings")
+    profile["preference_tags"] = list(
+        dict.fromkeys(tag.strip() for tag in tags if tag.strip())
+    )[:20]
+    return profile
 
 
 class DemoState:
@@ -158,12 +181,22 @@ class Handler(BaseHTTPRequestHandler):
 
     def _route_post(self) -> None:
         if self.path == "/api/reset":
+            body = self._json_body()
+            try:
+                user_profile = normalize_demo_profile(body.get("user_profile"))
+            except ValueError as exc:
+                self._send(400, json.dumps({"error": str(exc)}), "application/json")
+                return
             session_id = f"demo_{uuid.uuid4().hex[:8]}"
-            DemoState.agent.reset(session_id, user_profile={"preference_tags": []})
+            DemoState.agent.reset(session_id, user_profile=user_profile)
             DemoState.debug_store.pop(session_id, None)
             DemoState.debug_pool.pop(session_id, None)
             DemoState.debug_meta.pop(session_id, None)
-            self._send(200, json.dumps({"session_id": session_id}), "application/json")
+            self._send(
+                200,
+                json.dumps({"session_id": session_id, "user_profile": user_profile}),
+                "application/json",
+            )
             return
         if self.path == "/api/turn":
             body = self._json_body()
@@ -292,6 +325,8 @@ PAGE = """<!DOCTYPE html>
   body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: #101014; color: #e8e8ee; min-height: 100vh; }
   header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid #26262e; background: #141419; }
   header h1 { font-size: 17px; margin: 0; font-weight: 600; } header h1 span { color: #8b5cf6; }
+  .session-controls { display: flex; align-items: center; gap: 8px; }
+  #profile { min-width: 250px; background: #1e1e26; border: 1px solid #2c2c36; color: #e8e8ee; border-radius: 8px; padding: 8px 10px; }
   #reset { background: #8b5cf6; border: 0; color: white; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; } #reset:hover { background: #7c3aed; }
   main { max-width: 960px; margin: 0 auto; padding: 20px 16px 120px; }
   .row { display: flex; margin: 10px 0; }
@@ -341,7 +376,7 @@ PAGE = """<!DOCTYPE html>
 </style>
 </head>
 <body>
-<header><h1>NeeShops <span>Shopping Copilot</span> — live agent demo</h1><button id="reset">New session</button></header>
+<header><h1>NeeShops <span>Shopping Copilot</span> — live agent demo</h1><div class="session-controls"><input id="profile" aria-label="Preference tags" placeholder="Profile tags: comfort, durability"><button id="reset">New session</button></div></header>
 <main id="log"><p class="hint">Try: “I need casual women's shoes under $120” · “running shoes with cushioning” · “gift for my sister around $30”</p></main>
 <form id="f"><input id="i" autocomplete="off" placeholder="Tell the copilot what you're looking for…" autofocus><button type="submit">Send</button></form>
 <script>
@@ -441,9 +476,18 @@ function attachDebug(debug){
   if (debug.total) renderPool(wrap, debug);
 }
 async function reset() {
-  const res = await fetch('/api/reset', {method: 'POST'});
-  sessionId = (await res.json()).session_id; turn = 0;
-  log.innerHTML = '<p class="hint">New session started. Tell the copilot what you want.</p>';
+  const tags = document.getElementById('profile').value.split(',').map(x => x.trim()).filter(Boolean);
+  const res = await fetch('/api/reset', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({user_profile: {preference_tags: tags}})
+  });
+  const data = await res.json();
+  sessionId = data.session_id; turn = 0;
+  const label = tags.length ? ` Active profile: ${tags.join(', ')}.` : ' No profile tags active.';
+  log.innerHTML = '';
+  const hint = document.createElement('p'); hint.className = 'hint';
+  hint.textContent = `New session started.${label} Tell the copilot what you want.`;
+  log.appendChild(hint);
 }
 document.getElementById('reset').onclick = reset;
 document.getElementById('f').onsubmit = async (e) => {

@@ -29,6 +29,13 @@ CrossEncoder and R6 Hybrid remain planned.
 
 ## Current implementation
 
+`ConstraintAwareRanker` is the deployed default. It ranks explicit hard-
+constraint violations first, then coverage and configured deterministic
+features. Its personalisation feature uses
+`ranking.deterministic.weights.personalization`. It defaults to `0.0` and is
+disabled after P3-D5 found no Hit@10 improvement at `0.03`; experiments can
+enable it without changing ranking code.
+
 `HeuristicRanker`: reranks the top `ranking.rerank_limit` candidates
 (config), blends each candidate's retrieval score with
 `neeshops.personalization.profile.personalization_boost()` weighted by
@@ -38,11 +45,11 @@ requirement 7), and assigns one of three fixed human-readable reasons by
 rank position.
 
 R2/R3 extract deterministic `RankingFeatures` separately from aggregation.
-They prioritize the count of explicit hard-constraint mismatches, then a
-configuration-weighted relevance score, then original retrieval rank. Missing
-catalog metadata is unknown, not a mismatch. Internal diagnostics expose
-feature values, constraint statuses, and final relevance without changing the
-public recommendation contract.
+They prioritize explicit hard-constraint mismatches, constraint coverage,
+configuration-weighted relevance, popularity, and a deterministic ASIN tie-
+break. Missing catalog metadata is unknown, not a mismatch. Internal
+diagnostics expose feature values, constraint statuses, and final relevance
+without changing the public recommendation contract.
 
 All R2/R3 weights and ablation switches are in `ranking.deterministic`.
 Normalization supports raw, min-max, and rank signals. RRF is implemented for
