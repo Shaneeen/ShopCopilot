@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from neeshops.conversation.constraints import is_intent_override
 from neeshops.models.session import (
     NO_PREFERENCE,
     ConversationState,
@@ -88,6 +89,18 @@ class StateManager:
         state.turn = turn
         if route:
             state.route = route
+
+        # An intent-override turn is recorded (ConversationState.override_turn)
+        # for diagnostics and future transition work, but constraints are
+        # NOT cleared here: measured on the 200-session panel, deactivating
+        # the disclaimed soft fields (and cutting the accumulated query at
+        # the override turn) LOWERED override HitRate 0.80 → 0.67 — the
+        # card's soft values describe the SAME target product, so they are
+        # true ranking/retrieval signal, not stale preferences. Only the
+        # normal per-field override semantics below apply (a new value
+        # replaces the old one; the old value goes to the stale bucket).
+        if is_intent_override(user_message):
+            state.override_turn = turn
 
         for field, value in (extracted_constraints or {}).items():
             old = state.constraints.get(field)

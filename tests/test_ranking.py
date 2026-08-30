@@ -65,16 +65,24 @@ def test_ranker_base_defaults():
     assert ranker.get_usage() == {"prompt_tokens": 0, "completion_tokens": 0}
 
 
-def test_llm_reranker_disabled_raises_not_implemented():
-    import pytest
+def test_llm_reranker_disabled_falls_back_without_raising():
     from neeshops.ranking.llm_reranker import LLMReranker
 
     reranker = LLMReranker()
     assert reranker.is_available() is False
     assert reranker.get_usage() == {"prompt_tokens": 0, "completion_tokens": 0}
 
-    with pytest.raises(NotImplementedError):
-        reranker.rank([], {}, ConversationState(session_id="s1"), top_k=10)
+    # Fail-soft contract: an unavailable tier never raises — an empty
+    # shortlist returns empty, and a real pool returns the deterministic
+    # baseline.
+    assert reranker.rank([], {}, ConversationState(session_id="s1"), top_k=10) == []
+    baseline = reranker.rank(
+        [Candidate("B001", 1.0, "bm25")],
+        {"B001": {"title": "shoe"}},
+        ConversationState(session_id="s1"),
+        top_k=10,
+    )
+    assert [r.parent_asin for r in baseline] == ["B001"]
 
 
 def test_ranker_usage_passthrough_in_agent():
@@ -213,34 +221,26 @@ def test_ranker_tuple_return_passthrough():
 
 
 
-def test_build_ranker_strategy_flag_and_availability():
-    from unittest.mock import patch
-    from neeshops.agent import _build_ranker
-    from neeshops.ranking.heuristic import HeuristicRanker
+def test_ranker_selection_follows_strategy_flag():
+    from neeshops.agent import NeeShopsAgent
+    from neeshops.config.settings import load_strategy
+    from neeshops.ranking.deterministic import ConstraintAwareRanker
     from neeshops.ranking.llm_reranker import LLMReranker
 
-    # Flag off -> HeuristicRanker
-    r1 = _build_ranker({"feature_flags": {"enable_llm_reranker": False}, "ranking": {}})
-    assert isinstance(r1, HeuristicRanker)
+    # Flag off -> the deterministic ranker stays unwrapped.
+    strategy = load_strategy()
+    strategy["feature_flags"]["enable_llm_reranker"] = False
+    agent = NeeShopsAgent(strategy=strategy)
+    assert isinstance(agent.ranker, ConstraintAwareRanker)
 
-    # Flag on, but is_available is False -> HeuristicRanker
-    r2 = _build_ranker(
-        {
-            "feature_flags": {"enable_llm_reranker": True},
-            "ranking": {"rerank_limit": 20},
-        }
-    )
-    assert isinstance(r2, HeuristicRanker)
-
-    # Flag on, is_available is True -> LLMReranker
-    with patch.object(LLMReranker, "is_available", return_value=True):
-        r3 = _build_ranker(
-            {
-                "feature_flags": {"enable_llm_reranker": True},
-                "ranking": {"rerank_limit": 25},
-            }
-        )
-        assert isinstance(r3, LLMReranker)
-        assert r3.top_n_to_rerank == 25
+    # Flag on -> the LLM tier wraps it as tier 2 (availability is checked
+    # per turn; every failure falls back to the wrapped baseline).
+    strategy = load_strategy()
+    strategy["feature_flags"]["enable_llm_reranker"] = True
+    strategy["ranking"]["llm"]["rerank_limit"] = 25
+    agent = NeeShopsAgent(strategy=strategy)
+    assert isinstance(agent.ranker, LLMReranker)
+    assert agent.ranker.top_n_to_rerank == 25
+    assert isinstance(agent.ranker._fallback, ConstraintAwareRanker)
 
 

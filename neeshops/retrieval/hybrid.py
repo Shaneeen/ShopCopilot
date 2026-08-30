@@ -12,6 +12,7 @@ candidate recall, P3 owns reranking; these only change WHICH pool P3 gets:
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Optional
 
 from neeshops.config.settings import load_strategy
@@ -35,7 +36,7 @@ class HybridRetriever(Retriever):
         strategy: Optional[dict[str, Any]] = None,
     ) -> None:
         self.bm25 = bm25 or BM25Retriever()
-        self.semantic = semantic or SemanticRetriever()
+        self.semantic = semantic or self._default_semantic()
         self._strategy = strategy or load_strategy()
         # Sub-retrievers need the same strategy view (e.g. the per-token
         # pooling flag, the semantic feature flag) — inject it when the
@@ -46,6 +47,21 @@ class HybridRetriever(Retriever):
                 self.bm25.set_strategy(strategy)
             if hasattr(self.semantic, "set_strategy"):
                 self.semantic.set_strategy(strategy)
+
+    def _default_semantic(self) -> SemanticRetriever:
+        """Derive the semantic index location from the BM25 retriever's
+        catalog so both retrievers always agree on which catalog is live.
+        Deriving from global settings instead made an Agent wired for a
+        tmp-path/missing catalog silently serve the DEFAULT catalog's
+        semantic index (and its recommendations)."""
+        bm25_catalog = getattr(self.bm25, "catalog_path", None)
+        if bm25_catalog is not None:
+            catalog_dir = Path(bm25_catalog).parent
+            return SemanticRetriever(
+                index_path=catalog_dir / "semantic.index.npy",
+                meta_path=catalog_dir / "semantic.meta.json",
+            )
+        return SemanticRetriever()
 
     def weights_for_route(self, route: Optional[str]) -> dict[str, float]:
         route_key = route if route in ("buying", "browsing") else "browsing"
@@ -149,6 +165,10 @@ class HybridRetriever(Retriever):
 
         candidate_limit = cfg.get("candidate_limit", 200)
         role_weights = mq_cfg.get("weights") or {}
+        # The configured Buying/Browsing source weights apply here too:
+        # role weights alone bypassed route weights, so the multi-query
+        # path ignored `retrieval.buying/browsing` entirely.
+        route_weights = self.weights_for_route(state.route)
         lists: dict[str, list[Candidate]] = {}
         weights: dict[str, float] = {}
         for role, query in non_empty.items():
@@ -157,12 +177,12 @@ class HybridRetriever(Retriever):
                 lists[f"bm25:{role}"] = stamp_provenance(
                     self.bm25.search(query, state, candidate_limit), f"bm25:{role}"
                 )
-                weights[f"bm25:{role}"] = weight
+                weights[f"bm25:{role}"] = weight * route_weights["bm25"]
             if self.semantic.is_available():
                 lists[f"semantic:{role}"] = stamp_provenance(
                     self.semantic.search(query, state, candidate_limit), f"semantic:{role}"
                 )
-                weights[f"semantic:{role}"] = weight
+                weights[f"semantic:{role}"] = weight * route_weights["semantic"]
 
         merged = merge_rrf(lists, weights, k=int(cfg.get("rrf_k", 60)))
         log_event(

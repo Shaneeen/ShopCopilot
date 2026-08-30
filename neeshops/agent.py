@@ -103,6 +103,12 @@ class NeeShopsAgent:
             )
         else:
             self.ranker = base_ranker
+        # Crash-containment tier (Ranker protocol): respond() routes here
+        # when the configured ranker reports unavailable or raises — the
+        # agent must never fail a turn because an optional tier did.
+        self._fallback_ranker: Ranker = ConstraintAwareRanker(
+            strategy=self.strategy, token_index=self.token_index
+        )
         self.clarification_engine = clarification_engine or ClarificationEngine(
             strategy=self.strategy, catalog_lookup=self.catalog_lookup
         )
@@ -141,12 +147,21 @@ class NeeShopsAgent:
         route = detect_route(user_message, state.route, len(state.constraints))
 
         # Provisional view: this turn's extraction applies to the whole
-        # pipeline immediately (contradictions stale old values in preview).
-        preview_state = self._preview_state(state, extracted)
-
-        candidates, guarantee_info = self.build_candidates(
-            state, user_message, extracted, preview_state=preview_state
+        # pipeline immediately (contradictions stale old values in preview,
+        # the freshly detected route replaces the previous one).
+        preview_state = self._preview_state(
+            state, extracted, route=route, turn=turn
         )
+
+        # Retrieval is fault-contained: a crashed/disconnected retriever
+        # degrades to an empty pool (never an exception out of respond).
+        try:
+            candidates, guarantee_info = self.build_candidates(
+                state, user_message, extracted, preview_state=preview_state
+            )
+        except Exception as exc:  # noqa: BLE001 - reliability contract
+            log_event("agent.retrieval_failed", session_id=session_id, error=str(exc))
+            candidates, guarantee_info = [], self._empty_guarantee_info()
         # Transient last-turn pool (for instrumentation panels — the exact
         # production pool this turn ranked, no recomputation needed).
         self.last_candidates = candidates
@@ -159,9 +174,30 @@ class NeeShopsAgent:
         llm_fallback: str | None = None
         llm_used = False
         if candidates:
-            recommendations = self.ranker.rank(
-                candidates, self.catalog_lookup, preview_state, top_k
-            )
+            ranker = self.ranker if self.ranker.is_available() else self._fallback_ranker
+            try:
+                result = ranker.rank(
+                    candidates, self.catalog_lookup, preview_state, top_k
+                )
+            except Exception as exc:  # noqa: BLE001 - reliability contract
+                log_event(
+                    "agent.ranker_failed",
+                    session_id=session_id,
+                    ranker=getattr(ranker, "name", type(ranker).__name__),
+                    error=str(exc),
+                )
+                result = self._fallback_ranker.rank(
+                    candidates, self.catalog_lookup, preview_state, top_k
+                )
+            if isinstance(result, tuple) and len(result) == 2:
+                recommendations, rank_usage = result
+                if isinstance(rank_usage, dict):
+                    for key in ("prompt_tokens", "completion_tokens"):
+                        value = rank_usage.get(key)
+                        if isinstance(value, int) and value >= 0:
+                            usage[key] = value
+            else:
+                recommendations = result
             if isinstance(self.ranker, LLMReranker):
                 llm_latency_ms = getattr(self.ranker, "last_latency_ms", None)
                 llm_fallback = getattr(self.ranker, "last_fallback_reason", None)
@@ -176,9 +212,24 @@ class NeeShopsAgent:
                     llm_used = pt is not None or ct is not None
                 if llm_latency_ms and llm_latency_ms > 0:
                     llm_used = True
+            else:
+                # Ranker protocol usage (Ranker.get_usage). The base default
+                # is all-zero, so only real counts overwrite the response.
+                proto_usage = ranker.get_usage()
+                if isinstance(proto_usage, dict):
+                    pt = proto_usage.get("prompt_tokens")
+                    ct = proto_usage.get("completion_tokens")
+                    if isinstance(pt, int) and pt >= 0 and (pt or ct):
+                        usage["prompt_tokens"] = pt
+                        if isinstance(ct, int) and ct >= 0:
+                            usage["completion_tokens"] = ct
 
+        # The PREVIEW state drives the decision, not the pre-turn state:
+        # a no-preference answer given THIS turn must be visible now, or
+        # the clarification engine re-asks the same attribute (the wildcard
+        # "other" was asked again immediately after a no-preference reply).
         decision = self.clarification_engine.decide(
-            state,
+            preview_state,
             candidates,
             turn,
             context=self._clarification_context(
@@ -266,13 +317,25 @@ class NeeShopsAgent:
         preview_state: Optional[Any] = None,
     ) -> tuple[list[Candidate], dict[str, Any]]:
         """Retrieval → guarantee pool → filters → top-up. Returns the
-        200-candidate pool plus guarantee diagnostics. Public so
+        bounded candidate pool plus guarantee diagnostics. Public so
         scripts/run_oracle_eval.py replicates the exact production pool."""
-        view = preview_state if preview_state is not None else self._preview_state(state, extracted)
+        view = preview_state if preview_state is not None else self._preview_state(
+            state, extracted
+        )
         queries = self.build_retrieval_queries(state, user_message, extracted)
         limit = int(self.strategy["retrieval"].get("candidate_limit", 200))
 
-        hybrid_pool = self.retriever.search_multi(queries, state, top_k=limit)
+        # Retrieval runs against the PREVIEW state: this turn's route must
+        # drive the route weights, and retrievers observe the constraints
+        # stated this turn (search() receives state for exactly this).
+        search_multi = getattr(self.retriever, "search_multi", None)
+        if search_multi is not None:
+            hybrid_pool = search_multi(queries, view, top_k=limit)
+        else:
+            # Plain Retriever implementations only expose search() — run
+            # the angle queries as one joined query.
+            joined = " ".join(q for q in queries.values() if q)
+            hybrid_pool = self.retriever.search(joined, view, top_k=limit)
         self.last_hybrid_pool = hybrid_pool
         info = self._guarantee_info(view)
         candidates = self._priority_union(hybrid_pool, info, limit)
@@ -284,9 +347,10 @@ class NeeShopsAgent:
             candidates = self._topup_pool(candidates, view, info, limit)
         return candidates, info
 
-    def _guarantee_info(self, view_state: Any) -> dict[str, Any]:
-        """Compute the exact Boolean AND set (the guarantee tier)."""
-        info: dict[str, Any] = {
+    @staticmethod
+    def _empty_guarantee_info() -> dict[str, Any]:
+        """Zeroed guarantee diagnostics — the retrieval-failed shape."""
+        return {
             "groups": [],
             "ids": [],
             "plausible_ids": [],
@@ -296,6 +360,10 @@ class NeeShopsAgent:
             "padded_ids": 0,
             "over_generality": False,
         }
+
+    def _guarantee_info(self, view_state: Any) -> dict[str, Any]:
+        """Compute the exact Boolean AND set (the guarantee tier)."""
+        info: dict[str, Any] = self._empty_guarantee_info()
         if self.token_index is None:
             return info
         guarantee_cfg = self.strategy["retrieval"].get("guarantee", {})
@@ -483,12 +551,15 @@ class NeeShopsAgent:
         self,
         state: Any,
         extracted: Optional[dict[str, Any]] = None,
+        route: Optional[str] = None,
+        turn: Optional[int] = None,
     ) -> Any:
         """State as it will look after apply_turn records this exchange —
-        used for filtering/ranking/decisions so a constraint extracted NOW
-        applies NOW (filters used to lag one turn behind). Mirrors the slot
-        lifecycle in StateManager.apply_turn (contradiction staling,
-        re-affirmation recovery) without appending history."""
+        used for filtering/ranking/retrieval/decisions so a constraint
+        extracted NOW applies NOW (filters used to lag one turn behind).
+        Mirrors the slot lifecycle in StateManager.apply_turn (contradiction
+        staling, re-affirmation recovery) without appending history, and
+        carries this turn's route and turn number."""
         constraints = dict(state.constraints)
         stale = dict(getattr(state, "stale", None) or {})
         for field, value in (extracted or {}).items():
@@ -498,7 +569,16 @@ class NeeShopsAgent:
             elif _is_real_value(old) and old != value:
                 stale[field] = old
             constraints[field] = value
-        return state.model_copy(update={"constraints": constraints, "stale": stale})
+        updates: dict[str, Any] = {
+            "constraints": constraints,
+            "stale": stale,
+            "inferred": dict(getattr(state, "inferred", None) or {}),
+        }
+        if route:
+            updates["route"] = route
+        if turn is not None:
+            updates["turn"] = turn
+        return state.model_copy(update=updates)
 
     def _clarification_context(
         self,
@@ -533,7 +613,12 @@ class NeeShopsAgent:
           far. Clarification replies are short and often boilerplate ("I
           don't have an additional preference for budget") — rebuilding the
           query from the latest message alone let the target drop out of
-          the pool entirely on non-informative turns.
+          the pool entirely on non-informative turns. This includes
+          pre-override text: measured on the 200-session panel, cutting
+          the accumulation at the override turn dropped the target out of
+          the hybrid pool after the override (the opener's category words
+          are the strongest target-matching tokens), so the disclaimed
+          intent is deactivated at the CONSTRAINT level only.
         - **latest** — keywords of just this message. A long accumulated
           OR-query dilutes BM25 ordering; this angle rescues products that
           match only the newest, strongest signal.
@@ -572,9 +657,11 @@ class NeeShopsAgent:
         candidate pool entirely on every non-informative turn. Accumulating
         keeps the opening intent permanently in the query while new answers
         add discriminating tokens. (Intent-override messages keep the
-        accumulation too — the user's actual target never changes, so
-        earlier keywords stay true; only slot-filling is skipped.)
-        """
+        accumulation too — measured on the 200-session panel, cutting it
+        at the override turn dropped the target out of the hybrid pool;
+        the disclaimed intent is instead deactivated at the constraint
+        level, which does not remove its text from the target's own
+        retrieval signal.)"""
         tokens: list[str] = []
         seen: set[str] = set()
         for msg in [t.user_message for t in state.history] + [user_message]:

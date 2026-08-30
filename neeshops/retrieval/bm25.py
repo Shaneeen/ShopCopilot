@@ -151,7 +151,11 @@ class BM25Retriever(Retriever):
         # title/category matches a query token outrank products that match
         # only somewhere in a long description — the user's target usually
         # shares its coarse category and title words with the conversation.
-        terms = [t for t in query.split() if t]
+        #
+        # Dedup (order-preserving) and bound the OR expression: a repeated
+        # token ("shoes " x 5000) otherwise becomes a 5000-term FTS5 MATCH
+        # whose query planning stalls for minutes on the 50k catalog.
+        terms = list(dict.fromkeys(t for t in query.split() if t))[:256]
         if not terms:
             return []
         try:

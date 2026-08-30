@@ -17,6 +17,7 @@ from typing import Any
 import pytest
 
 from neeshops.agent import NeeShopsAgent
+from neeshops.config.settings import load_strategy
 from neeshops.models.session import ConversationState
 from neeshops.ranking.base import Ranker
 from neeshops.retrieval.base import Candidate, Retriever
@@ -71,24 +72,11 @@ def test_empty_catalog_file_returns_valid_response(tmp_path: Path) -> None:
 
 
 def test_missing_llm_key_deterministic_fallback() -> None:
-    """Strategy with enable_llm_reranker=True without API key falls back deterministically to HeuristicRanker."""
-    strategy = {
-        "retrieval": {
-            "candidate_limit": 50,
-            "buying": {"bm25_weight": 0.7, "semantic_weight": 0.3},
-            "browsing": {"bm25_weight": 0.3, "semantic_weight": 0.7},
-        },
-        "ranking": {"rerank_limit": 20, "personalization_weight": 0.15},
-        "clarification": {
-            "max_questions_per_session": 2,
-            "min_candidates_before_recommend": 5,
-            "ask_if_candidates_above": 60,
-        },
-        "feature_flags": {
-            "enable_semantic_retrieval": False,
-            "enable_llm_reranker": True,
-        },
-    }
+    """Strategy with enable_llm_reranker=True without API key falls back
+    deterministically to the constraint-aware baseline ranker."""
+    strategy = load_strategy()
+    strategy["feature_flags"]["enable_semantic_retrieval"] = False
+    strategy["feature_flags"]["enable_llm_reranker"] = True
     agent = Agent(strategy=strategy)
     agent.reset("llm_fallback_s1", user_profile={"preference_tags": ["comfort"]})
 

@@ -85,6 +85,11 @@ _FEATURE_WORDS = {
 }
 _USE_CASE_WORDS = {"wedding", "party", "work", "sports", "hiking", "travel"}
 
+# _BRAND_WORDS is a set — freeze its scan order so multi-brand messages
+# extract the same brand in every process (set iteration order is hash
+# salted per run).
+_BRAND_WORDS_ORDERED = tuple(sorted(_BRAND_WORDS))
+
 _COLOR_WORDS = {
     "black",
     "white",
@@ -106,6 +111,26 @@ _COLOR_WORDS = {
     "silver",
     "wine",
     "burgundy",
+}
+
+# Words whose following colour mention is a rejection, not a request
+# (checked within a 2-token window before each colour word).
+_COLOR_NEGATORS = {
+    "forget",
+    "forgo",
+    "drop",
+    "lose",
+    "no",
+    "not",
+    "nothing",
+    "without",
+    "skip",
+    "instead",
+    "replace",
+    "switch",
+    "rather",
+    "neither",
+    "never",
 }
 
 # Same vocabulary the official evaluator uses to build intent cards, plus a
@@ -171,16 +196,39 @@ _STYLE_WORDS = {
     "preppy",
 }
 
-_SIZE_RE = re.compile(
-    r"\b(xxs|xs|s|m|l|xl|xxl|xxxl|small|medium|large|x-large|xx-large"
-    r"|size\s?\d+(?:\.\d)?)\b",
+# Size extraction is context-gated: single-letter sizes ("s", "m") are
+# trusted only after an explicit "size" cue or as apostrophe-free
+# standalone words. A bare letter otherwise matches the trailing fragment
+# of contractions/possessives — "I'm" yielded size "m" and "Women's"
+# yielded size "s" on real sessions, inventing false size constraints that
+# then filtered and ranked against phantom requirements.
+_SIZE_CONTEXT_RE = re.compile(
+    r"\bsizes?\s*[:=\-]?\s*(xxs|xs|s|m|l|xl|xxl|xxxl|small|medium|large"
+    r"|x-large|xx-large|\d+(?:\.\d+)?)\b",
     re.I,
 )
+_SIZE_WORD_RE = re.compile(
+    r"\b(xx-large|x-large|xxxl|xxl|xl|xxs|small|medium|large)\b", re.I
+)
+_SIZE_LETTER_RE = re.compile(r"(?<![A-Za-z0-9'])(s|m|l)(?![A-Za-z0-9])", re.I)
 
 _PRICE_RE = re.compile(r"\$?\s?(\d+(?:\.\d+)?)\s*(?:dollars)?")
-_UNDER_RE = re.compile(
-    r"\b(?:under|below|less than|cheaper than|max(?:imum)?|around|about)\b|\bbudget\b"
+# Budget evidence must be explicit: a currency-marked number or a number
+# tightly following a budget keyword. Bare prepositions ("around",
+# "about") are not budget evidence, and the first unrelated number in the
+# message is not a budget either — "wrap the scarf around your neck" plus
+# "2 wearing ways" became budget=2.0 and hard-filtered the $13.99 target
+# that raw retrieval ranked #1 (public_0090).
+_CURRENCY_NUMBER_RE = re.compile(
+    r"\$\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:usd|dollars|bucks)\b",
+    re.I,
 )
+_BUDGET_KEYWORD_RE = re.compile(
+    r"\b(under|below|less than|cheaper than|no more than|at most|up to"
+    r"|max(?:imum)?|budget)\b",
+    re.I,
+)
+_BUDGET_KEYWORD_WINDOW = 8
 
 _LOOKING_FOR_RE = re.compile(r"looking for ([^.!?,;]+)", re.I)
 # Covers both the opening "A key requirement is: X" and the evaluator's
@@ -228,7 +276,10 @@ def _has_no_preference(text: str) -> bool:
 
 def _find_brand(text: str) -> Optional[str]:
     lowered = text.lower()
-    for brand in _BRAND_WORDS:
+    # Iterating the raw set made the first match depend on process hash
+    # seed — a different brand could win in a different run. Iterate a
+    # deterministic order instead.
+    for brand in _BRAND_WORDS_ORDERED:
         if brand in lowered:
             return brand.split()[-1]
     m = re.search(r"\b(nike|adidas|puma|reebok)\b", lowered)
@@ -269,9 +320,39 @@ def _first_number(text: str) -> Optional[float]:
     return float(match.group(1)) if match else None
 
 
+def _budget_from_text(text: str) -> Optional[float]:
+    """Budget value only from explicit evidence.
+
+    A currency-marked number ("$40", "40 dollars"), or a number within a
+    few characters after a budget keyword ("under 40", "budget of 50").
+    Slot answers (the reply to a budget question) are handled by the
+    caller with `_first_number` — there the number IS the answer.
+    """
+    match = _CURRENCY_NUMBER_RE.search(text)
+    if match:
+        return float(match.group(1) or match.group(2))
+    for keyword in _BUDGET_KEYWORD_RE.finditer(text):
+        window = text[keyword.end() : keyword.end() + _BUDGET_KEYWORD_WINDOW]
+        number = re.search(r"\d+(?:\.\d+)?", window)
+        if number:
+            return float(number.group(0))
+    return None
+
+
 def _find_color(text: str) -> Optional[str]:
-    tokens = set(tokenize(text)) & _COLOR_WORDS
-    return sorted(tokens)[0] if tokens else None
+    tokens = tokenize(text)
+    kept: list[str] = []
+    for index, token in enumerate(tokens):
+        if token not in _COLOR_WORDS:
+            continue
+        # A colour named right after a negator is REJECTED ("forget blue,
+        # I want red") — it must not win the tie-break and overwrite the
+        # colour the user actually asked for.
+        window = tokens[max(0, index - 2) : index]
+        if any(word in _COLOR_NEGATORS for word in window):
+            continue
+        kept.append(token)
+    return sorted(kept)[0] if kept else None
 
 
 def _find_material(text: str) -> Optional[str]:
@@ -288,14 +369,14 @@ def _find_style(text: str) -> Optional[str]:
 
 
 def _find_size(text: str) -> Optional[str]:
-    match = _SIZE_RE.search(text)
-    if not match:
-        return None
-    val = match.group(1).lower()
-    if val.startswith("size"):
-        m = re.search(r"\d+(?:\.\d+)?", val)
-        return m.group(0) if m else val
-    return val
+    """Context-gated size: an explicit "size" cue first, then unambiguous
+    size words, then apostrophe-free standalone letters ("I'm"/"Women's"
+    must not become size "m"/"s")."""
+    for pattern in (_SIZE_CONTEXT_RE, _SIZE_WORD_RE, _SIZE_LETTER_RE):
+        match = pattern.search(text)
+        if match:
+            return match.group(1).lower()
+    return None
 
 
 def value_from_text(field: str, text: str) -> Optional[str]:
@@ -382,7 +463,7 @@ def _classify_requirement(value: str) -> dict:
     """Classify one 'key requirement' clause into a {field: value} update."""
     lowered = value.lower()
     if "budget" in lowered or re.search(r"\$\s?\d", lowered):
-        number = _first_number(lowered)
+        number = _budget_from_text(lowered)
         if number is not None:
             return {"budget": number}
     if lowered.startswith("color:"):
@@ -483,6 +564,7 @@ def extract_constraints(
     #    A wildcard ("other") reply carries up to two constraints of any
     #    type, each parsed into its own field; an unparseable reply marks
     #    "other" NO_PREFERENCE so the clarification engine stops asking it.
+    wildcard_reply = False
     if slot == "other":
         if _has_no_preference(text):
             out["other"] = NO_PREFERENCE
@@ -490,6 +572,7 @@ def extract_constraints(
             parsed = _parse_compound_reply(message)
             if parsed:
                 out.update(parsed)
+                wildcard_reply = True
             else:
                 out["other"] = NO_PREFERENCE
     elif slot in fields:
@@ -503,63 +586,71 @@ def extract_constraints(
             if field.replace("_", " ") in text or field in text:
                 out[field] = NO_PREFERENCE
 
-    # 3. Budget: "under $120", "budget around $27.99".
-    if "budget" not in out and _UNDER_RE.search(text):
-        number = _first_number(text)
-        if number is not None:
-            out["budget"] = number
+    # Steps 3–6 are free-vocabulary passes over the WHOLE message. A parsed
+    # wildcard reply skips them: its fragments are already classified, and
+    # re-parsing the reply's own wording reinterprets it — a wildcard answer
+    # containing "laundry bag" set category=bag, and the category filter then
+    # removed the actual underwear target that raw retrieval ranked 2–3.
+    if not wildcard_reply:
+        # 3. Budget: "under $120", "budget around $27.99" — explicit budget
+        #    evidence only (currency mark, or a number right after a budget
+        #    keyword).
+        if "budget" not in out:
+            budget = _budget_from_text(text)
+            if budget is not None:
+                out["budget"] = budget
 
-    # 4. Evaluator-shaped opener: "I'm looking for women shirts. ..."
-    if "category" not in out:
-        looking = _LOOKING_FOR_RE.search(message)
-        if looking:
-            value = _clean_value(looking.group(1), _CATEGORY_VALUE_LIMIT)
-            tokens = [
-                t for t in value.split() if t.lower() not in _CATEGORY_STOP_TOKENS
-            ]
-            value = " ".join(tokens)
-            if value:
-                out["category"] = value
+        # 4. Evaluator-shaped opener: "I'm looking for women shirts. ..."
+        if "category" not in out:
+            looking = _LOOKING_FOR_RE.search(message)
+            if looking:
+                value = _clean_value(looking.group(1), _CATEGORY_VALUE_LIMIT)
+                tokens = [
+                    t for t in value.split() if t.lower() not in _CATEGORY_STOP_TOKENS
+                ]
+                value = " ".join(tokens)
+                if value:
+                    out["category"] = value
 
-    # 5. "A key requirement is: X" — classify X into a structured field.
-    requirement = _REQUIREMENT_RE.search(message)
-    if requirement:
-        for field, value in _classify_requirement(requirement.group(1)).items():
-            out.setdefault(field, value)
+        # 5. "A key requirement is: X" — classify X into a structured field.
+        requirement = _REQUIREMENT_RE.search(message)
+        if requirement:
+            for field, value in _classify_requirement(requirement.group(1)).items():
+                out.setdefault(field, value)
 
-    # 6. Free vocabulary matches (color/material anywhere in the message).
-    if "color" not in out:
-        color = _find_color(text)
-        if color:
-            out["color"] = color
-    if "material" not in out:
-        material = _find_material(text)
-        if material:
-            out["material"] = material
-    if "style" not in out:
-        style = _find_style(text)
-        if style:
-            out["style"] = style
-    if "size" not in out:
-        size = _find_size(text)
-        if size:
-            out["size"] = size
-    if "brand" not in out:
-        brand = _find_brand(text)
-        if brand:
-            out["brand"] = brand
-    if "category" not in out:
-        category = _find_category(text)
-        if category:
-            out["category"] = category
-    if "feature" not in out:
-        feature = _find_feature(text)
-        if feature:
-            out["feature"] = feature
-    if "use_case" not in out:
-        use_case = _find_use_case(text)
-        if use_case:
-            out["use_case"] = use_case
+        # 6. Free vocabulary matches (color/material anywhere in the message).
+        if "color" not in out:
+            color = _find_color(text)
+            if color:
+                out["color"] = color
+        if "material" not in out:
+            material = _find_material(text)
+            if material:
+                out["material"] = material
+        if "style" not in out:
+            style = _find_style(text)
+            if style:
+                out["style"] = style
+        if "size" not in out:
+            size = _find_size(text)
+            if size:
+                out["size"] = size
+        if "brand" not in out:
+            brand = _find_brand(text)
+            if brand:
+                out["brand"] = brand
+        if "category" not in out:
+            category = _find_category(text)
+            if category:
+                out["category"] = category
+        if "feature" not in out:
+            feature = _find_feature(text)
+            if feature:
+                out["feature"] = feature
+        if "use_case" not in out:
+            use_case = _find_use_case(text)
+            if use_case:
+                out["use_case"] = use_case
 
     return out
 

@@ -80,6 +80,12 @@ class ConversationState(BaseModel):
     Override — slot erasure and rewriting). Excluded from filter demotion,
     weighted 0.3 in ranking coverage, recoverable when re-affirmed."""
 
+    override_turn: Optional[int] = None
+    """Turn number of the most recent intent-override message. Accumulated
+    retrieval queries include only history from this turn on — pre-override
+    text belongs to the disclaimed intent and must not keep feeding
+    retrieval after the user said to ignore it."""
+
     inferred: dict[str, InferredSlot] = Field(default_factory=dict)
     """Agreement-inferred attributes: when the top-10 pool agrees on a value
     for an un-asked attribute, it's recorded here as a decaying bonus-only

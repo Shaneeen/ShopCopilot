@@ -180,6 +180,57 @@ conflicts: conversation & agent intelligence, retrieval & search, ranking
 core, personalisation & evaluation, research agent & evaluation, and integration/demo/DX.
 Full breakdown: `docs/neeshops/TEAM_WORKSTREAMS.md`.
 
+## Status (audit repairs 2026-08-30 — extraction correctness, full-pool scoring, robustness)
+
+*Scores — instrumented official-evaluator wrapper (`scripts/instrumented_eval.py`, 200 public
+sessions, same machine, same env; baseline = pristine `HEAD` run in a throwaway worktree the
+same session).*
+
+| Suite | Metric | Audit repairs (current) | Same-env baseline (HEAD 1652f46) | Δ | Audit report (other env) |
+|---|---|---|---|---|---|
+| **Public set** (200 sessions) | Hit@10 / MRR / MTTC / Technical | **0.855 / 0.4382 / 3.59 / 0.7072** | 0.865 / 0.4470 / 3.52 / 0.7162 | −0.010 / −0.0088 / +0.07 / −0.0090 | 0.885 / 0.4751 / 3.30 / 0.7390 |
+| By scenario (HR@10) | buying / browsing / intent-override / boundary | **0.900 / 0.8875 / 0.7333 / 0.600** | 0.8625 / 0.900 / 0.800 / 0.800 | +0.038 / −0.013 / −0.067 / −0.200 | 0.8875 / 0.925 / 0.800 / 0.800 |
+
+Kept (measured wins / zero-risk fixes): false-constraint extraction repairs (no more size `m`
+from "I'm", size `s` from "Women's", budget from "around…2 wearing ways", category from
+wildcard-reply boilerplate — Buying HR 0.8625→0.900, MRR 0.480→0.528, MTTC 3.08→2.75);
+full-bounded-pool ranking (`rerank_limit` 40→320, cost cap not eligibility); "still exploring"
+routes Browsing; route source weights applied in multi-query fusion (browsing weights measured
+back to 0.7/0.3 — the 0.3/0.7 semantic-heavy split regressed Browsing/Boundary with the weak
+hashed-TF-IDF index); `decide()` now sees the preview state (no-preference answers visible the
+same turn); negation-aware colour ("forget blue, I want red"); order-preserving BM25 term dedup
+(fixed a minutes-long FTS stall on "shoes "×5000 — `test_malformed_and_extreme_inputs` hung);
+retrieval/ranker crash containment + Ranker protocol (`is_available`/`get_usage`/tuple)
+restored; deterministic brand scan; semantic index location derived from the agent's catalog
+(a missing-catalog agent no longer serves the default catalog's index); 47-test regression file
+`tests/test_audit_regressions.py`. Suite: **325 passed, 1 deselected**.
+
+Reverted after measurement (documented in code + tests): deactivating the disclaimed soft
+fields on intent-override turns (0.80→0.67 override HR — the card's soft values describe the
+SAME target product, so they are true signal) and cutting the accumulated query at the
+override turn (dropped the target out of the hybrid pool, `override_not_yet_delivered` 11
+misses). `ConversationState.override_turn` is still recorded for future work.
+
+Known gaps (next session): vs the same-env baseline the net is **−2 sessions of 200** (11
+hit→miss vs 9 miss→hit), fully explained by the full-pool scoring change: widening the ranked
+competition from pool-top-40 to pool-top-~300 rescued 9 targets beyond the old window (the
+audit's P0) but let deep-pool zero-violation/high-coverage candidates outrank 11 pool-head
+targets the old window had protected (paired diff: e.g. public_0085 pool rank 1 delivered
+rank 2 → pool rank 1 undelivered). The browsing/boundary/override scenario deltas are these
+same flips concentrated in small samples (10/30/80 sessions); `browsing_popularity_bump=0`
+was tested and refuted (identical subset numbers). If the 2 sessions matter, the lever is a
+partial competition window (~100–120) or a retrieval-rank term ahead of popularity in the
+rank sort key — A/B it on the dev split before adopting. The audit's cross-env numbers used
+a BM25-only runtime (no semantic index on that machine); this environment has
+`data/semantic.index.npy` live, so absolute numbers are not comparable across the two.
+
+Reproduce:
+
+```bash
+python -m pytest -q
+python scripts/instrumented_eval.py --output evaluation/results/instrumented_results.json
+```
+
 ## Status (v2 restructure 2026-08-30 — recall-first guarantee pool)
 
 *Scores — official evaluator (200 public sessions, 50k catalog, `results.json`).*

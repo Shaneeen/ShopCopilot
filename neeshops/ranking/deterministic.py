@@ -78,6 +78,12 @@ class ConstraintAwareRanker(Ranker):
             self.last_latency_ms = (time.perf_counter() - started) * 1000
             return []
 
+        # rerank_limit is a COST cap, not an eligibility filter: it must sit
+        # at or above the retrieval candidate_limit so every pool member is
+        # scored. Truncating to 40 BEFORE feature scoring silently decided
+        # eligibility by pool-insertion order (guarantee tier, then RRF
+        # order) — 4 of the 23 measured misses never entered the rerank
+        # window despite being in the candidate pool.
         pool = _unique_candidates(candidates)[: int(self._cfg["rerank_limit"])]
         retrieval_signals = self._retrieval_signals(pool)
         scored: list[tuple[int, float, float, float, str, Candidate]] = []
