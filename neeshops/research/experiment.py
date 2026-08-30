@@ -3,6 +3,7 @@
 what keeps the research agent "controlled": it can only ever propose
 different values for parameters we've already declared safe to tune.
 """
+
 from __future__ import annotations
 
 import copy
@@ -47,6 +48,8 @@ SAFE_PARAMETERS = {
     "ranking.personalization_weight",
     "ranking.coverage_weight",
     "ranking.coverage_salience_weight",
+    "ranking.buying_salience_weight",
+    "ranking.buying_popularity_scale",
     "ranking.full_match_bonus",
     "ranking.browsing_popularity_bump",
     "ranking.overlap_dampening_threshold",
@@ -150,7 +153,11 @@ def _set_dotted(d: dict, dotted_path: str, value) -> None:
     for key in keys[:-1]:
         node = node.setdefault(key, {})
     last_key = keys[-1]
-    if last_key in node and isinstance(node[last_key], int) and isinstance(value, (int, float)):
+    if (
+        last_key in node
+        and isinstance(node[last_key], int)
+        and isinstance(value, (int, float))
+    ):
         node[last_key] = int(value)
     else:
         node[last_key] = value
