@@ -19,6 +19,7 @@ the full internal response (including `diagnostics`) is visible. Adds:
     python scripts/instrumented_eval.py                 # public 200
     python scripts/instrumented_eval.py --limit 50      # quick panel
 """
+
 from __future__ import annotations
 
 import argparse
@@ -158,11 +159,40 @@ def run_session(
             retrieval_hit_turns += 1
         if response.get("ask_attribute"):
             questions_asked += 1
-        ranked = normalize_recommendations(
-            response.get("recommendations"), catalog_ids
-        )
+        ranked = normalize_recommendations(response.get("recommendations"), catalog_ids)
+        recs = response.get("recommendations") or []
+        scores = []
+        for r in recs:
+            try:
+                scores.append(
+                    float(r.get("score", 0.0))
+                    if isinstance(r, dict)
+                    else float(getattr(r, "score", 0.0))
+                )
+            except Exception:
+                scores.append(0.0)
+        margin = (scores[0] - scores[1]) if len(scores) >= 2 else None
+        # Finer relevance margin from ranker diagnostics (violations compress ordering_score to same value)
+        relevance_margin = None
+        try:
+            diags = getattr(agent.ranker, "last_diagnostics", {}) or {}
+            # also fallback ranker
+            if not diags and hasattr(agent, "_fallback_ranker"):
+                diags = getattr(agent._fallback_ranker, "last_diagnostics", {}) or {}
+            rec_asins = [
+                r.get("parent_asin")
+                if isinstance(r, dict)
+                else getattr(r, "parent_asin", None)
+                for r in recs[:2]
+            ]
+            if len(rec_asins) >= 2 and rec_asins[0] in diags and rec_asins[1] in diags:
+                relevance_margin = float(diags[rec_asins[0]].relevance_score) - float(
+                    diags[rec_asins[1]].relevance_score
+                )
+        except Exception:
+            relevance_margin = None
+        rank = ranked.index(target) + 1 if target in ranked else None
         if target in ranked:
-            rank = ranked.index(target) + 1
             if override_applied:
                 best_rank = rank
                 hit_turn = turn
@@ -176,9 +206,13 @@ def run_session(
                 "pool_rank": pool_rank,
                 "retrieval_rank": retrieval_rank,
                 "and_set_size": response_diag.get("and_set_size"),
+                "pool_size": response_diag.get("pool_size"),
                 "over_generality": response_diag.get("over_generality"),
                 "target_rank": rank if target in ranked else None,
                 "llm_fallback": response_diag.get("llm_fallback"),
+                "margin": margin,
+                "relevance_margin": relevance_margin,
+                "ranked_scores": scores[:10] if scores else [],
             }
         )
         final_diag = dict(response_diag)
@@ -194,11 +228,16 @@ def run_session(
             if new_value:
                 disclosed.add(new_value)
             user_message = str(
-                override.get("message", "Actually, please ignore my earlier preference.")
+                override.get(
+                    "message", "Actually, please ignore my earlier preference."
+                )
             )
         else:
             user_message, boundary_used = customer_reply(
-                effective_sample, response.get("ask_attribute"), disclosed, boundary_used
+                effective_sample,
+                response.get("ask_attribute"),
+                disclosed,
+                boundary_used,
             )
 
     hit = hit_turn is not None
@@ -249,7 +288,8 @@ def summarize_panel(sessions: list[dict]) -> dict:
     hit_at = {
         f"hit_at_{k}": sum(
             1 for s in sessions if s["best_rank"] is not None and s["best_rank"] <= k
-        ) / n
+        )
+        / n
         for k in (1, 3, 5, 10)
     }
     miss_counts: dict[str, int] = {name: 0 for name in MISS_TYPES}
@@ -265,36 +305,292 @@ def summarize_panel(sessions: list[dict]) -> dict:
         {
             "efficiency": round(efficiency, 6),
             "recommended_technical_score": round(
-                0.50 * panel["hit_rate_at_10"] + 0.30 * panel["mrr"] + 0.20 * efficiency, 6
+                0.50 * panel["hit_rate_at_10"]
+                + 0.30 * panel["mrr"]
+                + 0.20 * efficiency,
+                6,
             ),
             **{k: round(v, 6) for k, v in hit_at.items()},
-            "target_in_pool_at_200": round(100.0 * sum(s["pool_hit_turns"] for s in sessions) / turns_total, 2),
-            "target_in_retrieval_at_200": round(100.0 * sum(s["retrieval_hit_turns"] for s in sessions) / turns_total, 2),
+            "target_in_pool_at_200": round(
+                100.0 * sum(s["pool_hit_turns"] for s in sessions) / turns_total, 2
+            ),
+            "target_in_retrieval_at_200": round(
+                100.0 * sum(s["retrieval_hit_turns"] for s in sessions) / turns_total, 2
+            ),
             "filter_kill_rate": round(
-                (sum(s["retrieval_hit_turns"] for s in sessions) - sum(s["pool_hit_turns"] for s in sessions)) / turns_total, 4
+                (
+                    sum(s["retrieval_hit_turns"] for s in sessions)
+                    - sum(s["pool_hit_turns"] for s in sessions)
+                )
+                / turns_total,
+                4,
             ),
             "avg_questions": round(sum(s["questions_asked"] for s in sessions) / n, 3),
-            "avg_final_and_set_size": round(statistics.fmean(and_sizes), 1) if and_sizes else None,
+            "avg_final_and_set_size": round(statistics.fmean(and_sizes), 1)
+            if and_sizes
+            else None,
             "over_generality_sessions": sum(
                 1 for s in sessions if any(t["over_generality"] for t in s["turns"])
             ),
             "llm_fallback_turns": sum(
                 1 for s in sessions for t in s["turns"] if t["llm_fallback"]
             ),
-            "p50_latency_ms": round(percentile([s["latency_ms"] for s in sessions], 50), 1),
-            "p95_latency_ms": round(percentile([s["latency_ms"] for s in sessions], 95), 1),
+            "p50_latency_ms": round(
+                percentile([s["latency_ms"] for s in sessions], 50), 1
+            ),
+            "p95_latency_ms": round(
+                percentile([s["latency_ms"] for s in sessions], 95), 1
+            ),
             "miss_decomposition": miss_counts,
         }
     )
     return panel
 
 
+def profile_last_question(sessions: list[dict], rerank_floor: int = 40) -> dict:
+    rows = []
+    for s in sessions:
+        if s["hit"]:
+            continue
+        turns = s.get("turns") or []
+        last_q_idx = -1
+        for i, t in enumerate(turns):
+            if t.get("asked"):
+                last_q_idx = i
+        if last_q_idx == -1:
+            rows.append(
+                {
+                    "sample_id": s["sample_id"],
+                    "scenario_type": s["scenario_type"],
+                    "miss_type": s["miss_type"],
+                    "has_last_question": False,
+                }
+            )
+            continue
+        if last_q_idx + 1 >= len(turns):
+            rows.append(
+                {
+                    "sample_id": s["sample_id"],
+                    "scenario_type": s["scenario_type"],
+                    "miss_type": s["miss_type"],
+                    "has_last_question": True,
+                    "last_q_turn": turns[last_q_idx]["turn"],
+                    "last_q_attr": turns[last_q_idx].get("asked"),
+                    "last_q_gate": turns[last_q_idx].get("gate"),
+                    "before_and": turns[last_q_idx].get("and_set_size"),
+                    "after_and": None,
+                    "before_pool": turns[last_q_idx].get("pool_size"),
+                    "after_pool": None,
+                    "before_margin": turns[last_q_idx].get("margin"),
+                    "after_margin": None,
+                    "before_rel_margin": turns[last_q_idx].get("relevance_margin"),
+                    "after_rel_margin": None,
+                    "pct_reduction_and": None,
+                    "pct_reduction_pool": None,
+                    "margin_delta": None,
+                    "rel_margin_delta": None,
+                    "late_phase": None,
+                    "measurable": False,
+                }
+            )
+            continue
+        before = turns[last_q_idx]
+        after = turns[last_q_idx + 1]
+        before_and = before.get("and_set_size")
+        after_and = after.get("and_set_size")
+        before_pool = before.get("pool_size")
+        after_pool = after.get("pool_size")
+        before_margin = before.get("margin")
+        after_margin = after.get("margin")
+        before_rel = before.get("relevance_margin")
+        after_rel = after.get("relevance_margin")
+        pct_and = None
+        if (
+            isinstance(before_and, (int, float))
+            and isinstance(after_and, (int, float))
+            and before_and
+            and before_and > 0
+        ):
+            pct_and = (before_and - after_and) / before_and * 100.0
+        pct_pool = None
+        if (
+            isinstance(before_pool, (int, float))
+            and isinstance(after_pool, (int, float))
+            and before_pool
+            and before_pool > 0
+        ):
+            pct_pool = (before_pool - after_pool) / before_pool * 100.0
+        pct = pct_and if pct_and is not None else pct_pool
+        delta = None
+        if isinstance(before_margin, (int, float)) and isinstance(
+            after_margin, (int, float)
+        ):
+            delta = after_margin - before_margin
+        rel_delta = None
+        if isinstance(before_rel, (int, float)) and isinstance(after_rel, (int, float)):
+            rel_delta = after_rel - before_rel
+        late = None
+        cand_before = (
+            before_and if isinstance(before_and, (int, float)) else before_pool
+        )
+        if isinstance(cand_before, (int, float)):
+            late = cand_before <= rerank_floor
+        rows.append(
+            {
+                "sample_id": s["sample_id"],
+                "scenario_type": s["scenario_type"],
+                "miss_type": s["miss_type"],
+                "has_last_question": True,
+                "last_q_turn": before["turn"],
+                "last_q_attr": before.get("asked"),
+                "last_q_gate": before.get("gate"),
+                "before_and": before_and,
+                "after_and": after_and,
+                "before_pool": before_pool,
+                "after_pool": after_pool,
+                "before_margin": before_margin,
+                "after_margin": after_margin,
+                "before_rel_margin": before_rel,
+                "after_rel_margin": after_rel,
+                "pct_reduction_and": pct_and,
+                "pct_reduction_pool": pct_pool,
+                "pct_reduction": pct,
+                "margin_delta": delta,
+                "rel_margin_delta": rel_delta,
+                "late_phase": late,
+                "measurable": pct is not None and delta is not None,
+                "measurable_rel": pct is not None and rel_delta is not None,
+            }
+        )
+    measurable = [r for r in rows if r.get("measurable")]
+    measurable_rel = [r for r in rows if r.get("measurable_rel")]
+    large_collapse_threshold = 30.0
+    flat_margin_threshold = 0.01
+    rel_flat_threshold = 0.02
+
+    def is_large_collapse(r):
+        return (
+            r["pct_reduction"] is not None
+            and r["pct_reduction"] >= large_collapse_threshold
+        )
+
+    def is_flat_margin(r):
+        return (
+            r["margin_delta"] is not None and r["margin_delta"] <= flat_margin_threshold
+        )
+
+    def is_flat_rel(r):
+        return (
+            r["rel_margin_delta"] is not None
+            and r["rel_margin_delta"] <= rel_flat_threshold
+        )
+
+    pattern = [r for r in measurable if is_large_collapse(r) and is_flat_margin(r)]
+    pattern_rel = [r for r in measurable_rel if is_large_collapse(r) and is_flat_rel(r)]
+    # late-phase subset
+    late_measurable = [r for r in measurable if r.get("late_phase")]
+    late_measurable_rel = [r for r in measurable_rel if r.get("late_phase")]
+    late_pattern = [
+        r for r in late_measurable if is_large_collapse(r) and is_flat_margin(r)
+    ]
+    late_pattern_rel = [
+        r for r in late_measurable_rel if is_large_collapse(r) and is_flat_rel(r)
+    ]
+    # looser thresholds for sensitivity
+    pattern_loose = [
+        r
+        for r in measurable
+        if r["pct_reduction"] is not None
+        and r["pct_reduction"] >= 20.0
+        and r["margin_delta"] is not None
+        and r["margin_delta"] <= 0.02
+    ]
+    pattern_loose_rel = [
+        r
+        for r in measurable_rel
+        if r["pct_reduction"] is not None
+        and r["pct_reduction"] >= 20.0
+        and r["rel_margin_delta"] is not None
+        and r["rel_margin_delta"] <= 0.02
+    ]
+    # Also compute strictly negative margin
+    pattern_negative = [
+        r
+        for r in measurable
+        if is_large_collapse(r)
+        and r["margin_delta"] is not None
+        and r["margin_delta"] <= 0
+    ]
+    pattern_negative_rel = [
+        r
+        for r in measurable_rel
+        if is_large_collapse(r)
+        and r["rel_margin_delta"] is not None
+        and r["rel_margin_delta"] <= 0
+    ]
+    summary = {
+        "total_misses": sum(1 for s in sessions if not s["hit"]),
+        "misses_with_last_q": sum(1 for r in rows if r.get("has_last_question")),
+        "measurable": len(measurable),
+        "measurable_rel": len(measurable_rel),
+        "large_set_collapse_ge30": sum(1 for r in measurable if is_large_collapse(r)),
+        "flat_margin_le0_01": sum(1 for r in measurable if is_flat_margin(r)),
+        "pattern_large_collapse_and_flat_margin_ge30_le0_01": len(pattern),
+        "pattern_fraction": round(len(pattern) / len(measurable), 4)
+        if measurable
+        else 0.0,
+        "pattern_fraction_of_all_misses": round(
+            len(pattern) / max(1, sum(1 for s in sessions if not s["hit"])), 4
+        ),
+        "pattern_rel_ge30_le0_02": len(pattern_rel),
+        "pattern_rel_fraction": round(len(pattern_rel) / len(measurable_rel), 4)
+        if measurable_rel
+        else 0.0,
+        "pattern_negative": len(pattern_negative),
+        "pattern_negative_rel": len(pattern_negative_rel),
+        "late_phase_measurable": len(late_measurable),
+        "late_phase_measurable_rel": len(late_measurable_rel),
+        "late_pattern": len(late_pattern),
+        "late_pattern_rel": len(late_pattern_rel),
+        "late_pattern_fraction": round(len(late_pattern) / len(late_measurable), 4)
+        if late_measurable
+        else None,
+        "late_pattern_rel_fraction": round(
+            len(late_pattern_rel) / len(late_measurable_rel), 4
+        )
+        if late_measurable_rel
+        else None,
+        "loose_pattern_ge20_le0_02": len(pattern_loose),
+        "loose_fraction": round(len(pattern_loose) / len(measurable), 4)
+        if measurable
+        else 0.0,
+        "loose_pattern_rel": len(pattern_loose_rel),
+        "loose_rel_fraction": round(len(pattern_loose_rel) / len(measurable_rel), 4)
+        if measurable_rel
+        else 0.0,
+        "thresholds": {
+            "large_collapse_pct": large_collapse_threshold,
+            "flat_margin_delta": flat_margin_threshold,
+            "rel_flat_margin_delta": rel_flat_threshold,
+            "rerank_floor": rerank_floor,
+        },
+        "rows": rows,
+    }
+    return summary
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Instrumented public-set evaluation panel")
+    parser = argparse.ArgumentParser(
+        description="Instrumented public-set evaluation panel"
+    )
     parser.add_argument("--catalog", default="data/catalog.jsonl")
     parser.add_argument("--dataset", default="data/public_set.jsonl")
-    parser.add_argument("--output", default="evaluation/results/instrumented_results.json")
-    parser.add_argument("--limit", type=int, default=0, help="only run the first N samples")
+    parser.add_argument(
+        "--output", default="evaluation/results/instrumented_results.json"
+    )
+    parser.add_argument(
+        "--limit", type=int, default=0, help="only run the first N samples"
+    )
     args = parser.parse_args()
 
     samples = load_jsonl(args.dataset)
@@ -315,9 +611,27 @@ def main() -> int:
         name: summarize_panel(group) for name, group in sorted(grouped.items())
     }
 
+    gate = profile_last_question(sessions)
+    panel["gate_last_question_profile"] = {k: v for k, v in gate.items() if k != "rows"}
+    print("=== GATE last-question profile (misses only) ===")
+    print(json.dumps({k: v for k, v in gate.items() if k != "rows"}, indent=2))
+    for r in gate["rows"]:
+        if r.get("measurable"):
+            pct = r["pct_reduction"]
+            pct_str = f"{pct:.1f}%" if isinstance(pct, float) else "NA"
+            print(
+                f"{r['sample_id']:12} {r['scenario_type']:15} q={r['last_q_attr']:10} gate={str(r['last_q_gate']):14} before_and={str(r['before_and']):6} after_and={str(r['after_and']):6} pct={pct_str:>7} margin {r['before_margin']!s:>6}->{r['after_margin']!s:>6} d={r['margin_delta']!s:>6} rel {r['before_rel_margin']!s:>7}->{r['after_rel_margin']!s:>7} d_rel={str(round(r['rel_margin_delta'], 4)) if isinstance(r['rel_margin_delta'], float) else r['rel_margin_delta']:>7} late={r['late_phase']}"
+            )
+
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps({"panel": panel, "sessions": sessions}, indent=2) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(
+            {"panel": panel, "sessions": sessions, "gate_profile": gate}, indent=2
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(panel, indent=2))
     return 0
 
