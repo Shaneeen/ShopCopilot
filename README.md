@@ -1,3 +1,56 @@
+# ShopCopilot — Conversational E-Commerce Search (TikTok TechJam 2026)
+
+## Status (2026-08-31 — Submission Freeze: `46e3322`)
+
+*Official Evaluator Scores (`evaluator/local_evaluator.py`, 200 public sessions, 50,000 catalog items, freeze tag `submission-freeze`).*
+
+| Metric | Official Starter Baseline | Pre-Experiments (v2 Baseline) | **Final Shipped (`submission-freeze`)** | Δ vs Starter |
+|---|---|---|---|---|
+| **Hit@10** | 0.1250 (25/200) | 0.8700 (174/200) | **0.8800 (176/200)** | **7.0× (+75.5 pp)** |
+| **MRR** | 0.0680 | 0.4455 | **0.4916** | **7.2× (+0.4236)** |
+| **MTTC** | 9.81 turns | 3.465 turns | **3.375 turns** | **2.9× faster (−6.435 turns)** |
+| **TechnicalScore** | 0.1067 | 0.7193 | **0.7400** | **~7× (+0.6333)** |
+| **LLM Tokens / Cost** | 0 / $0.00 | 0 / $0.00 | **0 / $0.00 (Deterministic)** | $0.00 API cost |
+| **Turn Latency (dev-160)** | ~200 ms | ~230 ms | **p50: 330.1 ms · p95: 526.6 ms** | Sub-400ms SLA |
+
+### Per-Scenario Performance Breakdown (Public-200)
+
+| Scenario | Sample Count | Hit@10 | MRR | MTTC |
+|---|---|---|---|---|
+| **Browsing** | 74 / 80 (92.5%) | 0.9250 | 0.4532 | 2.91 turns |
+| **Buying** | 73 / 80 (91.25%) | 0.9125 | 0.5444 | 2.65 turns |
+| **Intent Override** | 23 / 30 (76.7%) | 0.7667 | 0.4960 | 5.47 turns |
+| **Boundary (Vague)** | 6 / 10 (60.0%) | 0.6000 | 0.3625 | 6.60 turns |
+| **Overall** | **176 / 200 (88.0%)** | **0.8800** | **0.4916** | **3.375 turns** |
+
+### Submission Deliverables & Documentation
+- **Technical Report:** [REPORT.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/REPORT.md)
+- **Presentation Deck (PPTX):** [ShopCopilot_TechJam_Deck.pptx](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/presentation/ShopCopilot_TechJam_Deck.pptx)
+- **Presentation Deck (PDF):** [ShopCopilot_TechJam_Deck.pdf](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/presentation/ShopCopilot_TechJam_Deck.pdf)
+- **Speaker Script (~9 min with delivery cues):** [docs/SPEAKER_SCRIPT.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/SPEAKER_SCRIPT.md)
+- **Video Storyboard & Script (2 min):** [docs/VIDEO_SCRIPT.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/VIDEO_SCRIPT.md)
+- **Presentation Claim-to-Evidence Map:** [docs/PRESENTATION.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/PRESENTATION.md)
+- **Fresh-Clone Rehearsal & Compliance Audit:** [docs/final-eval-record.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/final-eval-record.md)
+- **Experiment Ledger:** [docs/experiment-ledger.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/experiment-ledger.md)
+
+### Quickstart & Reproduction
+```powershell
+# 1. Install Dependencies & Build Catalog FTS Database
+pip install -r requirements.txt
+python scripts/setup_catalog.py
+
+# 2. Run Test Suite (332 passed, 1 deselected)
+python -m pytest -q
+
+# 3. Reproduce Official Evaluator Table (Hit@10 0.880, MRR 0.4916)
+python -m evaluator.local_evaluator
+
+# 4. Launch Interactive Live Demo (with Sampled Session Replay & Provenance Chips)
+python scripts/interactive_demo.py
+```
+
+---
+
 # TechJam Conversational E-Commerce Search Challenge
 
 
