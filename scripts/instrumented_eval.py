@@ -63,11 +63,17 @@ MISS_TYPES = (
 )
 
 
-def build_agent(catalog_path: Path) -> NeeShopsAgent:
+def build_agent(
+    catalog_path: Path, catalog_lookup: dict | None = None
+) -> NeeShopsAgent:
     """The same wiring starter.Agent does, exposing the full NeeShopsAgent."""
     bm25 = BM25Retriever(catalog_path=catalog_path)
     retriever = HybridRetriever(bm25=bm25)
-    lookup = load_catalog_lookup(catalog_path)
+    lookup = (
+        catalog_lookup
+        if catalog_lookup is not None
+        else load_catalog_lookup(catalog_path)
+    )
     return NeeShopsAgent(
         retriever=retriever, catalog_lookup=lookup, catalog_path=catalog_path
     )
@@ -347,7 +353,7 @@ def main() -> int:
     if args.limit:
         samples = samples[: args.limit]
     catalog_ids, categories, products = catalog_index(args.catalog)
-    agent = build_agent(Path(args.catalog))
+    agent = build_agent(Path(args.catalog), catalog_lookup=products)
 
     sessions = []
     for sample in samples:
