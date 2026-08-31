@@ -87,12 +87,15 @@ function panelTitle(slide, text, x, y, w, color = C_ACCENT) {
 
   // Hero Badge
   slide.addShape(pptx.ShapeType.roundRect, {
-    x: 0.8, y: 1.15, w: 3.2, h: 0.38,
+    x: 0.8, y: 1.15, w: 4.75, h: 0.38,
     fill: { color: C_PANEL }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
   });
-  slide.addText("TIKTOK TECHJAM 2026 · TRACK 4", {
-    x: 0.9, y: 1.2, w: 3.0, h: 0.28,
-    fontFace: F_SANS, fontSize: 10, color: C_ACCENT, bold: true, letterSpacing: 1
+  slide.addText([
+    { text: "TIKTOK TECHJAM 2026 · TRACK 4", options: { color: C_ACCENT } },
+    { text: "   ·   ANYTHING AH", options: { color: C_DARK } },
+  ], {
+    x: 0.9, y: 1.2, w: 4.55, h: 0.28,
+    fontFace: F_SANS, fontSize: 10, bold: true, letterSpacing: 1
   });
 
   slide.addText("Finding the Hidden Product", {
@@ -102,12 +105,6 @@ function panelTitle(slide, text, x, y, w, color = C_ACCENT) {
   slide.addText("Top-10 hit within 10 conversational turns · 50,000-item catalog · 0 external LLM calls", {
     x: 0.8, y: 2.75, w: 11.5, h: 0.45,
     fontFace: F_SANS, fontSize: 16, color: C_SEC
-  });
-  slide.addText([
-    { text: "TEAM   ", options: { fontFace: F_SANS, fontSize: 11, color: "8A7A5E", bold: true, letterSpacing: 1.5 } },
-    { text: "Anything Ah", options: { fontFace: F_SANS, fontSize: 15, color: C_DARK, bold: true } },
-  ], {
-    x: 0.8, y: 3.2, w: 11.5, h: 0.35,
   });
 
   // 4 Metric Highlight Cards
