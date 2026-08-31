@@ -152,6 +152,7 @@ def run_session(
     turns_run = 0
     retrieval_hit_turns = 0
     questions_asked = 0
+    wasted_asks = 0
     latencies: list[float] = []
     turn_records: list[dict] = []
     pre_override_target_rank: int | None = None
@@ -188,10 +189,12 @@ def run_session(
                 hit_turn = turn
             elif pre_override_target_rank is None:
                 pre_override_target_rank = rank
+        ask_attr = response.get("ask_attribute")
+        wasted = False
         turn_records.append(
             {
                 "turn": turn,
-                "asked": response.get("ask_attribute"),
+                "asked": ask_attr,
                 "gate": response_diag.get("decision_gate"),
                 "pool_rank": pool_rank,
                 "retrieval_rank": retrieval_rank,
@@ -199,6 +202,7 @@ def run_session(
                 "over_generality": response_diag.get("over_generality"),
                 "target_rank": rank,
                 "llm_fallback": response_diag.get("llm_fallback"),
+                "wasted": wasted,
             }
         )
         final_diag = dict(response_diag)
@@ -219,12 +223,23 @@ def run_session(
                 )
             )
         else:
-            user_message, boundary_used = customer_reply(
+            next_message, boundary_used = customer_reply(
                 effective_sample,
-                response.get("ask_attribute"),
+                ask_attr,
                 disclosed,
                 boundary_used,
             )
+            lowered = next_message.lower()
+            if ask_attr and (
+                "no additional preference" in lowered
+                or "don't have a preference" in lowered
+                or "don't have an additional" in lowered
+            ):
+                wasted_asks += 1
+                wasted = True
+                if turn_records:
+                    turn_records[-1]["wasted"] = True
+            user_message = next_message
 
     hit = hit_turn is not None
     miss_type = None
@@ -257,6 +272,7 @@ def run_session(
         "retrieval_hit_turns": retrieval_hit_turns,
         "turns_run": turns_run,
         "questions_asked": questions_asked,
+        "wasted_asks": wasted_asks,
         "miss_type": miss_type,
         "miss_taxonomy": miss_taxonomy,
         "final_and_set_size": final_diag.get("and_set_size"),
@@ -276,6 +292,20 @@ def percentile(values: list[float], pct: float) -> float:
 def summarize_panel(sessions: list[dict]) -> dict:
     n = len(sessions) or 1
     turns_total = sum(s["turns_run"] for s in sessions) or 1
+    total_wasted = sum(int(s.get("wasted_asks", 0)) for s in sessions)
+    wasted_mass = total_wasted / n if n else 0.0
+    wasted_per_route: dict[str, dict[str, float]] = {}
+    for s in sessions:
+        route = s.get("scenario_type", "unknown")
+        bucket = wasted_per_route.setdefault(route, {"wasted": 0, "sessions": 0})
+        bucket["wasted"] += int(s.get("wasted_asks", 0))
+        bucket["sessions"] += 1
+    for route, bucket in wasted_per_route.items():
+        bucket["avg_wasted"] = (
+            round(bucket["wasted"] / bucket["sessions"], 4)
+            if bucket["sessions"]
+            else 0.0
+        )
     panel = metric_summary(sessions)
     efficiency = max(0.0, min(1.0, (11.0 - float(panel["mttc"] or 11.0)) / 10.0))
     hit_at = {
@@ -313,6 +343,11 @@ def summarize_panel(sessions: list[dict]) -> dict:
                 6,
             ),
             **{k: round(v, 6) for k, v in hit_at.items()},
+            "wasted_asks_total": total_wasted,
+            "wasted_mass": round(wasted_mass, 4),
+            "avg_wasted_per_session": round(wasted_mass, 4),
+            "wasted_per_route": wasted_per_route,
+            "wasted_sessions": sum(1 for s in sessions if s.get("wasted_asks", 0) > 0),
             "target_in_pool_at_200": round(
                 100.0 * sum(s["pool_hit_turns"] for s in sessions) / turns_total, 2
             ),
