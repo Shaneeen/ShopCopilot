@@ -44,7 +44,7 @@
     "rerank_limit": 40,
     "personalization_weight": 0.15,
     "coverage_weight": 2.0,
-    "coverage_salience_weight": 0.5,
+    "coverage_salience_weight": 0.2,
     "buying_salience_weight": 0.2,
     "buying_popularity_scale": 1.0,
     "full_match_bonus": 0.5,

@@ -129,8 +129,7 @@ class ConstraintAwareRanker(Ranker):
             sort_popularity = (
                 features.popularity if enabled.get("popularity", True) else 0.0
             )
-            if state.route == "buying":
-                sort_popularity *= self._buying_popularity_scale
+            sort_popularity *= self._buying_popularity_scale
             scored.append(
                 (
                     features.hard_constraint_violation_count,
@@ -206,10 +205,7 @@ class ConstraintAwareRanker(Ranker):
         # isolates it instead of leaving these terms unconditionally on.
         if enabled.get("coverage", True):
             relevance += self._coverage_weight * features.coverage
-            salience_weight = self._coverage_salience_weight
-            if route == "buying":
-                salience_weight = self._buying_salience_weight
-            relevance += salience_weight * features.salience
+            relevance += self._coverage_salience_weight * features.salience
         if enabled.get("full_match_bonus", True) and features.coverage >= 0.999:
             relevance += self._full_match_bonus
         return relevance
