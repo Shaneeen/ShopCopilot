@@ -17,8 +17,8 @@ const pptx = new pptxgen();
 // below assumes a true 13.333 x 7.5 canvas, so define it explicitly.
 pptx.defineLayout({ name: "WIDE_16x9", width: 13.333, height: 7.5 });
 pptx.layout = "WIDE_16x9";
-pptx.author = "ShopCopilot Team";
-pptx.company = "ShopCopilot";
+pptx.author = "Anything Ah";
+pptx.company = "Anything Ah";
 pptx.title = "ShopCopilot TechJam 2026 Presentation";
 
 // --- Design Tokens ---
@@ -40,7 +40,7 @@ const F_MONO = "Consolas";
 
 const PAGE_W = 13.333;
 
-function addHeader(slide, title, category = "SHOPCOPILOT · TECHJAM 2026") {
+function addHeader(slide, title, category = "SHOPCOPILOT · TECHJAM 2026 · ANYTHING AH") {
   slide.addText(category.toUpperCase(), {
     x: 0.8, y: 0.4, w: 11.5, h: 0.3,
     fontFace: F_SANS, fontSize: 10, color: C_ACCENT, bold: true, letterSpacing: 1.5
@@ -52,7 +52,7 @@ function addHeader(slide, title, category = "SHOPCOPILOT · TECHJAM 2026") {
 }
 
 function addFooter(slide, extraText = "") {
-  const text = extraText ? `ShopCopilot · TechJam 2026 · submission-freeze 46e3322  |  ${extraText}` : "ShopCopilot · TechJam 2026 · submission-freeze 46e3322";
+  const text = extraText ? `ShopCopilot · TechJam 2026 · Anything Ah · submission-freeze 46e3322  |  ${extraText}` : "ShopCopilot · TechJam 2026 · Anything Ah · submission-freeze 46e3322";
   slide.addText(text, {
     x: 0.8, y: 7.05, w: 11.7, h: 0.3,
     fontFace: F_MONO, fontSize: 9, color: "8A7A5E"
