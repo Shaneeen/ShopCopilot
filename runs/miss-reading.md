@@ -119,6 +119,30 @@ thread is:
   post-override state is pinned by the override value. That would save 3–4 turns
   and re-rank sooner — but it does NOT by itself put a rank-57 target in the top-10.
 
+## Candidate-rule A/B (this worktree, before any code change)
+
+To be sure no conversation-level fix can move these sessions, the two plausible levers
+were tested by monkeypatching (no repo changes):
+
+1. **Boundary route fix (intent.py):** route any "don't have … preference" /
+   "use your judgment" message as browsing (with the existing browsing-sticky
+   semantics). A/B over ALL 29 override+boundary sessions: **0 flips, 0 regressions**
+   (no miss→hit, no hit→miss).
+2. **Forced browsing all turns (sanity ceiling):** A/B over all 7 boundary sessions:
+   flips public_0112 miss→hit (rank 2, T6), 0 hit→miss. But this ceiling is
+   unreachable by any realistic rule: the T3+ generic "I don't have an additional
+   preference for F" replies carry no browsing signal, and — decisively — the route
+   only selects retrieval weights, and `retrieval.buying` == `retrieval.browsing`
+   (both `bm25 0.7 / semantic 0.3`) in `default_strategy.json`. The route flip changes
+   **nothing** about retrieval: the browsing→buying flip at T2 is cosmetic.
+
+Conclusion: there is **no minimal conversation/state/intent change** that recovers any
+of the 8 misses. Stopping the post-override/no-preference questions cannot flip a miss
+(recommendations are emitted every turn regardless of asking), and the boundary route
+fix cannot flip a miss (route weights are identical). The remaining levers are ranking
+(retrieval-rank tie-break, partial scoring window) or retrieval (semantic index,
+synonyms) — explicitly out of scope for this branch ("DO NOT touch … ranking").
+
 **Bottom line:** the hypothesis (extraction/state-handling lag, spurious re-asks after
 route flip, override arriving during the confident gate) does NOT match the forensics.
 The misses are rank-depth losses after the override/boundary handshake, with the
