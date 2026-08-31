@@ -3,25 +3,32 @@
 #
 # The lines below are needed only for NeeShops' own implementation
 # (neeshops/) layered on top of it — kept minimal and conservative.
+#
+# Verified environment (submission freeze 46e3322, Python 3.13):
+#   numpy 2.5.2 · pydantic 2.13.4 · python-dotenv 1.2.3 · pytest 9.1.1
+#   requests 2.34.2 · google-genai 2.20.0
 
-# Core (required to import neeshops/ and run its tests)
-python-dotenv>=1.0.0
-pydantic>=2.6.0
-pytest>=8.0.0
-requests>=2.31.0
-google-genai>=1.22.0
+# Core — required to import neeshops/, run the Agent and the test suite.
+pydantic>=2.6.0          # session/product/recommendation models
+python-dotenv>=1.0.0     # .env loading in neeshops/config/settings.py
+numpy>=1.26.0            # HARD dependency: the v2 Boolean token index
+                         # (neeshops/retrieval/token_index.py — guarantee pool,
+                         # ranking features) imports it at module top level;
+                         # only the optional semantic retriever degrades to
+                         # BM25-only when numpy is missing.
+pytest>=8.0.0            # 332-test contract suite (python -m pytest -q)
+
+# Optional LLM reranking tier — built and gated OFF by default
+# (enable_llm_reranker = false); both providers import lazily, so nothing
+# here touches the network in the shipped deterministic configuration.
+requests>=2.31.0         # OpenRouter primary provider (lazy import)
+google-genai>=1.22.0     # Gemini secondary provider (lazy import)
 
 # BM25 / catalog storage in neeshops/retrieval/bm25.py uses stdlib sqlite3
 # (FTS5), same as the official starter — no extra dependency needed there.
+# Hashed TF-IDF + numpy cosine in neeshops/retrieval/semantic.py reuses the
+# numpy above — no extra dependency either.
 
-# Semantic retrieval (neeshops/retrieval/semantic.py): hashed TF-IDF +
-# numpy cosine — numpy is the single added dependency for the P2 semantic
-# path. Missing numpy degrades gracefully (semantic unavailable, BM25-only).
-numpy>=1.26.0
-
-# Optional, only needed once semantic retrieval / LLM reranking are
-# switched on via feature flags in .env — keep commented out until a
-# workstream actually needs them, so the baseline install stays fast:
-# Optional semantic retrieval dependencies remain disabled until needed:
+# Not needed (kept only as future notes) — install stays minimal:
 # sentence-transformers>=2.7.0
 # faiss-cpu>=1.8.0
