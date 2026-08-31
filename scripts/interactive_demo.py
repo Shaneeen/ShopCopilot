@@ -779,7 +779,7 @@ const addBubble = (cls, html) => {
   const row = document.createElement('div'); row.className = 'row';
   const b = document.createElement('div'); b.className = 'bubble ' + cls;
   b.innerHTML = html; row.appendChild(b); log.appendChild(row);
-  window.scrollTo(0, document.body.scrollHeight); return b;
+  row.scrollIntoView({behavior: 'smooth', block: 'end'}); return b;
 };
 
 async function postJSON(url, body){
@@ -956,7 +956,7 @@ function attachDebug(debug){
       <div class="pooltable"><em style="color:#8A7A5E">loading…</em></div>
     </details>`;
   log.appendChild(wrap);
-  window.scrollTo(0, document.body.scrollHeight);
+  wrap.scrollIntoView({behavior: 'smooth', block: 'end'});
   renderPool(wrap, debug);
 }
 
@@ -1076,7 +1076,7 @@ $('nextturn').onclick = async () => {
       const banner = document.createElement('div');
       banner.innerHTML = endBanner(data.hit, data.hit_turn, data.best_rank, data.trajectory);
       log.appendChild(banner);
-      window.scrollTo(0, document.body.scrollHeight);
+      banner.scrollIntoView({behavior: 'smooth', block: 'end'});
     } else if (data.next_user_message){
       addBubble('user', esc(data.next_user_message));
       $('nextturn').disabled = false;
