@@ -1,6 +1,5 @@
 {
-  "_comment": "Starting defaults only — see docs/EXPERIMENTS.md. The research agent (neeshops/research/) proposes and evaluates changes to these values; nothing here is tuned yet beyond a sane starting point.",
-
+  "_comment": "Starting defaults only \u00e2\u20ac\u201d see docs/EXPERIMENTS.md. The research agent (neeshops/research/) proposes and evaluates changes to these values; nothing here is tuned yet beyond a sane starting point.",
   "retrieval": {
     "candidate_limit": 300,
     "strategy": "hybrid",
@@ -39,7 +38,6 @@
       "semantic_weight": 0.3
     }
   },
-
   "ranking": {
     "rerank_limit": 40,
     "personalization_weight": 0.15,
@@ -55,9 +53,11 @@
       "retrieval_normalization": "minmax",
       "fusion_method": "minmax",
       "rrf_k": 60,
-      "budget_tolerance": 1.10,
+      "budget_tolerance": 1.1,
+      "competition_window": 80,
+      "competition_retrieval_tie_break": true,
       "weights": {
-        "retrieval": 0.40,
+        "retrieval": 0.4,
         "category": 0.12,
         "title_overlap": 0.08,
         "feature_overlap": 0.08,
@@ -101,7 +101,6 @@
       "blend_epsilon": 0.15
     }
   },
-
   "clarification": {
     "strategy": "adaptive",
     "max_questions_per_session": 5,
@@ -114,17 +113,14 @@
     "entropy_plausible_limit": 20000,
     "entropy_row_cap": 400
   },
-
   "intent": {
     "route_flip_erase_weight": 0.3,
     "inferred_decay": 0.9
   },
-
   "filters": {
-    "budget_tolerance": 1.10,
+    "budget_tolerance": 1.1,
     "min_pool_keep": 10
   },
-
   "feature_flags": {
     "enable_semantic_retrieval": true,
     "enable_llm_reranker": false

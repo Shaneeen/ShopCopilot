@@ -156,6 +156,7 @@ def run_session(
     turn_records: list[dict] = []
     pre_override_target_rank: int | None = None
     final_diag: dict = {}
+    last_ranked: list[str] = []
 
     for turn in range(1, MAX_TURNS + 1):
         start = time.perf_counter()
@@ -180,6 +181,7 @@ def run_session(
         if response.get("ask_attribute"):
             questions_asked += 1
         ranked = normalize_recommendations(response.get("recommendations"), catalog_ids)
+        last_ranked = list(ranked[:TOP_K])
         rank = None
         if target in ranked:
             rank = ranked.index(target) + 1
@@ -243,6 +245,60 @@ def run_session(
     if not hit:
         miss_taxonomy = "pool" if pool_hit_turns == 0 else "rank"
 
+    final_pool_rank = turn_records[-1]["pool_rank"] if turn_records else None
+    final_retrieval_rank = turn_records[-1]["retrieval_rank"] if turn_records else None
+    rank_crowding = None
+    if not hit and miss_taxonomy == "rank" and final_pool_rank is not None:
+        try:
+            diag_map = getattr(agent.ranker, "last_diagnostics", None)
+            if diag_map is None and hasattr(agent.ranker, "fallback"):
+                diag_map = getattr(
+                    getattr(agent.ranker, "fallback", None), "last_diagnostics", None
+                )
+            if diag_map is None and hasattr(agent, "_fallback_ranker"):
+                fb = getattr(agent, "_fallback_ranker", None)
+                if fb is not None:
+                    diag_map = getattr(fb, "last_diagnostics", None)
+            target_coverage = None
+            if diag_map is not None and target in diag_map:
+                target_coverage = diag_map[target].features.coverage
+            top10_asins = list(last_ranked[:10])
+            top10_coverages: list[float] = []
+            full_coverage_in_top10 = 0
+            if diag_map is not None:
+                for asin in top10_asins:
+                    d = diag_map.get(asin)
+                    cov = (
+                        float(d.features.coverage)
+                        if d is not None and d.features.coverage is not None
+                        else 0.0
+                    )
+                    top10_coverages.append(cov)
+                    if cov >= 0.999:
+                        full_coverage_in_top10 += 1
+            predominant = full_coverage_in_top10 >= 6
+            rank_crowding = {
+                "final_pool_rank": final_pool_rank,
+                "final_retrieval_rank": final_retrieval_rank,
+                "target_coverage": target_coverage,
+                "top10_full_coverage_count": full_coverage_in_top10,
+                "top10_coverages": top10_coverages,
+                "top10_asins": top10_asins,
+                "predominantly_full_coverage": predominant,
+            }
+        except Exception:
+            rank_crowding = {
+                "final_pool_rank": final_pool_rank,
+                "final_retrieval_rank": final_retrieval_rank,
+                "error": "crowding_eval_failed",
+            }
+        except Exception:
+            rank_crowding = {
+                "final_pool_rank": final_pool_rank,
+                "final_retrieval_rank": final_retrieval_rank,
+                "error": "crowding_eval_failed",
+            }
+
     return {
         "sample_id": sample["sample_id"],
         "scenario_type": sample["scenario_type"],
@@ -262,6 +318,9 @@ def run_session(
         "final_and_set_size": final_diag.get("and_set_size"),
         "latency_ms": statistics.fmean(latencies) if latencies else 0.0,
         "turns": turn_records,
+        "final_pool_rank": final_pool_rank,
+        "final_retrieval_rank": final_retrieval_rank,
+        "rank_crowding": rank_crowding,
     }
 
 
@@ -374,7 +433,9 @@ def main() -> int:
     agent = build_agent(Path(args.catalog), catalog_lookup=products)
 
     sessions = []
-    for sample in samples:
+    for idx, sample in enumerate(samples, 1):
+        if idx % 20 == 0 or idx == 1:
+            print(f"[{idx}/{len(samples)}] {sample['sample_id']}...", flush=True)
         sessions.append(run_session(agent, sample, catalog_ids, categories, products))
 
     panel = summarize_panel(sessions)

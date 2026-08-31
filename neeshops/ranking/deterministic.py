@@ -69,6 +69,10 @@ class ConstraintAwareRanker(Ranker):
         self._browsing_popularity_bump = float(
             rank_cfg.get("browsing_popularity_bump", 0.05)
         )
+        self._competition_window = int(self._cfg.get("competition_window", 0))
+        self._competition_retrieval_tie_break = bool(
+            self._cfg.get("competition_retrieval_tie_break", False)
+        )
         self._extractor = extractor or RankingFeatureExtractor(
             budget_tolerance=float(self._cfg.get("budget_tolerance", 1.10)),
             token_index=token_index,
@@ -97,7 +101,9 @@ class ConstraintAwareRanker(Ranker):
         # window despite being in the candidate pool.
         pool = _unique_candidates(candidates)[: int(self._cfg["rerank_limit"])]
         retrieval_signals = self._retrieval_signals(pool)
-        scored: list[tuple[int, float, float, float, str, Candidate]] = []
+        extracted: list[
+            tuple[Candidate, int, float, Any, Any, float, float, float]
+        ] = []
         for original_rank, (candidate, retrieval_signal) in enumerate(
             zip(pool, retrieval_signals), start=1
         ):
@@ -120,39 +126,86 @@ class ConstraintAwareRanker(Ranker):
             self.last_diagnostics[candidate.parent_asin] = RankingDiagnostic(
                 candidate.parent_asin, features, evaluation, relevance, original_rank
             )
-            # Coverage is also the primary twin tie-breaker in the sort key
-            # (not just an _aggregate() summand) — gate it the same way an
-            # ablation disables it, so disabling "coverage" truly isolates
-            # the remaining enabled features instead of leaving this tier
-            # of the ordering unconditionally active.
             sort_coverage = features.coverage if enabled.get("coverage", True) else 0.0
             sort_popularity = (
                 features.popularity if enabled.get("popularity", True) else 0.0
             )
             if state.route == "buying":
                 sort_popularity *= self._buying_popularity_scale
-            scored.append(
+            extracted.append(
                 (
-                    features.hard_constraint_violation_count,
-                    -sort_coverage,
-                    -relevance,
-                    -sort_popularity,
-                    candidate.parent_asin,
                     candidate,
+                    original_rank,
+                    retrieval_signal,
+                    features,
+                    evaluation,
+                    relevance,
+                    sort_coverage,
+                    sort_popularity,
                 )
             )
-
-        scored.sort(key=lambda item: item[:5])
+        overflow_asins: set[str] = set()
+        if self._competition_window > 0:
+            full_cov = [
+                (item, item[3].hard_constraint_violation_count, item[3].coverage)
+                for item in extracted
+                if item[3].hard_constraint_violation_count == 0
+                and item[3].coverage >= 0.999
+            ]
+            if len(full_cov) > self._competition_window:
+                sorted_full = sorted(full_cov, key=lambda x: (-x[0][2], x[0][1]))
+                overflow_asins = {
+                    x[0][0].parent_asin for x in sorted_full[self._competition_window :]
+                }
+        scored: list[tuple] = []
+        for (
+            candidate,
+            original_rank,
+            retrieval_signal,
+            features,
+            _evaluation,
+            relevance,
+            sort_coverage,
+            sort_popularity,
+        ) in extracted:
+            demotion = 1 if candidate.parent_asin in overflow_asins else 0
+            if self._competition_retrieval_tie_break:
+                scored.append(
+                    (
+                        features.hard_constraint_violation_count,
+                        -sort_coverage,
+                        demotion,
+                        -relevance,
+                        -retrieval_signal,
+                        -sort_popularity,
+                        candidate.parent_asin,
+                        candidate,
+                    )
+                )
+            else:
+                scored.append(
+                    (
+                        features.hard_constraint_violation_count,
+                        -sort_coverage,
+                        demotion,
+                        -relevance,
+                        -sort_popularity,
+                        candidate.parent_asin,
+                        candidate,
+                    )
+                )
+        if self._competition_retrieval_tie_break:
+            scored.sort(key=lambda item: item[:7])
+        else:
+            scored.sort(key=lambda item: item[:6])
         recommendations = [
             Recommendation(
-                parent_asin=candidate.parent_asin,
-                score=_ordering_score(violations, negative_relevance),
-                reason=self._reason(violations),
-                source=candidate.source,
+                parent_asin=item[-1].parent_asin,
+                score=_ordering_score(item[0], item[3]),
+                reason=self._reason(item[0]),
+                source=item[-1].source,
             )
-            for violations, _neg_coverage, negative_relevance, _neg_popularity, _asin, candidate in scored[
-                :top_k
-            ]
+            for item in scored[:top_k]
         ]
         self.last_latency_ms = (time.perf_counter() - started) * 1000
         return recommendations

@@ -59,6 +59,8 @@ SAFE_PARAMETERS = {
     "ranking.deterministic.fusion_method",
     "ranking.deterministic.rrf_k",
     "ranking.deterministic.budget_tolerance",
+    "ranking.deterministic.competition_window",
+    "ranking.deterministic.competition_retrieval_tie_break",
     "ranking.deterministic.weights.retrieval",
     "ranking.deterministic.weights.category",
     "ranking.deterministic.weights.title_overlap",
