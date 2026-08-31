@@ -193,6 +193,8 @@ def run_session(
                 "turn": turn,
                 "asked": response.get("ask_attribute"),
                 "gate": response_diag.get("decision_gate"),
+                "route": response_diag.get("route")
+                or agent.state_manager.get(session_id).route,
                 "pool_rank": pool_rank,
                 "retrieval_rank": retrieval_rank,
                 "and_set_size": response_diag.get("and_set_size"),
