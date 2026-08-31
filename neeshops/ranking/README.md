@@ -80,7 +80,7 @@ accepts only known unique IDs, fills omissions in heuristic order, and falls
 back safely on every provider failure. Per-call evidence is available as
 `last_usage`, `last_latency_ms`, and `last_fallback_reason`.
 
-`OpenRouterRankingProvider` (default, text model — e.g. `openai/gpt-4o-mini`)
+`OpenRouterRankingProvider` (default, text model — e.g. `nvidia/nemotron-3-super-120b-a12b:free`)
 calls `https://openrouter.ai/api/v1/chat/completions` with `OPENROUTER_API_KEY`
 (OpenAI-compatible JSON `ordered_ids`, `response_format: json_object`) and
 validates strictly. `GeminiRankingProvider` (`google-genai`, `GEMINI_API_KEY`)

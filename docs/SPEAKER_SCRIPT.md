@@ -27,28 +27,28 @@
 
 ---
 
-### Slide 2: Spec-Contract Pipeline & Defensive Architecture (30s)
-- **Say:** "We designed our pipeline strictly against the official simulator contract. **[POINT at Turn Contract]** On every turn, the agent can recommend products, ask a clarification question, or do both simultaneously. Crucially, asking a question never forfeits the turn's recommendation score.  
-**[POINT at Funnel]** From the 50k catalog, our SQLite FTS5 BM25 and hashed TF-IDF retrieve a hybrid candidate pool of roughly 300 products. Every single candidate is evaluated against our 320 scoring cap. Our 8-gate clarification engine decides the next best question using set-splitting entropy. The entire runtime is deterministic, offline, and guarded by 332 automated tests. **[ADVANCE]**"
-- **Cues:** `[POINT at Turn Contract]`, `[POINT at Funnel]`, `[ADVANCE]`.
+### Slide 2: Architecture & the Simulator Contract (30s)
+- **Say:** "We designed our pipeline strictly against the official simulator contract. **[POINT at the numbered contract rows]** On every turn, the agent can recommend products, ask a clarification question, or do both simultaneously. Crucially, asking a question never forfeits the turn's recommendation score.  
+**[POINT at the funnel]** From the 50k catalog, our SQLite FTS5 BM25 and hashed TF-IDF retrieve a hybrid candidate pool of roughly 300 products. Every single candidate is evaluated against our 320 scoring cap. Our 8-gate clarification engine decides the next best question using set-splitting entropy. The entire runtime is deterministic, offline, and guarded by 332 automated tests. **[ADVANCE]**"
+- **Cues:** `[POINT at the numbered contract rows]`, `[POINT at the funnel]`, `[ADVANCE]`.
 - **Timing:** 0:15 – 0:45
 - **If Asked:** "The 320 cap is a cost ceiling; since pools are ~300 items, 100% of candidates are fully scored."
 
 ---
 
 ### Slide 3: Performance Staircase (Money Slide) (45s)
-- **Say:** "Here is our performance staircase. **[POINT at Starter Row]** Against the official starter baseline, we achieve a **7.0× increase in Hit Rate** (0.125 to 0.880), a **7.2× increase in MRR** (0.068 to 0.4916), and we find the product **2.9× sooner** (9.81 turns down to 3.38).  
-**[LOOK]** But look closer at our progression from our own pre-experiment v2 baseline. **[POINT at Decomposition Panel]** Decomposing our Technical Score gain reveals that **67% of the total improvement came from MRR**. Our ranker puts the target product higher in the top 10 — exactly what our constraint-salience hypothesis predicted. **[PAUSE] [ADVANCE]**"
-- **Cues:** `[POINT at Starter Row]`, `[LOOK]`, `[POINT at Decomposition Panel]`, `[PAUSE]`, `[ADVANCE]`.
+- **Say:** "Here is our performance staircase. **[POINT at the chart]** Against the official starter baseline, we achieve a **7.0× increase in Hit Rate** (0.125 to 0.880), a **7.2× increase in MRR** (0.068 to 0.4916), and we find the product **2.9× sooner** (9.81 turns down to 3.38).  
+**[LOOK]** But look closer at our progression from our own pre-experiment v2 baseline. **[POINT at the decomposition bar]** Decomposing our Technical Score gain reveals that **67% of the total improvement came from MRR**. Our ranker puts the target product higher in the top 10 — exactly what our constraint-salience hypothesis predicted. **[PAUSE] [ADVANCE]**"
+- **Cues:** `[POINT at the chart]`, `[LOOK]`, `[POINT at the decomposition bar]`, `[PAUSE]`, `[ADVANCE]`.
 - **Timing:** 0:45 – 1:30
 - **If Asked:** "Technical Score formula is 0.5 Hit + 0.3 MRR + 0.2 Efficiency, exactly per competition specs."
 
 ---
 
-### Slide 4: Exploration of Innovation Directions (30s)
+### Slide 4: Innovation Directions — Kept vs Killed (30s)
 - **Say:** "We methodically evaluated the innovation directions suggested by the competition organizers. **[EMPHASIZE]** We implemented and tested every applicable track: hybrid retrieval, adaptive clarification, soft personalization, transparent explanations, LLM reranking, and constraint reweighting.  
-As you can see, we rigorously kept only what demonstrated statistically significant gains. Where hypotheses failed — such as personalization adding noise or LLM reranking adding 450 milliseconds of latency for zero accuracy gain — we killed them immediately. **[ADVANCE]**"
-- **Cues:** `[EMPHASIZE]` on evaluating every direction; `[ADVANCE]`.
+**[POINT at the SHIPPED panel]** The left panel shipped. **[POINT at the KILLED panel]** Where hypotheses failed — such as personalization adding noise or LLM reranking adding 450 milliseconds of latency for zero accuracy gain — we killed them immediately by their own pre-registered bars. **[ADVANCE]**"
+- **Cues:** `[EMPHASIZE]` on evaluating every direction, `[POINT at the SHIPPED panel]`, `[POINT at the KILLED panel]`, `[ADVANCE]`.
 - **Timing:** 1:30 – 2:00
 - **If Asked:** "Transparent explanation is live in our demo without any runtime penalty."
 
@@ -64,18 +64,18 @@ We did not rely on aggregate metric shifts, which on 160 sessions are noisy. Ins
 ---
 
 ### Slide 6: The Win: Constraint Salience vs Popularity (30s)
-- **Say:** "Our major shipped win came from diagnosing popularity crowding in the ranker. Popular catalog items were outranking constraint-satisfying products. Reweighting salience from 0.5 to 0.2 produced **+4 miss-to-hit flips** (`public_0031`, `0100`, `0085`, `0125`) against **−1 regression** (`0035`), yielding a net +3 win on dev.  
+- **Say:** "Our major shipped win came from diagnosing popularity crowding in the ranker. Popular catalog items were outranking constraint-satisfying products. Reweighting salience from 0.5 to 0.2 produced **+4 miss-to-hit flips** (`public_0031`, `0100`, `0085`, `0125`) against **−1 regression** (`0035`), yielding a net +3 win on dev — you can see the waterfall on the left.  
 **[LOOK]** In scientific honesty: the experiment failed its original Buying-specific hypothesis because the win was route-general. But because the paired flips were undeniable and confirmed out-of-sample on public-200, we merged it. **[ADVANCE]**"
-- **Cues:** `[LOOK]`, `[ADVANCE]`.
+- **Cues:** `[POINT at the waterfall]`, `[LOOK]`, `[ADVANCE]`.
 - **Timing:** 2:25 – 2:55
 - **If Asked:** "The change is buying-gated salience 0.2 and popularity 1.0."
 
 ---
 
-### Slide 7: Out-of-Sample Transfer & Per-Scenario Breakdown (25s)
+### Slide 7: Out-of-Sample Confirmation (25s)
 - **Say:** "Gains transferred cleanly out-of-sample from dev-160 to public-200 (Hit 0.880, MRR 0.4916).  
-**[POINT at Scenario Table]** Here is our per-scenario breakdown with full sample sizes: Browsing reached 74 of 80 (92.5%), Buying reached 73 of 80 (91.25%), Intent Override reached 23 of 30 (76.7%), and Boundary reached 6 of 10. We report exact counts so small-n denominators are transparent. **[ADVANCE]**"
-- **Cues:** `[POINT at Scenario Table]`, `[ADVANCE]`.
+**[POINT at the bar chart]** Here is our per-scenario breakdown with full sample sizes: Browsing reached 74 of 80 (92.5%), Buying reached 73 of 80 (91.25%), Intent Override reached 23 of 30 (76.7%), and Boundary reached 6 of 10. Every bar carries its exact count, so small-n denominators stay transparent. **[ADVANCE]**"
+- **Cues:** `[POINT at the bar chart]`, `[ADVANCE]`.
 - **Timing:** 2:55 – 3:20
 - **If Asked:** "Boundary's 6/10 represents 6 hits out of 10 vague exploration sessions."
 
@@ -83,7 +83,7 @@ We did not rely on aggregate metric shifts, which on 160 sessions are noisy. Ins
 
 ### Slide 8: The Graveyard: 6 Rejected Experiments (30s)
 - **Say:** "**[REPEAT]** Six experiments did not survive their own pre-registered bars.  
-Global salience (+1) and competition window (+1) were within our ±1 noise floor. Uninformative stopping (−1) broke session `0104`. Padding sort (0/0) and question margin (0/19) produced zero effect.  
+**[POINT at the flip bars]** Global salience (+1) and competition window (+1) were within our ±1 noise floor. Uninformative stopping (−1) broke session `0104`. Coverage-idf (0/0) and question margin (0/19) produced zero effect.  
 **[EMPHASIZE]** The 0.90625 Hit Rate sitting in our experiment logs was never merged to main because it failed our replication bar. Six negatives is how you know our one green win is genuine. **[ADVANCE]**"
 - **Cues:** `[REPEAT]`, `[EMPHASIZE]`, `[ADVANCE]`.
 - **Timing:** 3:20 – 3:50
@@ -94,7 +94,7 @@ Global salience (+1) and competition window (+1) were within our ±1 noise floor
 ### Slide 9: 4 Structural Findings (35s)
 - **Say:** "**[SLOW]** These negative results uncovered four fundamental structural insights:  
 1. **MTTC equals first-hit turn:** Because the evaluator stops immediately on a hit, wasted questions occur post-hit; 'asking less' cannot mechanically improve MTTC.  
-2. **Conversation and retrieval are coupled:** Session `0104` proved that skipping clarification harms later retrieval.  
+2. **Dialogue and retrieval are coupled:** Session `0104` proved that skipping clarification harms later retrieval.  
 3. **Scenario labels are dynamic:** 89% of browsing sessions switch dynamically to buying once constraints are disclosed.  
 4. **Ranking permutations have saturated:** Two independent rankers gave identical flips (+2/−1). **[ADVANCE]**"
 - **Cues:** `[SLOW]`, `[ADVANCE]`.
@@ -104,34 +104,33 @@ Global salience (+1) and competition window (+1) were within our ±1 noise floor
 ---
 
 ### Slide 10: Root-Cause Forensic Audit of All Misses (30s)
-- **Say:** "We audited all 16 misses on dev to identify root causes.  
-**[POINT at Badges]** First: **0 of 13 dropped constraints** — our query extraction is faithful.  
-Second: **2 pool misses** occurred because the target fell beyond rank 201 in initial retrieval — a coverage cap, not a bug.  
-Third: **13 rank misses** were in the pool but lacked sufficient user constraints to outrank competitors. Deep misses need new user information, not permutation tweaks. **[ADVANCE]**"
-- **Cues:** `[POINT at Badges]`, `[ADVANCE]`.
+- **Say:** "We audited all 16 misses on dev to identify root causes. **[POINT at the donut]** Thirteen of the sixteen are **rank-depth misses** — the target was in the pool but outranked; deep misses need new user information, not permutation tweaks.  
+Second: **2 pool misses** occurred because the target fell beyond rank 201 in initial retrieval — a coverage cap, not a bug. Third: **1 extraction edge case** with complex overlapping syntax.  
+**[POINT at the banner]** And the query faithfulness audit: **0 of 13 dropped constraints** — our pipeline leaks nothing. **[ADVANCE]**"
+- **Cues:** `[POINT at the donut]`, `[POINT at the banner]`, `[ADVANCE]`.
 - **Timing:** 4:25 – 4:55
 - **If Asked:** "1 extraction edge case (`public_0117`) involved multi-clause punctuation nesting."
 
 ---
 
 ### Slide 11: Feasibility Disclosure: Model, Cost & Latency (20s)
-- **Say:** "Here is our full feasibility disclosure:  
+- **Say:** "Here is our full feasibility disclosure: **[POINT at the metric cards]**  
 • Runtime model: **None (Deterministic BM25 + TF-IDF + Constraint Ranker)**  
 • Model API cost: **$0.00** · Tokens: **0 Prompt / 0 Completion**  
 • Network dependency: **None** (Fully offline capable)  
 • Latency: **p50 330.1 ms / p95 526.6 ms** on standard local hardware.  
 The deterministic system is not a fallback — it *is* the submission. **[ADVANCE]**"
-- **Cues:** `[POINT at Table]`, `[ADVANCE]`.
+- **Cues:** `[POINT at the metric cards]`, `[ADVANCE]`.
 - **Timing:** 4:55 – 5:15
 - **If Asked:** "The LLM tier remains implemented in `ranking/llm_reranker.py` with feature flag `enable_llm_reranker: false`."
 
 ---
 
 ### Slide 12: Business Impact & Conversational Trust (25s)
-- **Say:** "Why does this matter commercially?  
+- **Say:** "Why does this matter commercially? **[POINT at the chart]**  
 Conversational e-commerce fails when users abandon after irrelevant initial recommendations. Collapsing conversion from **9.8 turns to 3.4 turns** transforms bounce into purchase.  
 Furthermore, our mathematical attribution gives retailers transparent explainability for every recommendation, with zero marginal API cost per search turn. **[ADVANCE]**"
-- **Cues:** `[ADVANCE]`.
+- **Cues:** `[POINT at the chart]`, `[ADVANCE]`.
 - **Timing:** 5:15 – 5:40
 - **If Asked:** "Explainability prevents hallucinations and satisfies compliance requirements."
 
@@ -165,7 +164,7 @@ Thank you, and I welcome your questions. **[PAUSE]**"
 ## Rubric-Focused Q&A Responses
 
 ### Q1: "Why did you choose a deterministic ranker instead of an end-to-end LLM?"
-- **Answer:** "Two empirical reasons: First, our pre-registered ship gate tested live LLM reranking (GPT-4o-mini). It added 454 ms of latency for Δ=0 accuracy gain, failing our ship threshold. Second, deterministic constraint scoring provides 100% mathematical attribution, zero token cost, sub-400ms latency, and immune to prompt injection or hallucination."
+- **Answer:** "Two empirical reasons: First, our pre-registered ship gate probed live LLM reranking across three sizes and classes — GPT-4o-mini, a 2.6B dense model, a 30B (3B-active) MoE, and a 120B (12B-active) MoE on OpenRouter's free tier. Accuracy stayed flat (ΔHit 0, ΔMRR −0.005) while added latency ranged from 0.5 to 8.3 seconds per call — and a local LLM on a consumer laptop loses on time-to-first-token and prefill alone. Second, deterministic constraint scoring provides 100% mathematical attribution, zero token cost, sub-400ms latency, and immune to prompt injection or hallucination."
 
 ### Q2: "How does your 8-gate clarification engine know which attribute to ask next?"
 - **Answer:** "It computes exact set-splitting entropy across our inverted token index over 50,000 products. Rather than asking generic questions, it picks the attribute that divides the remaining candidate pool closest to a 50/50 split, maximizing expected information gain per turn."

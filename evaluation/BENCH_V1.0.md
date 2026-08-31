@@ -60,13 +60,15 @@ Pricing (estimates, shown even when your key is on a free tier — to justify pr
 
 | Model key | Input $/1M | Output $/1M | Env |
 |---|---|---|---|
-| `openai/gpt-4o-mini` (default) | 0.15 | 0.60 | `OPENROUTER_API_KEY`, `OPENROUTER_API_BASE` |
+| `nvidia/nemotron-3-super-120b-a12b:free` (default) | 0.00 | 0.00 | `OPENROUTER_API_KEY`, `OPENROUTER_API_BASE` |
+| `nvidia/nemotron-3-super-120b-a12b` (paid) | 0.085 | 0.40 | |
+| `openai/gpt-4o-mini` | 0.15 | 0.60 | |
 | `openai/gpt-4o` | 2.50 | 10.00 | |
 | `openai/gpt-3.5-turbo` | 0.50 | 1.50 | |
 | `gemini-3.7-flash` (secondary) | 0.10 | 0.40 | `GEMINI_API_KEY` |
 | `fake` (offline sim) | 0.15 | 0.60 | no key — proves token/cost plumbing |
 
-Default `strategy.ranking.llm = { provider:"openrouter", model:"openai/gpt-4o-mini", secondary_provider:"gemini", secondary_model:"gemini-3.7-flash", rerank_limit:30, timeout_seconds:5 }`; override with `NEESHOPS_LLM_PROVIDER` / `NEESHOPS_LLM_MODEL` / `NEESHOPS_LLM_SECONDARY_*` or `--model` / `--secondary`.
+Default `strategy.ranking.llm = { provider:"openrouter", model:"nvidia/nemotron-3-super-120b-a12b:free", secondary_provider:"gemini", secondary_model:"gemini-3.7-flash", rerank_limit:30, timeout_seconds:5 }`; override with `NEESHOPS_LLM_PROVIDER` / `NEESHOPS_LLM_MODEL` / `NEESHOPS_LLM_SECONDARY_*` or `--model` / `--secondary`.
 
 ## 5. Current snapshot — 100-case batched, **5-word insane** (2026-08-29, `workers=8`, seed 7) — insane way harder than public set
 

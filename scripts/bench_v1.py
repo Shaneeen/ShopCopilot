@@ -39,6 +39,10 @@ from neeshops.ranking.providers.fake import FakeRankingProvider
 CATALOG = Path("data/catalog.jsonl")
 
 PRICING = {
+    "nvidia/nemotron-3-super-120b-a12b:free": (0.0, 0.0),
+    "nvidia/nemotron-3-super-120b-a12b": (0.085, 0.40),
+    "nvidia/nemotron-3.5-lightning:free": (0.0, 0.0),
+    "liquidai/lfm-2.5-2.6b:free": (0.0, 0.0),
     "openai/gpt-4o-mini": (0.15, 0.60),
     "openai/gpt-4o": (2.50, 10.00),
     "openai/gpt-3.5-turbo": (0.50, 1.50),
@@ -483,7 +487,7 @@ def main() -> int:
     ap.add_argument(
         "--live", action="store_true", help="also run real providers if keys present"
     )
-    ap.add_argument("--model", default="openai/gpt-4o-mini")
+    ap.add_argument("--model", default="nvidia/nemotron-3-super-120b-a12b:free")
     ap.add_argument("--secondary", default="gemini-3.7-flash")
     ap.add_argument(
         "--workers", type=int, default=8, help="parallel cases (batch API calls)"

@@ -90,7 +90,7 @@
     },
     "llm": {
       "provider": "openrouter",
-      "model": "openai/gpt-4o-mini",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
       "secondary_provider": "gemini",
       "secondary_model": "gemini-3.7-flash",
       "rerank_limit": 30,

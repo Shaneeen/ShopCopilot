@@ -113,7 +113,7 @@ Lowering `coverage_salience_weight` from 0.5 to 0.2 produced $+4$ miss$\to$hit f
 | Model API Cost | $0.00 | Purely local execution |
 | Turn Latency | p50: 330.1 ms · p95: 526.6 ms | `runs/control-dev-newbaseline.json` |
 | Inference Network Call | None (Fully air-gapped / offline) | Self-contained |
-| Optional LLM Tier | Gated (OpenRouter GPT-4o-mini), Default OFF | `default_strategy.json: enable_llm_reranker: false` |
+| Optional LLM Tier | Gated (OpenRouter Nemotron 3 Super), Default OFF | `default_strategy.json: enable_llm_reranker: false` |
 | Runtime Environment | Python 3.13.2 · Windows 11 Pro 64-bit · AMD Ryzen 7 (32GB RAM) | `docs/final-eval-record.md` |
 
 ---

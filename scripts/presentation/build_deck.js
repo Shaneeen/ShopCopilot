@@ -13,7 +13,10 @@ if (!fs.existsSync(OUT_DIR)) {
 }
 
 const pptx = new pptxgen();
-pptx.layout = "LAYOUT_16x9"; // 13.33 x 7.5 in
+// NB: pptxgenjs's built-in LAYOUT_16x9 is only 10 x 5.625 in — all layout math
+// below assumes a true 13.333 x 7.5 canvas, so define it explicitly.
+pptx.defineLayout({ name: "WIDE_16x9", width: 13.333, height: 7.5 });
+pptx.layout = "WIDE_16x9";
 pptx.author = "ShopCopilot Team";
 pptx.company = "ShopCopilot";
 pptx.title = "ShopCopilot TechJam 2026 Presentation";
@@ -29,26 +32,29 @@ const C_MUTED = "9F5F6B";    // Muted rose (rejected)
 const C_WHITE = "FFFFFF";
 const C_BORDER = "D9CBA8";
 const C_GRAY_BG = "F4EDE0";
+const C_SAND = "C9B896";     // Neutral sand (baseline bars)
 
 const F_SERIF = "Georgia";
 const F_SANS = "Segoe UI";
 const F_MONO = "Consolas";
 
+const PAGE_W = 13.333;
+
 function addHeader(slide, title, category = "SHOPCOPILOT · TECHJAM 2026") {
   slide.addText(category.toUpperCase(), {
-    x: 0.8, y: 0.45, w: 11.5, h: 0.3,
+    x: 0.8, y: 0.4, w: 11.5, h: 0.3,
     fontFace: F_SANS, fontSize: 10, color: C_ACCENT, bold: true, letterSpacing: 1.5
   });
   slide.addText(title, {
-    x: 0.8, y: 0.75, w: 11.5, h: 0.6,
-    fontFace: F_SERIF, fontSize: 22, color: C_DARK, bold: true
+    x: 0.8, y: 0.7, w: 11.5, h: 0.55,
+    fontFace: F_SERIF, fontSize: 24, color: C_DARK, bold: true
   });
 }
 
 function addFooter(slide, extraText = "") {
   const text = extraText ? `ShopCopilot · TechJam 2026 · submission-freeze 46e3322  |  ${extraText}` : "ShopCopilot · TechJam 2026 · submission-freeze 46e3322";
   slide.addText(text, {
-    x: 0.8, y: 7.0, w: 11.7, h: 0.3,
+    x: 0.8, y: 7.05, w: 11.7, h: 0.3,
     fontFace: F_MONO, fontSize: 9, color: "8A7A5E"
   });
 }
@@ -59,56 +65,73 @@ function baseSlide() {
   return slide;
 }
 
+function panel(slide, x, y, w, h, fill = C_WHITE) {
+  slide.addShape(pptx.ShapeType.roundRect, {
+    x, y, w, h,
+    fill: { color: fill }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
+  });
+}
+
+function panelTitle(slide, text, x, y, w, color = C_ACCENT) {
+  slide.addText(text, {
+    x, y, w, h: 0.3,
+    fontFace: F_SANS, fontSize: 11, color, bold: true, letterSpacing: 1
+  });
+}
+
 // ==========================================
 // SLIDE 1: Title
 // ==========================================
 {
   const slide = baseSlide();
-  
+
   // Hero Badge
   slide.addShape(pptx.ShapeType.roundRect, {
-    x: 0.8, y: 1.2, w: 3.2, h: 0.38,
+    x: 0.8, y: 1.15, w: 3.2, h: 0.38,
     fill: { color: C_PANEL }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
   });
   slide.addText("TIKTOK TECHJAM 2026 · TRACK 4", {
-    x: 0.9, y: 1.25, w: 3.0, h: 0.28,
+    x: 0.9, y: 1.2, w: 3.0, h: 0.28,
     fontFace: F_SANS, fontSize: 10, color: C_ACCENT, bold: true, letterSpacing: 1
   });
 
   slide.addText("Finding the Hidden Product", {
-    x: 0.8, y: 1.8, w: 11.5, h: 1.1,
-    fontFace: F_SERIF, fontSize: 40, color: C_DARK, bold: true
+    x: 0.8, y: 1.7, w: 11.5, h: 1.0,
+    fontFace: F_SERIF, fontSize: 42, color: C_DARK, bold: true
   });
-  slide.addText("7.0× Baseline Hit Rate in 10 Conversational Turns · 50k Catalog · 0 External LLM Calls", {
-    x: 0.8, y: 2.9, w: 11.5, h: 0.5,
+  slide.addText("Top-10 hit within 10 conversational turns · 50,000-item catalog · 0 external LLM calls", {
+    x: 0.8, y: 2.75, w: 11.5, h: 0.45,
     fontFace: F_SANS, fontSize: 16, color: C_SEC
+  });
+  slide.addText([
+    { text: "TEAM   ", options: { fontFace: F_SANS, fontSize: 11, color: "8A7A5E", bold: true, letterSpacing: 1.5 } },
+    { text: "Anything Ah", options: { fontFace: F_SANS, fontSize: 15, color: C_DARK, bold: true } },
+  ], {
+    x: 0.8, y: 3.2, w: 11.5, h: 0.35,
   });
 
   // 4 Metric Highlight Cards
   const cards = [
-    { label: "HIT@10", val: "0.880", sub: "176 / 200 sessions (7.0×)" },
+    { label: "HIT@10", val: "0.880", sub: "176 / 200 sessions · 7.0×" },
     { label: "MRR", val: "0.4916", sub: "7.2× official starter" },
-    { label: "MTTC", val: "3.375", sub: "Found 2.9× faster (turns)" },
+    { label: "MTTC", val: "3.375", sub: "target found 2.9× faster" },
     { label: "TECHNICAL SCORE", val: "0.7400", sub: "7× starter (0.1067)" },
   ];
 
   cards.forEach((c, idx) => {
     const x = 0.8 + idx * 2.95;
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x, y: 3.8, w: 2.75, h: 2.2,
-      fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
-    });
+    panel(slide, x, 3.6, 2.75, 2.4);
     slide.addText(c.label, {
-      x: x + 0.2, y: 4.0, w: 2.35, h: 0.3,
+      x: x + 0.2, y: 3.85, w: 2.35, h: 0.3,
       fontFace: F_SANS, fontSize: 11, color: "8A7A5E", bold: true, letterSpacing: 1
     });
     slide.addText(c.val, {
-      x: x + 0.2, y: 4.35, w: 2.35, h: 0.8,
-      fontFace: F_MONO, fontSize: 30, color: C_ACCENT, bold: true
+      x: x + 0.2, y: 4.2, w: 2.35, h: 0.85,
+      fontFace: F_MONO, fontSize: 32, color: C_ACCENT, bold: true
     });
     slide.addText(c.sub, {
-      x: x + 0.2, y: 5.25, w: 2.35, h: 0.5,
-      fontFace: F_SANS, fontSize: 11, color: C_SEC
+      x: x + 0.2, y: 5.25, w: 2.35, h: 0.55,
+      fontFace: F_SANS, fontSize: 11.5, color: C_SEC
     });
   });
 
@@ -119,221 +142,224 @@ function baseSlide() {
 }
 
 // ==========================================
-// SLIDE 2: Spec-Contract View & Architecture
+// SLIDE 2: Architecture & Simulator Contract
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "Spec-Contract Pipeline & Defensive Architecture");
+  addHeader(slide, "Architecture & the Simulator Contract");
 
-  // Left Column: Turn Contract & Guarantees
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: 0.8, y: 1.5, w: 5.6, h: 5.2,
-    fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
-  });
-  slide.addText("SIMULATOR API CONTRACT (Official Evaluator)", {
-    x: 1.0, y: 1.7, w: 5.2, h: 0.3,
-    fontFace: F_SANS, fontSize: 11, color: C_ACCENT, bold: true, letterSpacing: 1
-  });
-  slide.addText(
-    "• Turn Options: Every turn returns message + optional ask_attribute + up to 10 recommendations.\n" +
-    "• Zero Hit Sacrifice: Clarification questions never forfeit recommendation evaluation.\n" +
-    "• Stop Condition: Immediate win if target in top-10, else max 10 turns.\n" +
-    "• Reliability Defenses:\n" +
-    "   - Strict de-duplication & valid catalog ASIN enforcement\n" +
-    "   - ask_attribute validated strictly against allowed spec enum\n" +
-    "   - Deterministic isolation: per-session state lifecycle\n" +
-    "   - 332 automated tests guarding all contracts & regression bounds\n" +
-    "   - Fully deterministic offline execution (0 network dependency)",
-    {
-      x: 1.0, y: 2.1, w: 5.2, h: 4.4,
-      fontFace: F_SANS, fontSize: 13, color: C_DARK, lineSpacingMultiple: 1.25
-    }
-  );
+  // Left Column: Contract (4 compact rows)
+  panel(slide, 0.8, 1.5, 5.5, 5.2);
+  panelTitle(slide, "SIMULATOR CONTRACT (OFFICIAL EVALUATOR)", 1.0, 1.7, 5.1);
 
-  // Right Column: Pipeline Funnel Diagram
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: 6.7, y: 1.5, w: 5.8, h: 5.2,
-    fill: { color: C_PANEL }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
+  const contract = [
+    { t: "Every turn", d: "message + optional ask + up to 10 recommendations" },
+    { t: "Zero hit sacrifice", d: "a clarification question never forfeits the hit check" },
+    { t: "Defensive by default", d: "strict dedupe · valid catalog ASINs · spec-enum asks" },
+    { t: "Deterministic core", d: "offline execution · 332 automated tests guard the contracts" },
+  ];
+  contract.forEach((c, i) => {
+    const y = 2.25 + i * 0.95;
+    slide.addShape(pptx.ShapeType.ellipse, {
+      x: 1.05, y: y + 0.05, w: 0.28, h: 0.28, fill: { color: C_ACCENT }
+    });
+    slide.addText(String(i + 1), {
+      x: 1.05, y: y + 0.05, w: 0.28, h: 0.28,
+      fontFace: F_SANS, fontSize: 11, color: C_WHITE, bold: true, align: "center", valign: "middle"
+    });
+    slide.addText(c.t, {
+      x: 1.5, y, w: 4.6, h: 0.32,
+      fontFace: F_SANS, fontSize: 14.5, color: C_DARK, bold: true
+    });
+    slide.addText(c.d, {
+      x: 1.5, y: y + 0.34, w: 4.6, h: 0.5,
+      fontFace: F_SANS, fontSize: 12, color: C_SEC, fit: "shrink"
+    });
   });
-  slide.addText("PRODUCTION EXECUTION FUNNEL", {
-    x: 6.9, y: 1.7, w: 5.4, h: 0.3,
-    fontFace: F_SANS, fontSize: 11, color: C_ACCENT, bold: true, letterSpacing: 1
+  slide.addText("Evaluator imported unmodified — zero edits, imports only.", {
+    x: 1.0, y: 6.15, w: 5.1, h: 0.35,
+    fontFace: F_SANS, fontSize: 10.5, italic: true, color: "8A7A5E"
   });
+
+  // Right Column: Funnel (tapered rows)
+  panel(slide, 6.6, 1.5, 5.93, 5.2, C_PANEL);
+  panelTitle(slide, "PRODUCTION EXECUTION FUNNEL", 6.9, 1.7, 5.4);
 
   const funnelSteps = [
-    { title: "50,000 Catalog Products", desc: "SQLite FTS5 BM25 + Hashed TF-IDF Semantic Index" },
-    { title: "Hybrid Retrieval Pool (~300 items)", desc: "Reciprocal Rank Fusion (k=60) + Guarantee Pool" },
-    { title: "Full Candidate Scoring (320 Safety Cap)", desc: "Cap >= Pool: 100% of candidate pool scored through ranker" },
-    { title: "8-Gate Clarification Engine", desc: "Entropy set-splitting on Boolean token index" },
-    { title: "Top-10 Attributed Output", desc: "Constraint coverage × IDF × Salience + Popularity" },
+    { title: "50,000-item catalog", desc: "SQLite FTS5 BM25 + hashed TF-IDF index" },
+    { title: "Hybrid pool · ~300 items", desc: "Reciprocal Rank Fusion (k=60) + guarantee pool" },
+    { title: "Full scoring · 320 cap", desc: "Cap ≥ pool → 100% of candidates scored" },
+    { title: "8-gate clarification", desc: "Entropy set-splitting on Boolean token index" },
+    { title: "Top-10, attributed", desc: "Coverage × IDF × salience + popularity" },
   ];
 
   funnelSteps.forEach((st, i) => {
+    const w = 5.3 - i * 0.2;
+    const cx = 6.6 + 5.93 / 2;
     const y = 2.15 + i * 0.92;
     slide.addShape(pptx.ShapeType.roundRect, {
-      x: 7.0, y, w: 5.2, h: 0.78,
+      x: cx - w / 2, y, w, h: 0.78,
       fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.08
     });
     slide.addText(`${i + 1}. ${st.title}`, {
-      x: 7.15, y: y + 0.08, w: 4.9, h: 0.3,
-      fontFace: F_SANS, fontSize: 12, color: C_DARK, bold: true
+      x: cx - w / 2 + 0.2, y: y + 0.09, w: w - 0.4, h: 0.3,
+      fontFace: F_SANS, fontSize: 12.5, color: C_DARK, bold: true
     });
     slide.addText(st.desc, {
-      x: 7.15, y: y + 0.38, w: 4.9, h: 0.32,
-      fontFace: F_SANS, fontSize: 10.5, color: C_SEC
+      x: cx - w / 2 + 0.2, y: y + 0.4, w: w - 0.4, h: 0.3,
+      fontFace: F_SANS, fontSize: 10.5, color: C_SEC, fit: "shrink"
     });
   });
 
   addFooter(slide);
   slide.addNotes(
-    "Say: We implemented their API exactly — and defensively. [POINT at contract row] Every turn can ask, recommend, or both; a question never forfeits the hit chance. The deterministic system is completely self-contained with no network dependency.\nTiming: 30s"
+    "Say: We implemented their API exactly — and defensively. [POINT at contract rows] Every turn can ask, recommend, or both; a question never forfeits the hit chance. [POINT at funnel] 50k items → ~300 pool → every candidate scored under the 320 cap → entropy questions → attributed top-10. Fully deterministic, offline. [ADVANCE]\nTiming: 30s"
   );
 }
 
 // ==========================================
-// SLIDE 3: Staircase (Money Slide)
+// SLIDE 3: Staircase (Money Slide) — charts
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "Performance Staircase: 7.0× Hit Rate & 7.2× MRR");
+  addHeader(slide, "The Staircase: 7× the Official Baseline");
 
-  // Top Table
-  const tableRows = [
-    [
-      { text: "System State", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "Hit@10", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "MRR", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "MTTC", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "Technical Score", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-    ],
-    [
-      { text: "Starter (Official Baseline)", options: { fontFace: F_SANS } },
-      { text: "0.125", options: { fontFace: F_MONO } },
-      { text: "0.0680", options: { fontFace: F_MONO } },
-      { text: "9.81 turns", options: { fontFace: F_MONO } },
-      { text: "0.1067", options: { fontFace: F_MONO } },
-    ],
-    [
-      { text: "Pre-Experiments (v2 Baseline)", options: { fontFace: F_SANS } },
-      { text: "0.870", options: { fontFace: F_MONO } },
-      { text: "0.4455", options: { fontFace: F_MONO } },
-      { text: "3.465 turns", options: { fontFace: F_MONO } },
-      { text: "0.7193", options: { fontFace: F_MONO } },
-    ],
-    [
-      { text: "Final Shipped (submission-freeze)", options: { bold: true, fill: { color: "FDF2E9" }, fontFace: F_SANS, color: C_ACCENT } },
-      { text: "0.880", options: { bold: true, fill: { color: "FDF2E9" }, fontFace: F_MONO, color: C_ACCENT } },
-      { text: "0.4916", options: { bold: true, fill: { color: "FDF2E9" }, fontFace: F_MONO, color: C_ACCENT } },
-      { text: "3.375 turns", options: { bold: true, fill: { color: "FDF2E9" }, fontFace: F_MONO, color: C_ACCENT } },
-      { text: "0.7400", options: { bold: true, fill: { color: "FDF2E9" }, fontFace: F_MONO, color: C_ACCENT } },
-    ],
-  ];
+  // Left panel: grouped column chart
+  panel(slide, 0.8, 1.5, 7.0, 5.2);
+  panelTitle(slide, "OFFICIAL METRICS · PUBLIC-200", 1.0, 1.68, 6.6);
 
-  slide.addTable(tableRows, {
-    x: 0.8, y: 1.5, w: 11.7, h: 2.2,
-    fontSize: 12, border: { pt: 1, color: C_BORDER }, align: "center", valign: "middle"
+  slide.addChart(pptx.ChartType.bar, [
+    { name: "Starter (official)", labels: ["Hit@10", "MRR", "Tech Score"], values: [0.125, 0.068, 0.1067] },
+    { name: "v2 (pre-experiments)", labels: ["Hit@10", "MRR", "Tech Score"], values: [0.870, 0.4455, 0.7193] },
+    { name: "Shipped (freeze)", labels: ["Hit@10", "MRR", "Tech Score"], values: [0.880, 0.4916, 0.7400] },
+  ], {
+    x: 1.0, y: 2.05, w: 6.6, h: 3.55,
+    barDir: "col", barGrouping: "clustered", barGapWidthPct: 70,
+    chartColors: [C_SAND, "8A6F5C", C_ACCENT],
+    showLegend: true, legendPos: "b", legendColor: C_DARK, legendFontSize: 10.5, legendFontFace: F_SANS,
+    catAxisLabelColor: C_DARK, catAxisLabelFontSize: 12, catAxisLabelFontFace: F_SANS,
+    valAxisHidden: true, valAxisMaxVal: 1.0, valAxisMinVal: 0,
+    valGridLine: { style: "none" }, catGridLine: { style: "none" },
+    showValue: true, dataLabelColor: C_DARK, dataLabelFontSize: 9, dataLabelFontFace: F_MONO,
+    dataLabelFormatCode: "0.000", dataLabelPosition: "outEnd",
+    showTitle: false,
   });
 
-  // Bottom Panels: Formula & Decomposition
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: 0.8, y: 4.0, w: 5.6, h: 2.7,
-    fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
-  });
-  slide.addText("OFFICIAL METRIC FORMULA", {
-    x: 1.0, y: 4.2, w: 5.2, h: 0.3,
-    fontFace: F_SANS, fontSize: 11, color: C_ACCENT, bold: true, letterSpacing: 1
-  });
-  slide.addText("TechnicalScore = 0.5·Hit@10 + 0.3·MRR + 0.2·Efficiency\nwhere Efficiency = clip((11 − MTTC) / 10, 0, 1)", {
-    x: 1.0, y: 4.6, w: 5.2, h: 0.8,
-    fontFace: F_MONO, fontSize: 11.5, color: C_DARK
-  });
-  slide.addText("• 7.0× Hit Rate (0.125 → 0.880)\n• 7.2× Mean Reciprocal Rank (0.068 → 0.4916)\n• Found 2.9× faster (9.81 → 3.375 turns)\n• ~7× Technical Score gain overall", {
-    x: 1.0, y: 5.4, w: 5.2, h: 1.1,
-    fontFace: F_SANS, fontSize: 12, color: C_SEC
+  slide.addText([
+    { text: "MTTC  9.81 → 3.38 turns", options: { fontFace: F_MONO, fontSize: 14, color: C_ACCENT, bold: true } },
+    { text: "   — target found 2.9× faster", options: { fontFace: F_SANS, fontSize: 12, color: C_SEC } },
+  ], {
+    x: 1.0, y: 5.95, w: 6.6, h: 0.45, align: "center"
   });
 
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: 6.7, y: 4.0, w: 5.8, h: 2.7,
-    fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
+  // Right top: gain decomposition stacked bar
+  panel(slide, 8.1, 1.5, 4.43, 3.0);
+  panelTitle(slide, "WHERE Δ +0.0207 CAME FROM", 8.3, 1.68, 4.1);
+
+  slide.addChart(pptx.ChartType.bar, [
+    { name: "MRR  +0.0138 · 67%", labels: ["ΔTS"], values: [0.0138] },
+    { name: "Hit@10  +0.0050 · 24%", labels: ["ΔTS"], values: [0.0050] },
+    { name: "Efficiency  +0.0018 · 9%", labels: ["ΔTS"], values: [0.0018] },
+  ], {
+    x: 8.3, y: 2.0, w: 4.03, h: 1.35,
+    barDir: "bar", barGrouping: "stacked", barGapWidthPct: 25,
+    chartColors: [C_ACCENT, C_AMBER, C_SAND],
+    showLegend: true, legendPos: "b", legendColor: C_DARK, legendFontSize: 9.5, legendFontFace: F_SANS,
+    catAxisHidden: true, valAxisHidden: true, valAxisMaxVal: 0.0207, valAxisMinVal: 0,
+    valGridLine: { style: "none" }, catGridLine: { style: "none" },
+    showValue: false, showTitle: false,
   });
-  slide.addText("SCORE GAIN DECOMPOSITION (vs v2 Pre-Exp)", {
-    x: 6.9, y: 4.2, w: 5.4, h: 0.3,
-    fontFace: F_SANS, fontSize: 11, color: C_ACCENT, bold: true, letterSpacing: 1
+
+  slide.addText("Two-thirds of the gain is MRR — the ranker puts the target higher in the top 10.", {
+    x: 8.3, y: 3.55, w: 4.05, h: 0.8,
+    fontFace: F_SANS, fontSize: 11.5, color: C_SEC, fit: "shrink"
   });
-  slide.addText("Δ TechnicalScore = +0.0207 (+2.07 pp)", {
-    x: 6.9, y: 4.6, w: 5.4, h: 0.4,
-    fontFace: F_MONO, fontSize: 13, color: C_ACCENT, bold: true
+
+  // Right bottom: formula
+  panel(slide, 8.1, 4.75, 4.43, 1.95, C_PANEL);
+  panelTitle(slide, "OFFICIAL FORMULA", 8.3, 4.93, 4.1);
+  slide.addText("Score = 0.5·Hit@10\n      + 0.3·MRR\n      + 0.2·clip((11−MTTC)/10)", {
+    x: 8.3, y: 5.3, w: 4.05, h: 1.25,
+    fontFace: F_MONO, fontSize: 12, color: C_DARK, lineSpacingMultiple: 1.15
   });
-  slide.addText(
-    "• MRR Gain: 67% of ΔTS (0.3 · +0.0461 = +0.0138)\n" +
-    "• Hit@10 Gain: 24% of ΔTS (0.5 · +0.0100 = +0.0050)\n" +
-    "• Efficiency Gain: 9% of ΔTS (0.2 · +0.0090 = +0.0018)\n\n" +
-    "Key Insight: Two-thirds of the gain comes from MRR — the ranker puts the target higher in the top 10.",
-    {
-      x: 6.9, y: 5.05, w: 5.4, h: 1.5,
-      fontFace: F_SANS, fontSize: 12, color: C_DARK
-    }
-  );
 
   addFooter(slide);
   slide.addNotes(
-    "Say: [EMPHASIZE] Against the official baseline we're seven-x. [PAUSE] Against our own pre-experiment system, two-thirds of the TechnicalScore gain is MRR — the ranker puts the right product higher, exactly what the shipped change predicts. [POINT at MRR row] [ADVANCE]\nTiming: 45s"
+    "Say: [POINT at chart] Against the official baseline we're seven-x on every metric. [PAUSE] [POINT at right panel] Against our own pre-experiment system, two-thirds of the TechnicalScore gain is MRR — the ranker puts the right product higher, exactly what the shipped change predicts. [ADVANCE]\nTiming: 45s"
   );
 }
 
 // ==========================================
-// SLIDE 4: Innovation Directions
+// SLIDE 4: Innovation Directions — kept vs killed
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "Exploration of Organizer-Proposed Innovation Directions");
+  addHeader(slide, "Innovation Directions: What Shipped, What Died");
 
-  const innovTable = [
-    [
-      { text: "Organizer Direction", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "ShopCopilot Approach", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "Experimental Outcome", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-    ],
-    [
-      { text: "Hybrid Retrieval", options: { bold: true, fontFace: F_SANS } },
-      { text: "BM25 FTS5 (0.7) + Semantic TF-IDF (0.3) + RRF (k=60) + Guarantee Pool", options: { fontFace: F_SANS } },
-      { text: "Shipped in v2: 88% pool recall, 0.880 Hit@10", options: { fontFace: F_MONO, color: C_ACCENT, bold: true } },
-    ],
-    [
-      { text: "Adaptive Clarification", options: { bold: true, fontFace: F_SANS } },
-      { text: "8-Gate entropy engine; question-margin gate hypothesis tested", options: { fontFace: F_SANS } },
-      { text: "0/19 late-phase gate triggered; stopped before building", options: { fontFace: F_MONO, color: C_MUTED } },
-    ],
-    [
-      { text: "Personalization", options: { bold: true, fontFace: F_SANS } },
-      { text: "Soft profile boost (weight sweep 0.00 to 0.15) guarded by hard constraints", options: { fontFace: F_SANS } },
-      { text: "Weight 0.03 worsened MRR; set to 0.00 (fail-safe)", options: { fontFace: F_MONO, color: C_MUTED } },
-    ],
-    [
-      { text: "Explainable Ranking", options: { bold: true, fontFace: F_SANS } },
-      { text: "Per-item ranking provenance (coverage, salience, popularity, violations)", options: { fontFace: F_SANS } },
-      { text: "Live in interactive demo; zero score penalty", options: { fontFace: F_MONO, color: C_ACCENT, bold: true } },
-    ],
-    [
-      { text: "LLM Reranking Tier", options: { bold: true, fontFace: F_SANS } },
-      { text: "OpenRouter GPT-4o-mini / Nemotron with strict margin & twin gates", options: { fontFace: F_SANS } },
-      { text: "Live probe Δ=0, +454ms latency; killed by ship gate", options: { fontFace: F_MONO, color: C_MUTED } },
-    ],
-    [
-      { text: "Constraint Reweighting", options: { bold: true, fontFace: F_SANS } },
-      { text: "Salience vs Popularity rebalancing (0.5 → 0.2) in deterministic ranker", options: { fontFace: F_SANS } },
-      { text: "SHIPPED WIN: +4/−1 flips on dev, +1.0pp Hit, +4.6pp MRR", options: { fontFace: F_MONO, color: C_ACCENT, bold: true } },
-    ],
+  const kept = [
+    { t: "Hybrid retrieval", d: "BM25 (0.7) + semantic TF-IDF (0.3) + RRF fusion", r: "88% pool recall · 0.880 Hit@10" },
+    { t: "Constraint reweighting", d: "buying-route salience 0.5 → 0.2, popularity untouched", r: "+1.0pp Hit · +4.6pp MRR · SHIPPED" },
+    { t: "Explainable ranking", d: "coverage · IDF · salience · popularity per item", r: "live in demo · zero score penalty" },
+  ];
+  const killed = [
+    { t: "LLM reranking tier", d: "3 sizes & classes probed — 2.6B dense · 30B-A3B · 120B-A12B MoE + GPT-4o-mini · Hit / MRR ≈ flat", r: "ΔHit 0 · ΔMRR −0.005 · +0.5–8.3 s per call → killed · local LLM loses on TTFT too" },
+    { t: "Soft personalization", d: "profile boost, weight sweep 0.00 – 0.15", r: "0.03 worsened MRR → set to 0.00" },
+    { t: "Late-phase question gate", d: "margin-gain question value on misses", r: "0 / 19 misses qualified → stopped" },
   ];
 
-  slide.addTable(innovTable, {
-    x: 0.8, y: 1.5, w: 11.7, h: 5.1,
-    fontSize: 11, border: { pt: 1, color: C_BORDER }, valign: "middle"
+  // Kept panel
+  panel(slide, 0.8, 1.5, 5.75, 5.2);
+  slide.addShape(pptx.ShapeType.roundRect, {
+    x: 0.8, y: 1.5, w: 5.75, h: 0.5, fill: { color: C_ACCENT }, rectRadius: 0.1
+  });
+  slide.addText("SHIPPED — KEPT BY THE GATES", {
+    x: 1.0, y: 1.55, w: 5.35, h: 0.4,
+    fontFace: F_SANS, fontSize: 12, color: C_WHITE, bold: true, letterSpacing: 1, valign: "middle"
+  });
+  kept.forEach((k, i) => {
+    const y = 2.35 + i * 1.5;
+    slide.addText(k.t, {
+      x: 1.05, y, w: 5.25, h: 0.35,
+      fontFace: F_SANS, fontSize: 14.5, color: C_DARK, bold: true
+    });
+    slide.addText(k.d, {
+      x: 1.05, y: y + 0.36, w: 5.25, h: 0.35,
+      fontFace: F_SANS, fontSize: 11.5, color: C_SEC, fit: "shrink"
+    });
+    slide.addText(k.r, {
+      x: 1.05, y: y + 0.74, w: 5.25, h: 0.35,
+      fontFace: F_MONO, fontSize: 11.5, color: C_ACCENT, bold: true, fit: "shrink"
+    });
+  });
+
+  // Killed panel
+  panel(slide, 6.78, 1.5, 5.75, 5.2, C_PANEL);
+  slide.addShape(pptx.ShapeType.roundRect, {
+    x: 6.78, y: 1.5, w: 5.75, h: 0.5, fill: { color: C_MUTED }, rectRadius: 0.1
+  });
+  slide.addText("KILLED — BY THEIR OWN PRE-REGISTERED BARS", {
+    x: 6.98, y: 1.55, w: 5.35, h: 0.4,
+    fontFace: F_SANS, fontSize: 12, color: C_WHITE, bold: true, letterSpacing: 1, valign: "middle"
+  });
+  killed.forEach((k, i) => {
+    const y = 2.35 + i * 1.5;
+    slide.addText(k.t, {
+      x: 7.03, y, w: 5.25, h: 0.35,
+      fontFace: F_SANS, fontSize: 14.5, color: C_DARK, bold: true
+    });
+    slide.addText(k.d, {
+      x: 7.03, y: y + 0.36, w: 5.25, h: 0.35,
+      fontFace: F_SANS, fontSize: 11.5, color: C_SEC, fit: "shrink"
+    });
+    slide.addText(k.r, {
+      x: 7.03, y: y + 0.74, w: 5.25, h: 0.35,
+      fontFace: F_MONO, fontSize: 11.5, color: C_MUTED, bold: true, fit: "shrink"
+    });
   });
 
   addFooter(slide);
   slide.addNotes(
-    "Say: We attempted every applicable direction on the organizer's own list — [EMPHASIZE] including the ones that produced negative results. That's how we know which mechanisms are real.\nTiming: 30s"
+    "Say: We attempted every applicable direction on the organizer's own list. [POINT left] The left panel shipped. [POINT right] The right panel died. We probed three LLM classes — a 2.6B dense, a 30B-active-3B MoE, a 120B MoE, plus GPT-4o-mini: accuracy flat, latency half a second to eight seconds per call — and a local LLM on a consumer laptop loses on time-to-first-token alone. Our deterministic path stays at 330 milliseconds. [ADVANCE]\nTiming: 30s"
   );
 }
 
@@ -342,509 +368,536 @@ function baseSlide() {
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "Experimental Method: Worktree Isolation & Paired Flips");
+  addHeader(slide, "Method: Pre-Registered, Paired, Isolated");
 
-  // 3 Boxes
   const boxes = [
     {
-      title: "1. Worktree Isolation",
-      desc: "5 dedicated git experiment worktrees branched from control snapshot 80eee9a.\n\n• Zero cross-contamination\n• Frozen evaluator untouched\n• Single config registration rule (tests/test_config_registered.py)",
+      num: "1", title: "Worktree isolation",
+      items: ["5 isolated experiment worktrees", "branched from control 80eee9a", "frozen evaluator · zero contamination"],
     },
     {
-      title: "2. Pre-Registered Pass Bars",
-      desc: "Every experiment had written acceptance criteria before running first eval:\n\n• Hit gain bar: ΔHit >= +0.03\n• Latency ceiling: added p95 <= 2s\n• Automatic revert on regression",
+      num: "2", title: "Pre-registered bars",
+      items: ["pass bar written before first eval", "ΔHit ≥ +0.03 · p95 ≤ +2 s", "automatic revert on regression"],
     },
     {
-      title: "3. Paired-Session Flips",
-      desc: "Aggregate differences <3pp on 160 sessions are noise.\n\n• Exact per-session paired flips (miss→hit vs hit→miss)\n• Measured noise floor: ±1 session (159/160 match across identical runs)",
+      num: "3", title: "Paired-session flips",
+      items: ["unit of truth: per-session flips", "noise floor ±1 session (159/160 agree)", "aggregate shifts <3pp are noise"],
     },
   ];
 
   boxes.forEach((b, i) => {
-    const x = 0.8 + i * 3.95;
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x, y: 1.6, w: 3.75, h: 5.0,
-      fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
+    const x = 0.8 + i * 3.975;
+    panel(slide, x, 1.6, 3.75, 5.0);
+    slide.addShape(pptx.ShapeType.ellipse, {
+      x: x + 0.25, y: 1.95, w: 0.55, h: 0.55, fill: { color: C_ACCENT }
+    });
+    slide.addText(b.num, {
+      x: x + 0.25, y: 1.95, w: 0.55, h: 0.55,
+      fontFace: F_SERIF, fontSize: 20, color: C_WHITE, bold: true, align: "center", valign: "middle"
     });
     slide.addText(b.title, {
-      x: x + 0.25, y: 1.9, w: 3.25, h: 0.4,
-      fontFace: F_SERIF, fontSize: 16, color: C_DARK, bold: true
+      x: x + 0.25, y: 2.75, w: 3.25, h: 0.45,
+      fontFace: F_SERIF, fontSize: 17, color: C_DARK, bold: true
     });
-    slide.addText(b.desc, {
-      x: x + 0.25, y: 2.5, w: 3.25, h: 3.8,
-      fontFace: F_SANS, fontSize: 13, color: C_SEC, lineSpacingMultiple: 1.25
-    });
+    slide.addText(
+      b.items.map(t => `•  ${t}`).join("\n"),
+      {
+        x: x + 0.25, y: 3.35, w: 3.25, h: 2.9,
+        fontFace: F_SANS, fontSize: 12.5, color: C_SEC, lineSpacingMultiple: 1.3, valign: "top"
+      }
+    );
   });
 
   addFooter(slide);
   slide.addNotes(
-    "Say: [SLOW] Every experiment had its pass bar written before the first eval ran. We measured per-session paired flips against a strict ±1 session noise floor.\nTiming: 25s"
+    "Say: [SLOW] Every experiment had its pass bar written before the first eval ran. We measured per-session paired flips against a strict ±1 session noise floor. [ADVANCE]\nTiming: 25s"
   );
 }
 
 // ==========================================
-// SLIDE 6: The Win (Salience Reweight)
+// SLIDE 6: The Win (Salience Reweight) — waterfall
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "The Shipped Win: Constraint Salience vs Popularity");
+  addHeader(slide, "The Shipped Win: Salience vs Popularity");
 
-  // Left Box: Waterfall & Session IDs
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: 0.8, y: 1.5, w: 5.6, h: 5.2,
-    fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
+  // Left: flip waterfall
+  panel(slide, 0.8, 1.5, 6.0, 5.2);
+  panelTitle(slide, "PAIRED FLIP WATERFALL · DEV-160", 1.0, 1.7, 5.6);
+
+  const plotY = 2.25, plotH = 2.75, minV = 138, maxV = 146;
+  const yOf = v => plotY + ((maxV - v) / (maxV - minV)) * plotH;
+  const bw = 1.1, gap = 0.35;
+  const bars = [
+    { x: 1.1, label: "141", top: yOf(141), bot: yOf(138), fill: C_SAND, sub: "Control" },
+    { x: 1.1 + bw + gap, label: "+4", top: yOf(145), bot: yOf(141), fill: C_ACCENT, sub: "Miss → Hit" },
+    { x: 1.1 + 2 * (bw + gap), label: "−1", top: yOf(145), bot: yOf(144), fill: C_MUTED, sub: "Hit → Miss" },
+    { x: 1.1 + 3 * (bw + gap), label: "144", top: yOf(144), bot: yOf(138), fill: C_ACCENT, sub: "Shipped" },
+  ];
+  // connectors (dashed)
+  slide.addShape(pptx.ShapeType.line, { x: bars[0].x + bw, y: yOf(141), w: gap, h: 0, line: { color: "8A7A5E", width: 1, dashType: "dash" } });
+  slide.addShape(pptx.ShapeType.line, { x: bars[1].x + bw, y: yOf(145), w: gap, h: 0, line: { color: "8A7A5E", width: 1, dashType: "dash" } });
+  slide.addShape(pptx.ShapeType.line, { x: bars[2].x + bw, y: yOf(144), w: gap, h: 0, line: { color: "8A7A5E", width: 1, dashType: "dash" } });
+  bars.forEach(b => {
+    slide.addShape(pptx.ShapeType.rect, {
+      x: b.x, y: b.top, w: bw, h: Math.max(b.bot - b.top, 0.05),
+      fill: { color: b.fill }, line: { color: C_BORDER, width: 0.75 }
+    });
+    slide.addText(b.label, {
+      x: b.x - 0.1, y: b.top - 0.4, w: bw + 0.2, h: 0.35,
+      fontFace: F_MONO, fontSize: 15, color: C_DARK, bold: true, align: "center"
+    });
+    slide.addText(b.sub, {
+      x: b.x - 0.15, y: yOf(138) + 0.1, w: bw + 0.3, h: 0.3,
+      fontFace: F_SANS, fontSize: 10, color: C_SEC, align: "center"
+    });
   });
-  slide.addText("PAIRED FLIP WATERFALL (Dev-160)", {
-    x: 1.0, y: 1.7, w: 5.2, h: 0.3,
-    fontFace: F_SANS, fontSize: 11, color: C_ACCENT, bold: true, letterSpacing: 1
+  slide.addText("+4:  0031 · 0100 · 0085 · 0125        −1:  0035", {
+    x: 1.0, y: 5.85, w: 5.6, h: 0.3,
+    fontFace: F_MONO, fontSize: 10.5, color: "8A7A5E", align: "center"
   });
+  slide.addText("net +3  >  ±1 noise floor", {
+    x: 1.0, y: 6.2, w: 5.6, h: 0.3,
+    fontFace: F_MONO, fontSize: 11.5, color: C_ACCENT, bold: true, align: "center"
+  });
+
+  // Right: mechanism + honesty + confirmation
+  panel(slide, 7.0, 1.5, 5.53, 5.2, C_PANEL);
+  panelTitle(slide, "MECHANISM", 7.2, 1.7, 5.1);
   slide.addText(
-    "Control Hits (fork-point 80eee9a): 141 / 160\n" +
-    "  + 4 Miss → Hit Flips:\n" +
-    "      • public_0031\n" +
-    "      • public_0100\n" +
-    "      • public_0085\n" +
-    "      • public_0125\n" +
-    "  − 1 Hit → Miss Flip:\n" +
-    "      • public_0035\n" +
-    "--------------------------------------------------\n" +
-    "Final Dev Hits: 144 / 160 (0.900 Hit@10, +3 Net Flips)",
+    "•  Popularity crowded out products satisfying rare, high-value constraints\n" +
+    "•  Fix: buying-route salience weight 0.5 → 0.2",
     {
-      x: 1.0, y: 2.1, w: 5.2, h: 4.4,
-      fontFace: F_MONO, fontSize: 12.5, color: C_DARK, lineSpacingMultiple: 1.2
+      x: 7.2, y: 2.1, w: 5.1, h: 1.0,
+      fontFace: F_SANS, fontSize: 12.5, color: C_DARK, lineSpacingMultiple: 1.2, fit: "shrink"
     }
   );
 
-  // Right Box: Mechanism & Honesty Box
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: 6.7, y: 1.5, w: 5.8, h: 5.2,
-    fill: { color: C_PANEL }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
-  });
-  slide.addText("MECHANISM & HYPOTHESIS REALITY", {
-    x: 6.9, y: 1.7, w: 5.4, h: 0.3,
-    fontFace: F_SANS, fontSize: 11, color: C_ACCENT, bold: true, letterSpacing: 1
+  panel(slide, 7.2, 3.35, 5.13, 1.85, C_WHITE);
+  slide.addText("HONESTY", {
+    x: 7.4, y: 3.5, w: 4.7, h: 0.28,
+    fontFace: F_SANS, fontSize: 10, color: C_AMBER, bold: true, letterSpacing: 1
   });
   slide.addText(
-    "Root Cause:\n" +
-    "Popularity score was crowding out products that satisfied specific, high-value user constraints. Lowering salience weight (0.5 → 0.2) lets constraint coverage dominate.\n\n" +
-    "Honesty Box (Scientific Discipline):\n" +
-    "The experiment originally hypothesized a Buying-specific win. In reality, the wins were route-general across multiple scenarios.\n\n" +
-    "Because the net +3 paired flips exceeded the ±1 noise floor and confirmed on the public-200 set (0.870 → 0.880, MRR 0.4455 → 0.4916), it was merged to main.",
+    "Failed its own Buying-specific hypothesis — the wins were route-general. Shipped anyway: flips, not hypothesis, were the evidence.",
     {
-      x: 6.9, y: 2.1, w: 5.4, h: 4.4,
-      fontFace: F_SANS, fontSize: 12.5, color: C_DARK, lineSpacingMultiple: 1.25
+      x: 7.4, y: 3.8, w: 4.75, h: 1.3,
+      fontFace: F_SANS, fontSize: 12, color: C_DARK, lineSpacingMultiple: 1.2, fit: "shrink"
     }
   );
+
+  slide.addShape(pptx.ShapeType.roundRect, {
+    x: 7.2, y: 5.45, w: 5.13, h: 0.85, fill: { color: C_ACCENT }, rectRadius: 0.08
+  });
+  slide.addText("public-200 confirm:  Hit 0.870 → 0.880 · MRR 0.4455 → 0.4916", {
+    x: 7.35, y: 5.45, w: 4.85, h: 0.85,
+    fontFace: F_MONO, fontSize: 12, color: C_WHITE, bold: true, valign: "middle", fit: "shrink"
+  });
 
   addFooter(slide);
   slide.addNotes(
-    "Say: [LOOK] The win failed its own hypothesis. It shipped anyway — because the flips, not the hypothesis, were the evidence. [ADVANCE]\nTiming: 30s"
+    "Say: [POINT at waterfall] Popularity was crowding out constraint matches. Salience 0.5 to 0.2: four miss-to-hit flips against one regression. [LOOK] The win failed its own hypothesis — it shipped anyway, because the flips were the evidence, and it confirmed out-of-sample. [ADVANCE]\nTiming: 30s"
   );
 }
 
 // ==========================================
-// SLIDE 7: Progression & Per-Scenario Breakdown
+// SLIDE 7: Out-of-Sample Transfer + per-scenario chart
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "Out-of-Sample Transfer & Per-Scenario Results");
+  addHeader(slide, "Out-of-Sample Confirmation");
 
-  // Left: Two Distinct Evaluation Sets
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: 0.8, y: 1.5, w: 5.6, h: 5.2,
-    fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
+  // Left: dev → public stats
+  panel(slide, 0.8, 1.5, 5.6, 5.2);
+  panelTitle(slide, "PROGRESSION ACROSS SPLITS", 1.0, 1.7, 5.2);
+
+  const splits = [
+    { tag: "DEV-160 · TUNING SET", big: "0.900 Hit@10", det: "144 / 160 · MRR 0.5144 · MTTC 3.19" },
+    { tag: "PUBLIC-200 · CONFIRMATION (TOUCHED 2×)", big: "0.880 Hit@10", det: "176 / 200 · MRR 0.4916 · MTTC 3.375" },
+  ];
+  splits.forEach((s, i) => {
+    const y = 2.2 + i * 1.75;
+    panel(slide, 1.0, y, 5.2, 1.5, C_PANEL);
+    slide.addText(s.tag, {
+      x: 1.2, y: y + 0.12, w: 4.8, h: 0.28,
+      fontFace: F_SANS, fontSize: 9.5, color: "8A7A5E", bold: true, letterSpacing: 0.5
+    });
+    slide.addText(s.big, {
+      x: 1.2, y: y + 0.42, w: 4.8, h: 0.55,
+      fontFace: F_MONO, fontSize: 24, color: C_ACCENT, bold: true
+    });
+    slide.addText(s.det, {
+      x: 1.2, y: y + 1.02, w: 4.8, h: 0.35,
+      fontFace: F_MONO, fontSize: 11, color: C_SEC, fit: "shrink"
+    });
   });
-  slide.addText("PROGRESSION ACROSS SPLITS", {
-    x: 1.0, y: 1.7, w: 5.2, h: 0.3,
-    fontFace: F_SANS, fontSize: 11, color: C_ACCENT, bold: true, letterSpacing: 1
+  slide.addShape(pptx.ShapeType.line, {
+    x: 3.6, y: 3.7, w: 0, h: 0.5, line: { color: C_ACCENT, width: 2.5, endArrowType: "triangle" }
   });
-  slide.addText(
-    "Dev-160 Split (Tuning Set):\n" +
-    "• Control: 141 / 160 (0.881) · MRR 0.4388 · MTTC 3.32\n" +
-    "• Shipped: 144 / 160 (0.900) · MRR 0.5144 · MTTC 3.19\n\n" +
-    "Public-200 Set (Confirmation Only — Touched Twice):\n" +
-    "• Baseline: 174 / 200 (0.870) · MRR 0.4455 · MTTC 3.465\n" +
-    "• Shipped:  176 / 200 (0.880) · MRR 0.4916 · MTTC 3.375\n\n" +
-    "Result: Out-of-sample confirmation proved the salience gain was not overfitted to dev.",
+  slide.addText("The salience gain was not overfitted to dev.", {
+    x: 1.0, y: 5.85, w: 5.2, h: 0.6,
+    fontFace: F_SANS, fontSize: 12.5, italic: true, color: C_SEC
+  });
+
+  // Right: per-scenario horizontal bars
+  panel(slide, 6.7, 1.5, 5.83, 5.2);
+  panelTitle(slide, "HIT@10 BY SCENARIO (PUBLIC-200)", 6.9, 1.7, 5.4);
+
+  slide.addChart(pptx.ChartType.bar, [
     {
-      x: 1.0, y: 2.1, w: 5.2, h: 4.4,
-      fontFace: F_SANS, fontSize: 12.5, color: C_DARK, lineSpacingMultiple: 1.25
-    }
-  );
+      name: "Hit@10",
+      labels: ["Boundary · 6/10", "Intent Override · 23/30", "Buying · 73/80", "Browsing · 74/80"],
+      values: [0.6, 0.7667, 0.9125, 0.925],
+    },
+  ], {
+    x: 6.9, y: 2.1, w: 5.4, h: 3.55,
+    barDir: "bar", barGapWidthPct: 50,
+    chartColors: [C_ACCENT],
+    catAxisLabelColor: C_DARK, catAxisLabelFontSize: 11, catAxisLabelFontFace: F_SANS,
+    valAxisHidden: true, valAxisMaxVal: 1.0, valAxisMinVal: 0,
+    valGridLine: { style: "none" }, catGridLine: { style: "none" },
+    showValue: true, dataLabelColor: C_DARK, dataLabelFontSize: 10.5, dataLabelFontFace: F_MONO,
+    dataLabelFormatCode: "0.000", dataLabelPosition: "outEnd",
+    showLegend: false, showTitle: false,
+  });
 
-  // Right: Per-Scenario Table with Honest Counts
-  const scenTable = [
-    [
-      { text: "Scenario", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "Count", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "Hit@10", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "MRR", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "MTTC", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-    ],
-    [
-      { text: "Browsing", options: { fontFace: F_SANS, bold: true } },
-      { text: "74 / 80", options: { fontFace: F_MONO } },
-      { text: "0.9250", options: { fontFace: F_MONO, color: C_ACCENT } },
-      { text: "0.4532", options: { fontFace: F_MONO } },
-      { text: "2.91 turns", options: { fontFace: F_MONO } },
-    ],
-    [
-      { text: "Buying", options: { fontFace: F_SANS, bold: true } },
-      { text: "73 / 80", options: { fontFace: F_MONO } },
-      { text: "0.9125", options: { fontFace: F_MONO, color: C_ACCENT } },
-      { text: "0.5444", options: { fontFace: F_MONO } },
-      { text: "2.65 turns", options: { fontFace: F_MONO } },
-    ],
-    [
-      { text: "Intent Override", options: { fontFace: F_SANS, bold: true } },
-      { text: "23 / 30", options: { fontFace: F_MONO } },
-      { text: "0.7667", options: { fontFace: F_MONO } },
-      { text: "0.4960", options: { fontFace: F_MONO } },
-      { text: "5.47 turns", options: { fontFace: F_MONO } },
-    ],
-    [
-      { text: "Boundary (Vague)", options: { fontFace: F_SANS, bold: true } },
-      { text: "6 / 10", options: { fontFace: F_MONO } },
-      { text: "0.6000", options: { fontFace: F_MONO } },
-      { text: "0.3625", options: { fontFace: F_MONO } },
-      { text: "6.60 turns", options: { fontFace: F_MONO } },
-    ],
+  slide.addText("Exact counts on every bar — small denominators stay visible.", {
+    x: 6.9, y: 5.95, w: 5.4, h: 0.35,
+    fontFace: F_SANS, fontSize: 11, italic: true, color: "8A7A5E", align: "center"
+  });
+
+  addFooter(slide);
+  slide.addNotes(
+    "Say: Gains transferred cleanly out-of-sample from dev to public-200. [POINT at chart] Browsing 92.5%, Buying 91.25%, Intent Override 76.7%, Boundary 60% — and we show the exact counts so the small n is visible. [ADVANCE]\nTiming: 25s"
+  );
+}
+
+// ==========================================
+// SLIDE 8: The Graveyard — diverging flip bars
+// ==========================================
+{
+  const slide = baseSlide();
+  addHeader(slide, "The Graveyard: 6 Rejected by Their Own Bars");
+
+  const rows = [
+    { name: "exp/rank-salience", flips: 3, reason: "Exceeded ±1 noise floor · confirmed on public-200", action: "MERGED", good: true },
+    { name: "exp/global-salience", flips: 1, reason: "Within ±1 noise floor · didn't generalize", action: "Reverted" },
+    { name: "exp/competition-window", flips: 1, reason: "Within ±1 noise floor · identical flips", action: "Unmerged" },
+    { name: "exp/uninformative-stop", flips: -1, reason: "Regressed hits · broke session 0104", action: "Reverted" },
+    { name: "exp/rank-coverage-idf", flips: 0, reason: "Pool lever never fires on dev (0/0 flips)", action: "Unmerged" },
+    { name: "exp/question-margin", flips: 0, zeroLabel: "0/19", reason: "Pattern absent in the 19 misses", action: "Stopped" },
+    { name: "exp/boundary-override", flips: 0, zeroLabel: "0", reason: "Premise disproven by replay forensics", action: "Stopped" },
   ];
 
-  slide.addTable(scenTable, {
-    x: 6.7, y: 1.5, w: 5.8, h: 3.4,
-    fontSize: 11.5, border: { pt: 1, color: C_BORDER }, align: "center", valign: "middle"
-  });
+  const cx = 4.7;             // zero axis
+  const scale = 0.5;          // inches per flip
+  const rowY0 = 1.75, rowH = 0.63, barH = 0.28;
 
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: 6.7, y: 5.1, w: 5.8, h: 1.6,
-    fill: { color: C_PANEL }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
-  });
-  slide.addText("Honesty in Small Denominators:\nBoundary is 6 of 10 and Intent Override is 23 of 30. We show exact sample sizes (n=80, 80, 30, 10) rather than hiding behind percentage rates.", {
-    x: 6.9, y: 5.25, w: 5.4, h: 1.3,
-    fontFace: F_SANS, fontSize: 11.5, color: C_DARK
-  });
+  // axis
+  slide.addShape(pptx.ShapeType.line, { x: cx, y: 1.65, w: 0, h: rows.length * rowH + 0.1, line: { color: C_BORDER, width: 1.25 } });
 
-  addFooter(slide);
-  slide.addNotes(
-    "Say: Gains transfer out-of-sample. [POINT] And here's the small print we won't hide: boundary is six of ten — we show the counts.\nTiming: 25s"
-  );
-}
-
-// ==========================================
-// SLIDE 8: The Graveyard (6 Non-Shipped Experiments)
-// ==========================================
-{
-  const slide = baseSlide();
-  addHeader(slide, "The Graveyard: 6 Hypotheses Rejected by Their Own Bars");
-
-  const graveyardTable = [
-    [
-      { text: "Experiment Branch", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "Net Flips", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "Pre-Registered Bar / Reason for Rejection", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "Action", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-    ],
-    [
-      { text: "exp/rank-salience", options: { fontFace: F_SANS, bold: true } },
-      { text: "+3 net (+4/−1)", options: { fontFace: F_MONO, color: C_ACCENT, bold: true } },
-      { text: "Exceeded ±1 noise floor; confirmed on public-200", options: { fontFace: F_SANS } },
-      { text: "MERGED", options: { fontFace: F_MONO, color: C_ACCENT, bold: true } },
-    ],
-    [
-      { text: "exp/global-salience", options: { fontFace: F_SANS } },
-      { text: "+1 net (+2/−1)", options: { fontFace: F_MONO } },
-      { text: "Within ±1 noise floor; not confirmed out-of-sample", options: { fontFace: F_SANS } },
-      { text: "Reverted", options: { fontFace: F_MONO, color: C_MUTED } },
-    ],
-    [
-      { text: "exp/competition-window", options: { fontFace: F_SANS } },
-      { text: "+1 net (+2/−1)", options: { fontFace: F_MONO } },
-      { text: "Within ±1 noise floor; identical flips to global-salience", options: { fontFace: F_SANS } },
-      { text: "Unmerged", options: { fontFace: F_MONO, color: C_MUTED } },
-    ],
-    [
-      { text: "exp/uninformative-stop", options: { fontFace: F_SANS } },
-      { text: "−1 net (+1/−2)", options: { fontFace: F_MONO, color: "A02C2C" } },
-      { text: "Regressed Hit (143/160); broke public_0104", options: { fontFace: F_SANS } },
-      { text: "Reverted", options: { fontFace: F_MONO, color: "A02C2C" } },
-    ],
-    [
-      { text: "exp/rank-coverage-idf", options: { fontFace: F_SANS } },
-      { text: "0 net (0/0)", options: { fontFace: F_MONO } },
-      { text: "Zero effect: 156/160 dev sessions over-generality dominated", options: { fontFace: F_SANS } },
-      { text: "Unmerged", options: { fontFace: F_MONO, color: C_MUTED } },
-    ],
-    [
-      { text: "exp/question-margin", options: { fontFace: F_SANS } },
-      { text: "Gate: 0/19", options: { fontFace: F_MONO } },
-      { text: "0 of 19 misses exhibited late-phase collapse opportunity", options: { fontFace: F_SANS } },
-      { text: "Stopped", options: { fontFace: F_MONO, color: C_MUTED } },
-    ],
-    [
-      { text: "exp/boundary-override", options: { fontFace: F_SANS } },
-      { text: "Forensics: 0", options: { fontFace: F_MONO } },
-      { text: "Forensics disproved lag premise; extraction already same-turn", options: { fontFace: F_SANS } },
-      { text: "Stopped", options: { fontFace: F_MONO, color: C_MUTED } },
-    ],
-  ];
-
-  slide.addTable(graveyardTable, {
-    x: 0.8, y: 1.5, w: 11.7, h: 4.5,
-    fontSize: 10.5, border: { pt: 1, color: C_BORDER }, align: "center", valign: "middle"
-  });
-
-  slide.addText(
-    "\"Every red row was rejected by criteria written before the experiment ran. The 0.90625 in our logs was never merged.\"",
-    {
-      x: 0.8, y: 6.2, w: 11.7, h: 0.5,
-      fontFace: F_SERIF, fontSize: 13, color: C_DARK, italic: true, align: "center"
+  rows.forEach((r, i) => {
+    const y = rowY0 + i * rowH;
+    if (i % 2 === 0) {
+      slide.addShape(pptx.ShapeType.rect, {
+        x: 0.8, y: y - 0.06, w: 11.73, h: rowH - 0.06, fill: { color: C_GRAY_BG }, line: { type: "none" }
+      });
     }
-  );
+    // name
+    slide.addText(r.name, {
+      x: 0.85, y: y + 0.03, w: 2.45, h: 0.4,
+      fontFace: F_MONO, fontSize: 10.5, color: C_DARK, bold: true, valign: "middle"
+    });
+    // bar
+    if (r.flips !== 0) {
+      const w = Math.abs(r.flips) * scale;
+      const bx = r.flips > 0 ? cx : cx - w;
+      slide.addShape(pptx.ShapeType.rect, {
+        x: bx, y: y + (rowH - 0.06 - barH) / 2 + 0.03, w, h: barH,
+        fill: { color: r.good ? C_ACCENT : C_MUTED }, line: { type: "none" }
+      });
+      slide.addText(r.flips > 0 ? `+${r.flips}` : `${r.flips}`, {
+        x: r.flips > 0 ? bx + w + 0.08 : bx - 0.62, y: y + 0.03, w: 0.6, h: 0.4,
+        fontFace: F_MONO, fontSize: 11, color: r.good ? C_ACCENT : C_MUTED, bold: true, valign: "middle", align: r.flips > 0 ? "left" : "right"
+      });
+    } else {
+      slide.addShape(pptx.ShapeType.rect, {
+        x: cx - 0.03, y: y + (rowH - 0.06 - barH) / 2 + 0.03, w: 0.06, h: barH,
+        fill: { color: "8A7A5E" }, line: { type: "none" }
+      });
+      slide.addText(r.zeroLabel || "0", {
+        x: cx + 0.1, y: y + 0.03, w: 0.7, h: 0.4,
+        fontFace: F_MONO, fontSize: 11, color: "8A7A5E", bold: true, valign: "middle"
+      });
+    }
+    // reason
+    slide.addText(r.reason, {
+      x: 6.55, y: y + 0.03, w: 4.15, h: 0.4,
+      fontFace: F_SANS, fontSize: 10.5, color: C_SEC, valign: "middle", fit: "shrink"
+    });
+    // action chip
+    const merged = r.action === "MERGED";
+    slide.addShape(pptx.ShapeType.roundRect, {
+      x: 10.85, y: y + 0.06, w: 1.63, h: 0.34,
+      fill: { color: merged ? C_ACCENT : C_BG }, line: { color: merged ? C_ACCENT : C_MUTED, width: 1 }, rectRadius: 0.08
+    });
+    slide.addText(r.action, {
+      x: 10.85, y: y + 0.06, w: 1.63, h: 0.34,
+      fontFace: F_MONO, fontSize: 9.5, color: merged ? C_WHITE : C_MUTED, bold: true, align: "center", valign: "middle"
+    });
+  });
+
+  slide.addText("net paired flips (dev-160)  →", {
+    x: cx - 1.7, y: 1.38, w: 3.4, h: 0.25,
+    fontFace: F_SANS, fontSize: 9, color: "8A7A5E", align: "center", italic: true
+  });
+
+  slide.addText("“Every red row was rejected by criteria written before the experiment ran. The 0.90625 in our logs was never merged.”", {
+    x: 0.8, y: 6.35, w: 11.73, h: 0.45,
+    fontFace: F_SERIF, fontSize: 13, color: C_DARK, italic: true, align: "center"
+  });
 
   addFooter(slide);
   slide.addNotes(
-    "Say: [REPEAT] Six experiments did not survive their own bars. Six negatives is how you know the green one is real.\nTiming: 30s"
+    "Say: [REPEAT] Six experiments did not survive their own bars. [POINT at bars] Two were within the noise floor, one regressed, three had zero effect. Six negatives is how you know the green one is real. [ADVANCE]\nTiming: 30s"
   );
 }
 
 // ==========================================
-// SLIDE 9: Structural Findings
+// SLIDE 9: 4 Structural Findings
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "4 Structural Findings Discovered Through Negative Results");
+  addHeader(slide, "4 Structural Findings from Negative Results");
 
   const findings = [
     {
-      num: "01",
-      title: "MTTC = First Hit Turn",
-      desc: "The evaluator terminates sessions the instant a target enters top 10. Wasted clarification questions occur POST-hit, so 'asking fewer questions' cannot mechanically reduce MTTC. Only surfacing the target sooner improves MTTC.",
+      num: "01", title: "MTTC = first-hit turn", stat: "miss = 11",
+      desc: "The evaluator stops the moment the target enters top-10. Wasted questions happen post-hit — only surfacing sooner moves MTTC.",
     },
     {
-      num: "02",
-      title: "Conversation ↔ Retrieval Coupling",
-      desc: "'Hit-safe by construction' is FALSE. In session public_0104, stopping clarification preserved an unrefined query that failed retrieval on subsequent turns. Dialogue and retrieval state are tightly coupled.",
+      num: "02", title: "Dialogue and retrieval are coupled", stat: "0104",
+      desc: "Stopping clarification changed the message stream and broke retrieval. “Hit-safe by construction” is false.",
     },
     {
-      num: "03",
-      title: "Scenario Labels ≠ Runtime Route",
-      desc: "Static scenario types (Browsing vs Buying) do not determine turn-by-turn dynamics. 89% of browsing sessions acquire hard constraints by turn 2 and dynamically switch to Buying route weights.",
+      num: "03", title: "Scenario labels ≠ runtime route", stat: "89%",
+      desc: "84 / 94 non-buying sessions run buying-route turns — including every one of the 15 dev misses.",
     },
     {
-      num: "04",
-      title: "Rank Re-orderings Are Saturated",
-      desc: "Two completely independent ranker experiments (global-salience & competition-window) produced IDENTICAL flips (+2/−1: public_0075, public_0092 / public_0112). Ranking permutations on existing pools have hit saturation.",
+      num: "04", title: "Re-ordering is saturated", stat: "+2/−1 ×2",
+      desc: "Two independent ranker changes produced identical flips. Remaining misses need new information, not permutations.",
     },
   ];
 
   findings.forEach((f, i) => {
-    const x = 0.8 + (i % 2) * 5.95;
-    const y = 1.6 + Math.floor(i / 2) * 2.55;
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x, y, w: 5.75, h: 2.35,
-      fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
-    });
+    const x = 0.8 + (i % 2) * 5.98;
+    const y = 1.6 + Math.floor(i / 2) * 2.6;
+    panel(slide, x, y, 5.75, 2.4);
     slide.addText(f.num, {
-      x: x + 0.2, y: y + 0.15, w: 0.8, h: 0.35,
-      fontFace: F_MONO, fontSize: 18, color: C_ACCENT, bold: true
+      x: x + 0.22, y: y + 0.18, w: 0.75, h: 0.4,
+      fontFace: F_MONO, fontSize: 19, color: C_ACCENT, bold: true
     });
     slide.addText(f.title, {
-      x: x + 0.8, y: y + 0.15, w: 4.7, h: 0.35,
-      fontFace: F_SERIF, fontSize: 14, color: C_DARK, bold: true
+      x: x + 0.85, y: y + 0.18, w: 3.4, h: 0.4,
+      fontFace: F_SERIF, fontSize: 14.5, color: C_DARK, bold: true, fit: "shrink"
     });
-    slide.addText(f.desc, {
-      x: x + 0.2, y: y + 0.55, w: 5.3, h: 1.65,
-      fontFace: F_SANS, fontSize: 11.5, color: C_SEC, lineSpacingMultiple: 1.2
-    });
-  });
-
-  addFooter(slide);
-  slide.addNotes(
-    "Say: [SLOW] No score shows these. Each one redirected the next experiment. For example, knowing that 'ask less' cannot move MTTC saved us weeks of futile prompt engineering.\nTiming: 35s"
-  );
-}
-
-// ==========================================
-// SLIDE 10: Why We Miss (Root Cause Analysis)
-// ==========================================
-{
-  const slide = baseSlide();
-  addHeader(slide, "Why We Miss: Root-Cause Forensic Audit of All Misses");
-
-  // 3 Forensic Buckets
-  const missBuckets = [
-    {
-      title: "Pool Depth Misses (2)",
-      stat: "2 / 16",
-      desc: "Target product fell beyond retrieval cutoff (post-filter ranks 240–410 and 823–1480).\n\nRoot Cause: Coverage cap in candidate generation (rank 201+), not a ranking bug.",
-    },
-    {
-      title: "Rank Score Misses (13)",
-      stat: "13 / 16",
-      desc: "Target was present in candidate pool but outranked by competing high-coverage items.\n\nRoot Cause: Deep misses need new information from user, not reordering.",
-    },
-    {
-      title: "Extraction Residue (1)",
-      stat: "1 / 16",
-      desc: "Single entity extraction edge case (public_0117) with complex overlapping syntax.\n\nRoot Cause: Bounded regex parsing on unstructured customer utterances.",
-    },
-  ];
-
-  missBuckets.forEach((b, i) => {
-    const x = 0.8 + i * 3.95;
     slide.addShape(pptx.ShapeType.roundRect, {
-      x, y: 1.6, w: 3.75, h: 3.6,
-      fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
-    });
-    slide.addText(b.title, {
-      x: x + 0.2, y: 1.8, w: 3.35, h: 0.35,
-      fontFace: F_SERIF, fontSize: 15, color: C_DARK, bold: true
-    });
-    slide.addText(b.stat, {
-      x: x + 0.2, y: 2.15, w: 3.35, h: 0.5,
-      fontFace: F_MONO, fontSize: 24, color: C_ACCENT, bold: true
-    });
-    slide.addText(b.desc, {
-      x: x + 0.2, y: 2.7, w: 3.35, h: 2.3,
-      fontFace: F_SANS, fontSize: 12, color: C_SEC, lineSpacingMultiple: 1.25
-    });
-  });
-
-  // Bottom Guarantee Badges
-  const badges = [
-    "QUERY FAITHFUL: 0 / 13 recoverable constraints dropped from queries",
-    "POOL MISSES: Coverage cap (rank 201+), not pipeline bugs",
-    "DEEP MISSES: Need new user information, not permutation tweaks",
-  ];
-
-  badges.forEach((bg, i) => {
-    const x = 0.8 + i * 3.95;
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x, y: 5.4, w: 3.75, h: 1.2,
+      x: x + 4.3, y: y + 0.16, w: 1.25, h: 0.4,
       fill: { color: C_PANEL }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.08
     });
-    slide.addText(bg, {
-      x: x + 0.15, y: 5.5, w: 3.45, h: 1.0,
-      fontFace: F_SANS, fontSize: 11, color: C_DARK, bold: true, align: "center", valign: "middle"
+    slide.addText(f.stat, {
+      x: x + 4.3, y: y + 0.16, w: 1.25, h: 0.4,
+      fontFace: F_MONO, fontSize: 9.5, color: C_ACCENT, bold: true, align: "center", valign: "middle", fit: "shrink"
+    });
+    slide.addText(f.desc, {
+      x: x + 0.22, y: y + 0.75, w: 5.3, h: 1.5,
+      fontFace: F_SANS, fontSize: 12, color: C_SEC, lineSpacingMultiple: 1.2, fit: "shrink"
     });
   });
 
   addFooter(slide);
   slide.addNotes(
-    "Say: We audited our own pipeline for leaks and found none — [EMPHASIZE] the remaining misses are genuine capability limits, and we know exactly which.\nTiming: 30s"
+    "Say: [SLOW] No score shows these four facts. Each one redirected the next experiment — knowing that 'ask less' cannot move MTTC saved us from weeks of futile prompt engineering. [ADVANCE]\nTiming: 35s"
   );
 }
 
 // ==========================================
-// SLIDE 11: Model, Cost & Latency Disclosure
+// SLIDE 10: Why We Miss — donut + root causes
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "Feasibility Disclosure: Model, Cost & Latency");
+  addHeader(slide, "Why We Miss: Forensic Audit of All 16 Dev Misses");
 
-  const discTable = [
-    [
-      { text: "Item / Dimension", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "Official Submission Disclosure", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-      { text: "Verification Evidence / Artifact", options: { bold: true, fill: { color: C_PANEL }, fontFace: F_SANS } },
-    ],
-    [
-      { text: "Runtime Model", options: { fontFace: F_SANS, bold: true } },
-      { text: "NONE — Deterministic BM25 + Hashed TF-IDF + Constraint Ranker", options: { fontFace: F_MONO, color: C_ACCENT, bold: true } },
-      { text: "results.json: reported_token_usage = 0", options: { fontFace: F_MONO } },
-    ],
-    [
-      { text: "LLM Tokens", options: { fontFace: F_SANS, bold: true } },
-      { text: "0 Prompt Tokens / 0 Completion Tokens", options: { fontFace: F_MONO } },
-      { text: "results.json: total_tokens = 0", options: { fontFace: F_MONO } },
-    ],
-    [
-      { text: "Inference Cost", options: { fontFace: F_SANS, bold: true } },
-      { text: "$0.00 (Zero model API cost)", options: { fontFace: F_MONO, color: C_ACCENT, bold: true } },
-      { text: "Self-contained local execution", options: { fontFace: F_SANS } },
-    ],
-    [
-      { text: "Network Dependency", options: { fontFace: F_SANS, bold: true } },
-      { text: "NONE at inference time", options: { fontFace: F_MONO } },
-      { text: "Runs completely air-gapped / offline", options: { fontFace: F_SANS } },
-    ],
-    [
-      { text: "Turn Latency (dev-160)", options: { fontFace: F_SANS, bold: true } },
-      { text: "p50: 330.1 ms  ·  p95: 526.6 ms", options: { fontFace: F_MONO } },
-      { text: "runs/control-dev-newbaseline.json:panel", options: { fontFace: F_MONO } },
-    ],
-    [
-      { text: "Optional LLM Tier", options: { fontFace: F_SANS, bold: true } },
-      { text: "Built & Gated (OpenRouter gpt-4o-mini); default OFF", options: { fontFace: F_SANS } },
-      { text: "default_strategy.json: enable_llm_reranker = false", options: { fontFace: F_MONO } },
-    ],
-    [
-      { text: "Execution Environment", options: { fontFace: F_SANS, bold: true } },
-      { text: "Python 3.13.2 · Windows 11 Pro 64-bit · AMD Ryzen 7 (32GB RAM)", options: { fontFace: F_MONO } },
-      { text: "Captured live via docs/final-eval-record.md", options: { fontFace: F_SANS } },
-    ],
+  // Left: donut
+  panel(slide, 0.8, 1.5, 4.9, 5.2);
+  panelTitle(slide, "MISS TAXONOMY (DEV-160)", 1.0, 1.7, 4.5);
+  slide.addChart(pptx.ChartType.doughnut, [
+    { name: "Misses", labels: ["Rank-depth · 13", "Pool-depth · 2", "Extraction · 1"], values: [13, 2, 1] },
+  ], {
+    x: 1.0, y: 2.1, w: 4.5, h: 3.7,
+    chartColors: [C_ACCENT, C_AMBER, C_SAND],
+    holeSize: 60,
+    showLegend: true, legendPos: "b", legendColor: C_DARK, legendFontSize: 11, legendFontFace: F_SANS,
+    showValue: false, showPercent: false, showTitle: false,
+  });
+  slide.addText("n = 16 of 160 sessions", {
+    x: 1.0, y: 6.15, w: 4.5, h: 0.3,
+    fontFace: F_MONO, fontSize: 10.5, color: "8A7A5E", align: "center"
+  });
+
+  // Right: root causes
+  const causes = [
+    { stat: "13", tag: "RANK-DEPTH", color: C_ACCENT, desc: "Target in the pool but outranked — needs new user information, not re-ordering." },
+    { stat: "2", tag: "POOL-DEPTH", color: C_AMBER, desc: "Target ranked 201+ in the pool — a recall cap, not a filter bug." },
+    { stat: "1", tag: "EXTRACTION", color: "8A7A5E", desc: "Complex overlapping syntax edge case (public_0117)." },
   ];
+  causes.forEach((c, i) => {
+    const y = 1.5 + i * 1.32;
+    panel(slide, 5.9, y, 6.63, 1.17);
+    slide.addShape(pptx.ShapeType.rect, {
+      x: 5.9, y: y + 0.15, w: 0.09, h: 0.87, fill: { color: c.color }, line: { type: "none" }
+    });
+    slide.addText(c.stat, {
+      x: 6.15, y: y + 0.18, w: 0.85, h: 0.8,
+      fontFace: F_MONO, fontSize: 30, color: c.color, bold: true, valign: "middle"
+    });
+    slide.addText(c.tag, {
+      x: 7.05, y: y + 0.16, w: 5.3, h: 0.3,
+      fontFace: F_SANS, fontSize: 10.5, color: "8A7A5E", bold: true, letterSpacing: 1
+    });
+    slide.addText(c.desc, {
+      x: 7.05, y: y + 0.47, w: 5.3, h: 0.6,
+      fontFace: F_SANS, fontSize: 11.5, color: C_DARK, fit: "shrink"
+    });
+  });
 
-  slide.addTable(discTable, {
-    x: 0.8, y: 1.5, w: 11.7, h: 5.1,
-    fontSize: 11, border: { pt: 1, color: C_BORDER }, valign: "middle"
+  // Faithfulness banner
+  slide.addShape(pptx.ShapeType.roundRect, {
+    x: 5.9, y: 5.55, w: 6.63, h: 1.15, fill: { color: C_PANEL }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
+  });
+  slide.addText([
+    { text: "QUERY FAITHFULNESS: ", options: { fontFace: F_SANS, fontSize: 12, color: C_ACCENT, bold: true } },
+    { text: "0 of 13 recoverable constraints dropped. The pipeline leaks nothing — remaining misses are genuine capability limits.", options: { fontFace: F_SANS, fontSize: 12, color: C_DARK } },
+  ], {
+    x: 6.1, y: 5.65, w: 6.25, h: 0.95, valign: "middle", fit: "shrink"
   });
 
   addFooter(slide);
   slide.addNotes(
-    "Say: Feasibility disclosed per spec — [POINT] zero tokens, zero model cost, no network at inference. The deterministic system is the submission.\nTiming: 20s"
+    "Say: We audited our own pipeline for leaks and found none. [POINT at donut] Thirteen of sixteen are rank-depth — the target was in the pool but outranked. [POINT at banner] Zero of thirteen recoverable constraints were dropped. The remaining misses are genuine capability limits, and we know exactly which. [ADVANCE]\nTiming: 30s"
   );
 }
 
 // ==========================================
-// SLIDE 12: Business Impact & Conversational Trust
+// SLIDE 11: Feasibility Disclosure
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "Business Impact: Guided Purchase vs Commercial Abandonment");
+  addHeader(slide, "Feasibility: Zero Tokens, Zero Cost, Zero Network");
 
+  const cards = [
+    { label: "LLM TOKENS", val: "0", sub: "0 prompt · 0 completion" },
+    { label: "MODEL COST", val: "$0.00", sub: "zero API fees" },
+    { label: "NETWORK", val: "None", sub: "fully offline at inference" },
+    { label: "TURN LATENCY", val: "330 ms", sub: "p50 · p95 527 ms" },
+  ];
+  cards.forEach((c, i) => {
+    const x = 0.8 + i * 2.96;
+    panel(slide, x, 1.6, 2.85, 1.85);
+    slide.addText(c.label, {
+      x: x + 0.2, y: 1.8, w: 2.45, h: 0.28,
+      fontFace: F_SANS, fontSize: 10, color: "8A7A5E", bold: true, letterSpacing: 1
+    });
+    slide.addText(c.val, {
+      x: x + 0.2, y: 2.12, w: 2.45, h: 0.65,
+      fontFace: F_MONO, fontSize: 28, color: C_ACCENT, bold: true
+    });
+    slide.addText(c.sub, {
+      x: x + 0.2, y: 2.85, w: 2.45, h: 0.45,
+      fontFace: F_SANS, fontSize: 10.5, color: C_SEC, fit: "shrink"
+    });
+  });
+
+  panel(slide, 0.8, 3.85, 11.73, 2.85);
+  panelTitle(slide, "DISCLOSURE DETAIL", 1.0, 4.03, 11.3);
+  const lines = [
+    ["Runtime model", "Deterministic BM25 + hashed TF-IDF + constraint ranker — no model at inference"],
+    ["Evidence", "results.json → reported_token_usage = 0 · total_tokens = 0"],
+    ["Optional LLM tier", "Built and gated OFF by default (enable_llm_reranker = false)"],
+    ["Environment", "Python 3.13 · Windows 11 Pro · AMD Ryzen 7 · 32 GB RAM"],
+    ["Recorded live", "docs/final-eval-record.md — same frozen commit 46e3322"],
+  ];
+  lines.forEach((l, i) => {
+    const y = 4.45 + i * 0.42;
+    slide.addText(l[0], {
+      x: 1.0, y, w: 2.4, h: 0.36,
+      fontFace: F_SANS, fontSize: 12, color: C_SEC, bold: true, valign: "middle"
+    });
+    slide.addText(l[1], {
+      x: 3.5, y, w: 8.8, h: 0.36,
+      fontFace: F_MONO, fontSize: 11.5, color: C_DARK, valign: "middle", fit: "shrink"
+    });
+  });
+
+  addFooter(slide);
+  slide.addNotes(
+    "Say: Feasibility disclosed per spec — [POINT at cards] zero tokens, zero model cost, no network at inference, 330 millisecond responses. The deterministic system is the submission. [ADVANCE]\nTiming: 20s"
+  );
+}
+
+// ==========================================
+// SLIDE 12: Business Impact — turns chart
+// ==========================================
+{
+  const slide = baseSlide();
+  addHeader(slide, "Business Impact: From Bounce to Checkout");
+
+  // Left: turns-to-conversion chart
+  panel(slide, 0.8, 1.5, 5.9, 5.2);
+  panelTitle(slide, "TURNS TO FIND THE PRODUCT", 1.0, 1.7, 5.5);
+  slide.addChart(pptx.ChartType.bar, [
+    { name: "Mean turns to conversion", labels: ["Legacy LLM loop", "ShopCopilot"], values: [9.81, 3.375] },
+  ], {
+    x: 1.1, y: 2.2, w: 5.3, h: 3.5,
+    barDir: "col", barGapWidthPct: 80,
+    chartColors: [C_SAND, C_ACCENT],
+    catAxisLabelColor: C_DARK, catAxisLabelFontSize: 12, catAxisLabelFontFace: F_SANS,
+    valAxisHidden: true, valAxisMaxVal: 11, valAxisMinVal: 0,
+    valGridLine: { style: "none" }, catGridLine: { style: "none" },
+    showValue: true, dataLabelColor: C_DARK, dataLabelFontSize: 13, dataLabelFontFace: F_MONO,
+    dataLabelFormatCode: "0.00", dataLabelPosition: "outEnd",
+    showLegend: false, showTitle: false,
+  });
+  slide.addText("Vague first query → wrong products → exit.", {
+    x: 1.0, y: 5.95, w: 5.5, h: 0.35,
+    fontFace: F_SANS, fontSize: 11, italic: true, color: "8A7A5E", align: "center"
+  });
+
+  // Right: three pillars
   const pillars = [
-    {
-      title: "Bounce Rate Collapse",
-      sub: "3.4 turns vs 9.8 turns",
-      desc: "Commercial conversational search fails when users abandon after vague initial queries. Reducing mean turns to conversion from 9.8 to 3.4 turns changes user experience from bounce to completed checkout.",
-    },
-    {
-      title: "Attributable Ranking",
-      sub: "Transparent Explanations",
-      desc: "Every recommendation provides exact mathematical attribution: constraint coverage, IDF rarity, field salience, and popularity. High-stakes e-commerce requires explainability that black-box LLMs cannot provide.",
-    },
-    {
-      title: "Zero Marginal Cost",
-      sub: "$0.00 inference cost",
-      desc: "Servicing millions of retail users with $0.02/turn LLM rerankers destroys unit economics. Our deterministic index serves 330 ms responses with zero external API fees and 100% uptime SLA.",
-    },
+    { t: "Bounce → checkout", d: "3.4 turns vs 9.8 turns completes the purchase instead of abandonment." },
+    { t: "Attributable ranking", d: "Every card shows coverage, IDF rarity, salience, popularity — math, not a black box." },
+    { t: "Zero marginal cost", d: "330 ms responses, $0.00 per turn, 100% uptime SLA — unit economics survive scale." },
   ];
-
   pillars.forEach((p, i) => {
-    const x = 0.8 + i * 3.95;
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x, y: 1.6, w: 3.75, h: 5.0,
-      fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
+    const y = 1.5 + i * 1.8;
+    panel(slide, 6.9, y, 5.63, 1.6);
+    slide.addShape(pptx.ShapeType.rect, {
+      x: 6.9, y: y + 0.15, w: 0.09, h: 1.3, fill: { color: C_ACCENT }, line: { type: "none" }
     });
-    slide.addText(p.title, {
-      x: x + 0.2, y: 1.9, w: 3.35, h: 0.35,
-      fontFace: F_SERIF, fontSize: 16, color: C_DARK, bold: true
+    slide.addText(p.t, {
+      x: 7.15, y: y + 0.16, w: 5.2, h: 0.38,
+      fontFace: F_SERIF, fontSize: 15, color: C_DARK, bold: true
     });
-    slide.addText(p.sub, {
-      x: x + 0.2, y: 2.3, w: 3.35, h: 0.4,
-      fontFace: F_MONO, fontSize: 14, color: C_ACCENT, bold: true
-    });
-    slide.addText(p.desc, {
-      x: x + 0.2, y: 2.85, w: 3.35, h: 3.4,
-      fontFace: F_SANS, fontSize: 12.5, color: C_SEC, lineSpacingMultiple: 1.25
+    slide.addText(p.d, {
+      x: 7.15, y: y + 0.58, w: 5.2, h: 0.9,
+      fontFace: F_SANS, fontSize: 12, color: C_SEC, lineSpacingMultiple: 1.15, fit: "shrink"
     });
   });
 
   addFooter(slide);
   slide.addNotes(
-    "Say: Conversational search fails commercially when users abandon: vague query leads to wrong products leads to exit. 3.4 turns vs 9.8 is guided purchase vs bounce. Attributable ranking gives user trust.\nTiming: 25s"
+    "Say: [POINT at chart] Commercial conversational search fails when users abandon: 9.8 turns to conversion is a bounce; 3.4 is a checkout. [POINT at pillars] Attributable ranking builds trust, and zero marginal cost makes it viable at scale. [ADVANCE]\nTiming: 25s"
   );
 }
 
@@ -856,34 +909,35 @@ function baseSlide() {
   addHeader(slide, "Final-Eval Readiness: 800 Hidden Sessions");
 
   const checks = [
-    { title: "Evaluator Frozen", desc: "evaluator/ byte-identical to starter package. Zero edits, imports only." },
-    { title: "Fresh-Clone Rehearsal", desc: "Cloned clean repo into temporary workspace; reproduces exact 0.880 table." },
-    { title: "No Session Hardcoding", desc: "Zero session-id checks in starter/ or neeshops/ codebase." },
-    { title: "Strict Data Isolation", desc: "Public-200 touched twice for confirmation; 800 hidden sessions touched 0 times." },
-    { title: "332 Automated Tests", desc: "Pytest suite passes 100% (332 pass, 1 deselected) in under 22 seconds." },
-    { title: "Snapshot & Env Retained", desc: "Exact git commit 46e3322, pip dependencies, and hardware captured." },
+    { t: "Evaluator frozen", d: "byte-identical to starter package — imports only" },
+    { t: "Fresh-clone rehearsal", d: "clean clone reproduces the exact 0.880 table" },
+    { t: "No hardcoding", d: "zero session-id checks anywhere in the codebase" },
+    { t: "Data isolation", d: "800 hidden sessions touched 0 times · public-200 touched 2×" },
+    { t: "332 automated tests", d: "pass in 21 s on the frozen commit" },
+    { t: "Snapshot retained", d: "commit 46e3322 · pip deps · hardware captured" },
   ];
 
   checks.forEach((c, i) => {
-    const x = 0.8 + (i % 2) * 5.95;
-    const y = 1.6 + Math.floor(i / 2) * 1.7;
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x, y, w: 5.75, h: 1.55,
-      fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
+    const x = 0.8 + (i % 2) * 5.98;
+    const y = 1.6 + Math.floor(i / 2) * 1.72;
+    panel(slide, x, y, 5.75, 1.55);
+    slide.addText("✔", {
+      x: x + 0.2, y: y + 0.18, w: 0.4, h: 0.4,
+      fontFace: F_SANS, fontSize: 17, color: C_ACCENT, bold: true
     });
-    slide.addText(`✔  ${c.title}`, {
-      x: x + 0.2, y: y + 0.15, w: 5.35, h: 0.35,
-      fontFace: F_SERIF, fontSize: 14, color: C_ACCENT, bold: true
+    slide.addText(c.t, {
+      x: x + 0.62, y: y + 0.16, w: 4.95, h: 0.4,
+      fontFace: F_SERIF, fontSize: 14.5, color: C_DARK, bold: true
     });
-    slide.addText(c.desc, {
-      x: x + 0.2, y: y + 0.55, w: 5.35, h: 0.85,
-      fontFace: F_SANS, fontSize: 12, color: C_SEC, lineSpacingMultiple: 1.2
+    slide.addText(c.d, {
+      x: x + 0.62, y: y + 0.62, w: 4.95, h: 0.75,
+      fontFace: F_SANS, fontSize: 11.5, color: C_SEC, lineSpacingMultiple: 1.15, fit: "shrink"
     });
   });
 
   addFooter(slide);
   slide.addNotes(
-    "Say: 800 hidden sessions run against our frozen commit with the unmodified official evaluator. Our fresh clone rehearsal reproduced the exact 0.880 score.\nTiming: 20s"
+    "Say: 800 hidden sessions run against our frozen commit with the unmodified official evaluator. Our fresh clone rehearsal reproduced the exact 0.880 score. [ADVANCE]\nTiming: 20s"
   );
 }
 
@@ -892,49 +946,51 @@ function baseSlide() {
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "Technical Roadmap: Beyond Submission Freeze");
+  addHeader(slide, "Roadmap: Attack the Measured Ceilings");
 
   const roadItems = [
     {
-      phase: "Phase 1",
-      title: "Recall Expansion Layer",
-      desc: "Break candidate coverage cap (201+) with category-specialized inverted sub-indices to eliminate the remaining 2 pool misses.",
+      phase: "PHASE 1", title: "Recall expansion",
+      desc: "Category-specialized inverted sub-indices break the rank-201+ candidate cap.",
+      target: "removes the 2 pool misses",
     },
     {
-      phase: "Phase 2",
-      title: "Deep Feature Enrichment",
-      desc: "Extract fine-grained attributes (fabric weight, collar type, sole stiffness) to supply new information for rank-depth misses.",
+      phase: "PHASE 2", title: "Deep feature enrichment",
+      desc: "Extract fine-grained attributes — fabric weight, collar, sole stiffness.",
+      target: "feeds the 13 rank-depth misses",
     },
     {
-      phase: "Phase 3",
-      title: "Early Hit Prioritization",
-      desc: "Optimize turn-1 recommendation ranking specifically for top-1 placement to drive MTTC below 2.5 turns.",
+      phase: "PHASE 3", title: "Early hit prioritization",
+      desc: "Optimize turn-1 ranking for top-1 placement, not just top-10 membership.",
+      target: "target: MTTC 3.38 → < 2.5",
     },
   ];
 
   roadItems.forEach((r, i) => {
-    const x = 0.8 + i * 3.95;
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x, y: 1.6, w: 3.75, h: 5.0,
-      fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
-    });
+    const x = 0.8 + i * 3.975;
+    panel(slide, x, 1.6, 3.75, 5.0);
     slide.addText(r.phase, {
-      x: x + 0.2, y: 1.9, w: 3.35, h: 0.3,
-      fontFace: F_MONO, fontSize: 12, color: C_ACCENT, bold: true
+      x: x + 0.25, y: 1.9, w: 3.25, h: 0.3,
+      fontFace: F_MONO, fontSize: 11, color: C_ACCENT, bold: true, letterSpacing: 1
     });
     slide.addText(r.title, {
-      x: x + 0.2, y: 2.25, w: 3.35, h: 0.45,
-      fontFace: F_SERIF, fontSize: 16, color: C_DARK, bold: true
+      x: x + 0.25, y: 2.25, w: 3.25, h: 0.85,
+      fontFace: F_SERIF, fontSize: 17, color: C_DARK, bold: true, fit: "shrink"
     });
     slide.addText(r.desc, {
-      x: x + 0.2, y: 2.85, w: 3.35, h: 3.4,
+      x: x + 0.25, y: 3.15, w: 3.25, h: 1.6,
       fontFace: F_SANS, fontSize: 12.5, color: C_SEC, lineSpacingMultiple: 1.25
+    });
+    panel(slide, x + 0.25, 5.6, 3.25, 0.7, C_PANEL);
+    slide.addText(r.target, {
+      x: x + 0.4, y: 5.6, w: 2.95, h: 0.7,
+      fontFace: F_MONO, fontSize: 11, color: C_ACCENT, bold: true, valign: "middle", align: "center", fit: "shrink"
     });
   });
 
   addFooter(slide);
   slide.addNotes(
-    "Say: Our roadmap directly addresses our measured capability limits: expanding the pool recall layer and enriching features for deep rank misses.\nTiming: 15s"
+    "Say: Our roadmap directly addresses our measured capability limits: expanding the pool recall layer for the two pool misses, enriching features for the deep rank misses. [ADVANCE]\nTiming: 15s"
   );
 }
 
@@ -943,60 +999,54 @@ function baseSlide() {
 // ==========================================
 {
   const slide = baseSlide();
-  addHeader(slide, "Artifact Provenance & Reproduction Commands");
+  addHeader(slide, "Provenance & Reproducibility");
 
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: 0.8, y: 1.5, w: 5.6, h: 5.2,
-    fill: { color: C_WHITE }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
-  });
-  slide.addText("GIT TAG CHAIN & ARTIFACT REFS", {
-    x: 1.0, y: 1.7, w: 5.2, h: 0.3,
-    fontFace: F_SANS, fontSize: 11, color: C_ACCENT, bold: true, letterSpacing: 1
-  });
+  // Left: tags + artifacts
+  panel(slide, 0.8, 1.5, 5.6, 5.2);
+  panelTitle(slide, "TAG CHAIN & KEY ARTIFACTS", 1.0, 1.7, 5.2);
   slide.addText(
-    "Tag Chain:\n" +
-    "• fork-point (80eee9a) — fork baseline\n" +
-    "• new-baseline (46e3322) — post-salience control\n" +
-    "• submission-freeze (46e3322) — official submission\n\n" +
-    "Key Evidence Artifacts:\n" +
-    "• results.json — public-200 score (0.880)\n" +
-    "• runs/control-dev-newbaseline.json — dev-160 (0.900)\n" +
-    "• docs/experiment-ledger.md — all experiment runs\n" +
-    "• docs/final-eval-record.md — fresh clone record\n" +
-    "• DATA_ATTRIBUTION.md — UCSD McAuley Lab",
+    "fork-point          80eee9a   dev baseline\n" +
+    "new-baseline    46e3322   post-salience control\n" +
+    "submission-freeze 46e3322   official submission",
     {
-      x: 1.0, y: 2.1, w: 5.2, h: 4.4,
-      fontFace: F_MONO, fontSize: 11.5, color: C_DARK, lineSpacingMultiple: 1.2
+      x: 1.0, y: 2.15, w: 5.2, h: 1.1,
+      fontFace: F_MONO, fontSize: 11.5, color: C_DARK, lineSpacingMultiple: 1.35
+    }
+  );
+  panelTitle(slide, "KEY ARTIFACTS", 1.0, 3.55, 5.2);
+  slide.addText(
+    "•  results.json — public-200 · 0.880\n" +
+    "•  runs/control-dev-newbaseline.json — dev-160 · 0.900\n" +
+    "•  docs/experiment-ledger.md — every run\n" +
+    "•  DATA_ATTRIBUTION.md — UCSD McAuley Lab",
+    {
+      x: 1.0, y: 3.95, w: 5.2, h: 2.4,
+      fontFace: F_MONO, fontSize: 11.5, color: C_DARK, lineSpacingMultiple: 1.35
     }
   );
 
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: 6.7, y: 1.5, w: 5.8, h: 5.2,
-    fill: { color: C_PANEL }, line: { color: C_BORDER, width: 1 }, rectRadius: 0.1
-  });
-  slide.addText("REPRODUCE IN 3 COMMANDS", {
-    x: 6.9, y: 1.7, w: 5.4, h: 0.3,
-    fontFace: F_SANS, fontSize: 11, color: C_ACCENT, bold: true, letterSpacing: 1
-  });
+  // Right: reproduce
+  panel(slide, 6.7, 1.5, 5.83, 5.2, C_PANEL);
+  panelTitle(slide, "REPRODUCE FROM A CLEAN CLONE", 6.9, 1.7, 5.4);
   slide.addText(
-    "# 1. Install Dependencies & Build Catalog FTS\n" +
+    "# 1 · install + build catalog index\n" +
     "pip install -r requirements.txt\n" +
     "python scripts/setup_catalog.py\n\n" +
-    "# 2. Run Test Suite (332 passed)\n" +
+    "# 2 · test suite (332 passed)\n" +
     "python -m pytest -q\n\n" +
-    "# 3. Run Official Evaluator (Reproduces 0.880 Table)\n" +
+    "# 3 · official evaluator → 0.880 table\n" +
     "python -m evaluator.local_evaluator\n\n" +
-    "# 4. Launch Interactive Live Demo\n" +
+    "# 4 · live interactive demo\n" +
     "python scripts/interactive_demo.py",
     {
-      x: 6.9, y: 2.1, w: 5.4, h: 4.4,
-      fontFace: F_MONO, fontSize: 12, color: C_DARK, lineSpacingMultiple: 1.25
+      x: 6.9, y: 2.15, w: 5.4, h: 4.3,
+      fontFace: F_MONO, fontSize: 11.5, color: C_DARK, lineSpacingMultiple: 1.25
     }
   );
 
   addFooter(slide, "Data Attribution: Amazon Reviews 2023, McAuley Lab, UCSD");
   slide.addNotes(
-    "Say: Everything in this presentation is reproducible with three standard commands from a clean clone. Thank you.\nTiming: 10s"
+    "Say: Everything in this presentation is reproducible with three standard commands from a clean clone. Thank you — I welcome your questions. [PAUSE]\nTiming: 10s"
   );
 }
 

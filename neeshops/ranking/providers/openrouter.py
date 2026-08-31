@@ -111,6 +111,10 @@ class OpenRouterRankingProvider(RankingProvider):
             "max_tokens": 512,
             "response_format": {"type": "json_object"},
         }
+        # Ranking is a JSON sort — reasoning tokens are pure latency. Default
+        # to instruct mode; NEESHOPS_LLM_REASONING=on restores model default.
+        if os.getenv("NEESHOPS_LLM_REASONING", "off").strip().lower() != "on":
+            payload["reasoning"] = {"enabled": False}
         factory = self._client_factory
         if factory is not None:
             resp = factory(headers, payload, timeout_seconds, self._endpoint)

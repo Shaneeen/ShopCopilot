@@ -47,7 +47,8 @@ class Settings:
             .lower()
         )
         self.llm_model = os.getenv(
-            "NEESHOPS_LLM_MODEL", os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
+            "NEESHOPS_LLM_MODEL",
+            os.getenv("LLM_MODEL", "nvidia/nemotron-3-super-120b-a12b:free"),
         ).strip()
         self.llm_secondary_provider = (
             os.getenv("NEESHOPS_LLM_SECONDARY_PROVIDER", "gemini").strip().lower()
