@@ -112,8 +112,7 @@
     "margin_stop": 0.15,
     "entropy_top_k": 40,
     "entropy_plausible_limit": 20000,
-    "entropy_row_cap": 400,
-    "stop_after_no_disclosure": 1
+    "entropy_row_cap": 400
   },
 
   "intent": {

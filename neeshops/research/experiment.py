@@ -108,7 +108,6 @@ SAFE_PARAMETERS = {
     "clarification.entropy_top_k",
     "clarification.entropy_plausible_limit",
     "clarification.entropy_row_cap",
-    "clarification.stop_after_no_disclosure",
     # intent (slot lifecycle)
     "intent.route_flip_erase_weight",
     "intent.inferred_decay",
