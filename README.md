@@ -1,5 +1,7 @@
 # ShopCopilot — Conversational E-Commerce Search (TikTok TechJam 2026)
 
+> **Start here:** `docs/HANDOVER.md` — single rebuild kit (architecture, Round 1/2 hypotheses, deck/script/report outlines). `docs/V3.md` is frozen at 2026-08-30; `docs/experiment-ledger.md` is the metrics matrix. Parent directory should contain **only** `ShopCopilot/` (worktrees removed 2026-08-31, branches tagged `archive/exp-*`).
+
 ## Status (2026-08-31 — Submission Freeze: `46e3322`)
 
 *Official Evaluator Scores (`evaluator/local_evaluator.py`, 200 public sessions, 50,000 catalog items, freeze tag `submission-freeze`).*
