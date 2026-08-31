@@ -164,7 +164,7 @@ Thank you, and I welcome your questions. **[PAUSE]**"
 ## Rubric-Focused Q&A Responses
 
 ### Q1: "Why did you choose a deterministic ranker instead of an end-to-end LLM?"
-- **Answer:** "Two empirical reasons: First, our pre-registered ship gate probed live LLM reranking across three sizes and classes — GPT-4o-mini, a 2.6B dense model, a 30B (3B-active) MoE, and a 120B (12B-active) MoE on OpenRouter's free tier. Accuracy stayed flat (ΔHit 0, ΔMRR −0.005) while added latency ranged from 0.5 to 8.3 seconds per call — and a local LLM on a consumer laptop loses on time-to-first-token and prefill alone. Second, deterministic constraint scoring provides 100% mathematical attribution, zero token cost, sub-400ms latency, and immune to prompt injection or hallucination."
+- **Answer:** "Two empirical reasons: First, our pre-registered ship gate probed live LLM reranking across three sizes and classes — a 2.6B dense model, a 30B (3B-active) MoE, and a 120B (12B-active) MoE on OpenRouter's free tier. Accuracy stayed flat (ΔHit 0, ΔMRR −0.005) while added latency ranged from 2.2 to 8.3 seconds per call — and a local LLM on a consumer laptop loses on time-to-first-token and prefill alone. Second, deterministic constraint scoring provides 100% mathematical attribution, zero token cost, sub-400ms latency, and immune to prompt injection or hallucination."
 
 ### Q2: "How does your 8-gate clarification engine know which attribute to ask next?"
 - **Answer:** "It computes exact set-splitting entropy across our inverted token index over 50,000 products. Rather than asking generic questions, it picks the attribute that divides the remaining candidate pool closest to a 50/50 split, maximizing expected information gain per turn."

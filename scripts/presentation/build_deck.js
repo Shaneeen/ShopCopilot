@@ -299,7 +299,7 @@ function panelTitle(slide, text, x, y, w, color = C_ACCENT) {
     { t: "Explainable ranking", d: "coverage · IDF · salience · popularity per item", r: "live in demo · zero score penalty" },
   ];
   const killed = [
-    { t: "LLM reranking tier", d: "3 sizes & classes probed — 2.6B dense · 30B-A3B · 120B-A12B MoE + GPT-4o-mini · Hit / MRR ≈ flat", r: "ΔHit 0 · ΔMRR −0.005 · +0.5–8.3 s per call → killed · local LLM loses on TTFT too" },
+    { t: "LLM reranking tier", d: "3 sizes & classes probed — 2.6B dense · 30B-A3B · 120B-A12B MoE · Hit / MRR ≈ flat", r: "ΔHit 0 · ΔMRR −0.005 · +2.2–8.3 s per call → killed · local LLM loses on TTFT too" },
     { t: "Soft personalization", d: "profile boost, weight sweep 0.00 – 0.15", r: "0.03 worsened MRR → set to 0.00" },
     { t: "Late-phase question gate", d: "margin-gain question value on misses", r: "0 / 19 misses qualified → stopped" },
   ];
@@ -356,7 +356,7 @@ function panelTitle(slide, text, x, y, w, color = C_ACCENT) {
 
   addFooter(slide);
   slide.addNotes(
-    "Say: We attempted every applicable direction on the organizer's own list. [POINT left] The left panel shipped. [POINT right] The right panel died. We probed three LLM classes — a 2.6B dense, a 30B-active-3B MoE, a 120B MoE, plus GPT-4o-mini: accuracy flat, latency half a second to eight seconds per call — and a local LLM on a consumer laptop loses on time-to-first-token alone. Our deterministic path stays at 330 milliseconds. [ADVANCE]\nTiming: 30s"
+    "Say: We attempted every applicable direction on the organizer's own list. [POINT left] The left panel shipped. [POINT right] The right panel died. We probed three LLM classes — a 2.6B dense, a 30B-active-3B MoE, a 120B MoE: accuracy flat, latency two to eight seconds per call — and a local LLM on a consumer laptop loses on time-to-first-token alone. Our deterministic path stays at 330 milliseconds. [ADVANCE]\nTiming: 30s"
   );
 }
 
