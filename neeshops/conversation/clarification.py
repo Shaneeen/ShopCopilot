@@ -43,6 +43,7 @@ NO_PREFERENCE marks a attribute permanently consumed — never re-asked.
 All modes degrade gracefully; the core interface stays positional:
 decide(state, candidates, turn) with an optional context dict.
 """
+
 from __future__ import annotations
 
 import math
@@ -72,7 +73,15 @@ _QUESTIONS = {
 # wasted turn, so they are excluded here. Budget sits last: its card slot
 # is competitive (only the first four cleaned card values are ever
 # disclosed), so it's asked only after likelier fields.
-_ASKABLE_FIELDS = ("material", "color", "style", "size", "feature", "use_case", "budget")
+_ASKABLE_FIELDS = (
+    "material",
+    "color",
+    "style",
+    "size",
+    "feature",
+    "use_case",
+    "budget",
+)
 
 # When no evidence-backed field scores (all consumed/homogeneous/unknown),
 # drain the catch-all fields — card leftovers ("Imported", a use) land here.
@@ -131,10 +140,10 @@ class ClarificationEngine:
             decision["gate"] = "exhausted"
             return decision
         if turn > int(self._cfg.get("last_question_turn", 9)):
-            # Turn guard: the only zero-score failure mode is exceeding 10
-            # turns — structurally unreachable when questions stop here and
-            # every turn still carries recommendations.
             decision["gate"] = "turn_guard"
+            return decision
+        if self._should_stop_on_no_disclosure(state):
+            decision["gate"] = "no_disclosure_stop"
             return decision
         if candidate_count < int(self._cfg.get("min_candidates_before_recommend", 10)):
             decision["gate"] = "small_pool"
@@ -202,6 +211,32 @@ class ClarificationEngine:
         if len(asked_turns) >= 2 and all(not t.informative for t in asked_turns[-2:]):
             return False
         return True
+
+    def _should_stop_on_no_disclosure(self, state: ConversationState) -> bool:
+        threshold = self._cfg.get("stop_after_no_disclosure")
+        if threshold is None:
+            return False
+        try:
+            n = int(threshold)
+        except (TypeError, ValueError):
+            return False
+        if n <= 0:
+            return False
+        streak = 0
+        hist = state.history
+        for idx in range(len(hist) - 1, -1, -1):
+            turn = hist[idx]
+            if idx == 0:
+                break
+            prev_asked = hist[idx - 1].asked_attribute
+            if prev_asked is None:
+                continue
+            if turn.informative:
+                break
+            streak += 1
+            if streak >= n:
+                return True
+        return False
 
     # -- attribute selection ---------------------------------------------------
 
@@ -311,12 +346,8 @@ class ClarificationEngine:
             return None
         if max(dist.values()) / total > 0.9:
             return None  # pool already homogeneous on this field
-        entropy = -sum(
-            (w / total) * math.log(w / total) for w in dist.values()
-        )
-        reduction = self._expected_remaining(
-            dist, total, row_asins, token_index
-        )
+        entropy = -sum((w / total) * math.log(w / total) for w in dist.values())
+        reduction = self._expected_remaining(dist, total, row_asins, token_index)
         return entropy, reduction
 
     def _expected_remaining(
@@ -403,7 +434,10 @@ class ClarificationEngine:
             return []
         if field == "budget":
             prices = sorted(float(v) for v in dist.elements())
-            return [str(round(prices[len(prices) // 4])), str(round(prices[3 * len(prices) // 4]))]
+            return [
+                str(round(prices[len(prices) // 4])),
+                str(round(prices[3 * len(prices) // 4])),
+            ]
         ordered = sorted(dist.items(), key=lambda kv: (-kv[1], kv[0]))
         return [str(v) for v, _ in ordered[:n]]
 
