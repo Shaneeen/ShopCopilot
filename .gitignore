@@ -52,3 +52,8 @@ data/test_catalog.jsonl
 p2_push/README_FOR_AI.md
 .commandcode/
 .obsidian/
+**/node_modules/
+**/.tmp/
+nul
+SESSION_CONTEXT.md
+session_context.md
