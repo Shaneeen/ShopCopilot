@@ -40,7 +40,9 @@ data/embeddings/
 *.faiss
 *.index
 *.pptx
+!docs/presentation/*.pptx
 *.pdf
+!docs/presentation/*.pdf
 pptx_dump.txt
 p1.md
 p2.md
