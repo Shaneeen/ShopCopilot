@@ -30,6 +30,7 @@ data/dev_split.jsonl
 data/holdout_split.jsonl
 artifacts/
 .pytest_cache/
+.ruff_cache/
 *.egg-info/
 .vscode/
 .idea/

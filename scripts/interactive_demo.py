@@ -657,14 +657,15 @@ PAGE = """<!DOCTYPE html>
   #sample { background: #2A2F42; border: 1px solid #3A415A; color: #E8E8EE; border-radius: 8px; padding: 7px 10px; }
   header button { background: #722F37; border: 0; color: #FBF5E7; padding: 7px 13px; border-radius: 8px; font-weight: 600; cursor: pointer; }
   header button:hover { background: #8A424B; }
-  main { max-width: 980px; margin: 0 auto; padding: 18px 16px 140px; }
+  main { max-width: 1440px; margin: 0 auto; padding: 18px 24px 100px; scroll-padding-top: 70px; width: 96%; }
+  main .row:last-of-type { scroll-margin-bottom: 90px; }
   .samplebar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #fff; border: 1px solid #E5D9BC; border-radius: 12px; padding: 10px 14px; margin: 12px 0; box-shadow: 0 1px 3px rgba(27,31,46,.06); }
   .samplebar .meta { font-size: 13px; color: #5C4033; }
   .samplebar .meta b { color: #722F37; }
   .turnchip { font-family: Consolas, monospace; font-size: 11px; background: #EFDFBB; color: #5C4033; border-radius: 999px; padding: 3px 10px; }
   .scenario { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; background: #1B1F2E; color: #FBF5E7; border-radius: 999px; padding: 3px 10px; }
-  .row { display: flex; margin: 10px 0; }
-  .bubble { max-width: 78%; padding: 10px 14px; border-radius: 14px; line-height: 1.45; white-space: pre-wrap; word-wrap: break-word; }
+  .row { display: flex; margin: 12px 0; }
+  .bubble { max-width: 68%; padding: 12px 16px; border-radius: 14px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; font-size: 14px; }
   .user { margin-left: auto; background: #722F37; color: #FBF5E7; border-bottom-right-radius: 4px; }
   .agent { margin-right: auto; background: #fff; border: 1px solid #E5D9BC; border-bottom-left-radius: 4px; }
   .chipline { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
@@ -680,7 +681,7 @@ PAGE = """<!DOCTYPE html>
   .toggle button { border: 0; background: transparent; color: #5C4033; padding: 6px 12px; font-size: 12px; cursor: pointer; }
   .toggle button.on { background: #722F37; color: #FBF5E7; font-weight: 600; }
   .arm-note { font-size: 11px; color: #8A7A5E; font-style: italic; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)); gap: 10px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
   .card { background: #fff; border: 1px solid #E5D9BC; border-radius: 12px; padding: 10px; display: flex; gap: 10px; box-shadow: 0 1px 3px rgba(27,31,46,.05); }
   .card .rank { flex: none; width: 26px; height: 26px; border-radius: 50%; background: #1B1F2E; color: #FBF5E7; font-family: Consolas, monospace; font-size: 12px; display: flex; align-items: center; justify-content: center; align-self: flex-start; }
   .card .rank.top { background: #722F37; }
@@ -695,12 +696,12 @@ PAGE = """<!DOCTYPE html>
   .prov span.viol { background: #F9E3E3; color: #A02C2C; border-color: #E7BDBD; }
   .prov span.move { background: #EFDFBB; color: #5C4033; border-color: #E0CFA4; }
   .funnel { display: flex; align-items: center; gap: 8px; margin: 10px 0 8px; flex-wrap: wrap; }
-  .funnel .step { background: #F6EFE0; border: 1px solid #E0D5BB; border-radius: 10px; padding: 8px 12px; text-align: center; min-width: 104px; }
-  .funnel .step b { color: #722F37; font-size: 17px; display: block; font-family: Consolas, monospace; }
+  .funnel .step { background: #F6EFE0; border: 1px solid #E0D5BB; border-radius: 10px; padding: 6px 8px; text-align: center; min-width: 86px; }
+  .funnel .step b { color: #722F37; font-size: 14px; display: block; font-family: Consolas, monospace; }
   .funnel .step span { font-size: 11px; color: #5C4033; }
   .funnel .arrow { color: #B09A6E; font-size: 18px; }
   .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin: 10px 0; }
-  .tiles .tile { background: #F6EFE0; border: 1px solid #E0D5BB; border-radius: 10px; padding: 10px; }
+  .tiles .tile { background: #F6EFE0; border: 1px solid #E0D5BB; border-radius: 10px; padding: 8px; }
   .tiles .tile h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #8A7A5E; }
   .spark { display: flex; align-items: flex-end; gap: 2px; height: 44px; }
   .spark i { flex: 1; background: linear-gradient(180deg, #722F37, #C98A93); border-radius: 2px 2px 0 0; min-height: 3px; }
@@ -779,7 +780,7 @@ const addBubble = (cls, html) => {
   const row = document.createElement('div'); row.className = 'row';
   const b = document.createElement('div'); b.className = 'bubble ' + cls;
   b.innerHTML = html; row.appendChild(b); log.appendChild(row);
-  row.scrollIntoView({behavior: 'smooth', block: 'end'}); return b;
+  row.scrollIntoView({behavior: 'smooth', block: 'start'}); window.scrollBy(0,-70); return b;
 };
 
 async function postJSON(url, body){
@@ -807,7 +808,7 @@ function cardsHtml(recs){
   return recs.map((r, i) => `
     <div class="card" data-asin="${r.parent_asin}">
       <div class="rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
-      <img loading="lazy" src="${r.image}" alt="">
+      <img loading="lazy" src="${r.image}" alt="${esc(r.title).slice(0,2)}" onerror="this.style.display='none'" onload="if(this.naturalWidth<=2||this.naturalHeight<=2){this.style.display='none'; const d=document.createElement('div'); d.textContent=(this.alt||'?').slice(0,2).toUpperCase(); d.style.cssText='width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:#F6EFE0;border:1px solid #E5D9BC;border-radius:8px;font-size:13px;font-weight:700;color:#722F37;flex:none'; this.parentNode.insertBefore(d,this)}">
       <div class="body">
         <div class="title" title="${esc(r.title)}">${esc(r.title)}</div>
         <div class="sub">${r.price ?? '—'} · score ${Number(r.score).toFixed(3)}${r.rating ? ' · ★ ' + r.rating : ''}</div>
@@ -956,7 +957,7 @@ function attachDebug(debug){
       <div class="pooltable"><em style="color:#8A7A5E">loading…</em></div>
     </details>`;
   log.appendChild(wrap);
-  wrap.scrollIntoView({behavior: 'smooth', block: 'end'});
+  wrap.scrollIntoView({behavior: 'smooth', block: 'nearest'});
   renderPool(wrap, debug);
 }
 
@@ -994,7 +995,7 @@ function renderTurn(payload){
   if (payload.ask_attribute) chips.push(`<span class="chip ask">asking: ${esc(payload.ask_attribute)}</span>`);
   if (payload.route) chips.push(`<span class="chip turn">route: ${esc(payload.route)}</span>`);
   html += `<div class="chipline">${chips.join('')}</div>`;
-  addBubble('agent', html);
+  const anchor = addBubble('agent', html);
   if (payload.recommendations && payload.recommendations.length){
     const sec = document.createElement('div');
     sec.innerHTML = recsSection(payload);
@@ -1002,6 +1003,7 @@ function renderTurn(payload){
     sec.querySelectorAll('.toggle button').forEach(b => b.onclick = () => setArm(b.dataset.arm));
   }
   attachDebug(payload.debug);
+  setTimeout(()=>{ anchor.scrollIntoView({behavior: 'smooth', block: 'start'}); window.scrollBy(0,-62); }, 80);
 }
 
 // ---------- free chat ----------
@@ -1076,7 +1078,7 @@ $('nextturn').onclick = async () => {
       const banner = document.createElement('div');
       banner.innerHTML = endBanner(data.hit, data.hit_turn, data.best_rank, data.trajectory);
       log.appendChild(banner);
-      banner.scrollIntoView({behavior: 'smooth', block: 'end'});
+      banner.scrollIntoView({behavior: 'smooth', block: 'start'}); window.scrollBy(0,-70);
     } else if (data.next_user_message){
       addBubble('user', esc(data.next_user_message));
       $('nextturn').disabled = false;

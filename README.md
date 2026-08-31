@@ -1,3 +1,5 @@
+> **Our Scores (public-200, `results.json`): Hit@10 0.88 · MRR 0.4916 · MTTC 3.375 · Efficiency 0.7625 · TechnicalScore 0.7400**
+
 # ShopCopilot — Conversational E-Commerce Search (TikTok TechJam 2026)
 
 > **Start here:** `docs/HANDOVER.md` — single rebuild kit (architecture, Round 1/2 hypotheses, deck/script/report outlines). `docs/V3.md` is frozen at 2026-08-30; `docs/experiment-ledger.md` is the metrics matrix. Parent directory should contain **only** `ShopCopilot/` (worktrees removed 2026-08-31, branches tagged `archive/exp-*`).
