@@ -194,7 +194,36 @@ File docs/VIDEO_SCRIPT.md: storyboard with sampled-session language (never rando
 ## 11. Report rebuild (REPORT.md)
 Sections: abstract, scores, architecture diagram, retrieval, ranking, conversation, experiments (win + graveyard), forensics, feasibility, reproduce, attribution.
 
-## 12. Push checklist
+## 12. Pitch notes — curated from pitch.md (outdated numbers removed)
+
+> Original `pitch.md` (v2-era: 0.870/0.4455/3.465/6.7×, 248 tests) is kept for prose but **do not cite its numbers**; real scoring is `TechnicalScore=0.5*Hit+0.3*MRR+0.2*clip((11-MTTC)/10)` with freeze **0.880/0.4916/3.375/0.7400** (176/200, `results.json`, `final-eval-record.md`). Use the §5 master table for slide claims.
+
+**One-liner (keep verbatim):**
+> The best shopping agent does not maximize retrieval quality per turn — it maximizes information gained per turn. Every question is chosen by expected candidate-space collapse, computed *exactly* on an in-memory inverted index — no LLM, no sampling, deterministic.
+
+**Positioning vs related work (keep verbatim, §5 of pitch.md):**
+> Independent convergence with UoT and Ask-to-Be-Sure — but where they *sample* uncertainty via LLM calls and *train* policies on dialogue corpora, we compute it **exactly** (closed-form AND-set arithmetic on an inverted index) and select questions **deterministically with zero LLM**, under in-memory constraints, with an 8-gate precedence policy that no single-objective method covers.
+Never claim "information-gain questioning" as novel — claim the exact, deterministic, constraint-complete instantiation. Cite KBQG/FacT as already-built, Gorgias entropy-routing as superseded by `margin_stop × other_max_asks` grid.
+
+**What NOT to pitch (from pitch.md §7):**
+- Advanced LLM / vector DB / multi-agent (in-memory rule, common)
+- "We invented information-gain" (falsifiable via UoT/CIKM'26)
+- Any number not in `experiment-ledger` §1 or `final-eval-record.md` §3
+
+**Judge Q&A — updated to freeze (from pitch.md §8, numbers corrected):**
+- Why LLM off? Pre-registered gates (ΔHit +0.03, ΔMRR +0.02, trigger ≤30%, p95 +2s) failed: 4-anchor gpt-4o-mini Δ0 +454 ms p95 >2×; submission deterministic $0 offline.
+- Buying dropped? Not since freeze — buying 73/80 (0.9125) vs v2 buying 0.875; old -3.8pp was rank-crowding among ~200 full-coverage members (now addressed by salience 0.2 + rerank 320).
+- Why not fine-tune? Out-of-scope; weights are config-driven (`default_strategy.json` → `SAFE_PARAMETERS`) and swept, not trained.
+- Scale beyond 50k? TokenIndex 50k/95.5k 3.5s ~60–100MB O(1) intersections, linear.
+- Uncertainty vs Bayesian? Exact AND-set enumeration; sampling is for when you can't enumerate; over-generality 195/200 handled by plausible-set entropy.
+- What to improve? Buying window already shipped (320); next is recall layer + deep features (see §5 levers open).
+
+**Demo trace (from pitch.md §9, keep shape, drop stale 7842→612 numbers — use real traces in `docs/PRESENTATION.md` and `SPEAKER_SCRIPT.md`):**
+Turn n: candidate space → ask attribute with max set-split (e.g., use_case vs color) → collapse → hit #1 → STOP; show `generate_trace_report.py` + LLM gate abstain log.
+
+Archive: original `pitch.md` stays at `ShopCopilot/pitch.md` (tracked) for prose history; this §12 is the only slide-relevant extract.
+
+## 13. Push checklist
 - Branch: staging-main ahead of origin/staging-main by N (commit HANDOVER + archive + cleanup). Do not push .env, data/, evaluation/results/bench_*.json, instrumented_results.json (gitignored).
 - Remote: origin https://github.com/Shaneeen/ShopCopilot.git (or as configured); git push origin staging-main; tags: git push origin tag submission-freeze new-baseline fork-point archive/exp-*
 - Verify: git diff --stat HEAD origin/staging-main empty after push; pytest -q 332 pass; python -m evaluator.local_evaluator 176/200.
