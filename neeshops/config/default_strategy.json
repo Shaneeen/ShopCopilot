@@ -45,6 +45,8 @@
     "personalization_weight": 0.15,
     "coverage_weight": 2.0,
     "coverage_salience_weight": 0.5,
+    "buying_salience_weight": 0.2,
+    "buying_popularity_scale": 1.0,
     "full_match_bonus": 0.5,
     "browsing_popularity_bump": 0.05,
     "overlap_dampening_threshold": 2,

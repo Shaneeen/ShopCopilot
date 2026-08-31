@@ -20,6 +20,7 @@ Strategies:
   adaptive — improved config (slot-filling + pool-aware question selection)
   both     — run the identical seeded case list under each and diff
 """
+
 from __future__ import annotations
 
 import argparse
@@ -98,9 +99,13 @@ def pool_diagnostics(agent: Agent, session_id: str, message: str, target: str) -
     )
     info = impl._guarantee_info(preview)
     pool = impl._priority_union(hybrid, info, limit)
-    pool = apply_filters(pool, impl.catalog_lookup, preview, token_index=impl.token_index)
+    pool = apply_filters(
+        pool, impl.catalog_lookup, preview, token_index=impl.token_index
+    )
     pool = impl._topup_pool(pool, preview, info, limit)
-    pool_rank = next((i + 1 for i, c in enumerate(pool) if c.parent_asin == target), None)
+    pool_rank = next(
+        (i + 1 for i, c in enumerate(pool) if c.parent_asin == target), None
+    )
     return {
         "pool_size": len(pool),
         "retrieval_rank": retrieval_rank,
@@ -111,7 +116,9 @@ def pool_diagnostics(agent: Agent, session_id: str, message: str, target: str) -
     }
 
 
-def run_case(agent: Agent, target_row: dict, case_idx: int, verbose: bool) -> dict:
+def run_case(
+    agent: Agent, target_row: dict, case_idx: int, verbose: bool, diag: bool = False
+) -> dict:
     target = str(target_row["parent_asin"])
     card = intent_card(target_row)
     categories = [str(c) for c in target_row.get("categories") or []]
@@ -133,11 +140,21 @@ def run_case(agent: Agent, target_row: dict, case_idx: int, verbose: bool) -> di
     latencies = []
 
     for turn in range(1, MAX_TURNS + 1):
-        diag = pool_diagnostics(agent, session_id, message, target)
-        pool_sizes.append(diag["pool_size"])
-        if diag["pool_rank"] is not None:
+        diag_info = (
+            pool_diagnostics(agent, session_id, message, target)
+            if diag
+            else {
+                "pool_size": 0,
+                "pool_rank": None,
+                "filtered_rank": None,
+                "and_set_size": None,
+                "over_generality": False,
+            }
+        )
+        pool_sizes.append(diag_info["pool_size"])
+        if diag_info["pool_rank"] is not None:
             pool_hits += 1
-            if diag["filtered_rank"] is None:
+            if diag_info["filtered_rank"] is None:
                 filter_kills += 1
 
         start = time.perf_counter()
@@ -151,8 +168,8 @@ def run_case(agent: Agent, target_row: dict, case_idx: int, verbose: bool) -> di
                 mark = f"  <<< TARGET at rank {ranked.index(target) + 1}"
             print(
                 f"    t{turn} asked={response.get('ask_attribute')!r} "
-                f"recs={len(ranked)} pool={diag['pool_size']} "
-                f"pool_rank={diag['pool_rank']} filt_rank={diag['filtered_rank']}{mark}"
+                f"recs={len(ranked)} pool={diag_info['pool_size']} "
+                f"pool_rank={diag_info['pool_rank']} filt_rank={diag_info['filtered_rank']}{mark}"
             )
             print(f"       user: {message[:90]}")
             print(f"       agent: {response['message'][:90]}")
@@ -207,12 +224,21 @@ def summarize(cases: list[dict]) -> dict:
         ),
         "avg_pool_size": round(statistics.fmean(c["avg_pool_size"] for c in cases), 1),
         "target_in_pool@200_turns_pct": round(
-            100.0 * sum(c["pool_hit_turns"] for c in cases)
-            / max(1, sum(max(1, MAX_TURNS if not c["hit"] else c["first_hit_turn"]) for c in cases)),
+            100.0
+            * sum(c["pool_hit_turns"] for c in cases)
+            / max(
+                1,
+                sum(
+                    max(1, MAX_TURNS if not c["hit"] else c["first_hit_turn"])
+                    for c in cases
+                ),
+            ),
             1,
         ),
         "filter_killed_target_turns": sum(c["filter_kills"] for c in cases),
-        "avg_latency_ms": round(statistics.fmean(c["avg_latency_ms"] for c in cases), 1),
+        "avg_latency_ms": round(
+            statistics.fmean(c["avg_latency_ms"] for c in cases), 1
+        ),
     }
 
 
@@ -225,9 +251,7 @@ def build_agent(catalog: Path, clarification_cfg: dict) -> Agent:
 def print_cases(cases: list[dict]) -> None:
     for c in cases:
         status = (
-            f"HIT t{c['first_hit_turn']} rank {c['best_rank']}"
-            if c["hit"]
-            else "MISS"
+            f"HIT t{c['first_hit_turn']} rank {c['best_rank']}" if c["hit"] else "MISS"
         )
         print(f"  [{status:<18}] {c['target']}  {c['title']}")
 
@@ -237,8 +261,15 @@ def main() -> int:
     parser.add_argument("--catalog", default="data/catalog.jsonl")
     parser.add_argument("--cases", type=int, default=30)
     parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--strategy", choices=["baseline", "adaptive", "both"], default="both")
+    parser.add_argument(
+        "--strategy", choices=["baseline", "adaptive", "both"], default="both"
+    )
     parser.add_argument("--verbose", action="store_true")
+    parser.add_argument(
+        "--diag",
+        action="store_true",
+        help="enable pool diagnostics (extra retrieval per turn)",
+    )
     args = parser.parse_args()
 
     catalog = Path(args.catalog)
@@ -260,8 +291,10 @@ def main() -> int:
         cases = []
         for idx, row in enumerate(targets):
             if args.verbose:
-                print(f"  case {idx + 1}: {row['parent_asin']} {str(row['title'])[:60]}")
-            cases.append(run_case(agent, row, idx, args.verbose))
+                print(
+                    f"  case {idx + 1}: {row['parent_asin']} {str(row['title'])[:60]}"
+                )
+            cases.append(run_case(agent, row, idx, args.verbose, diag=args.diag))
         summary = summarize(cases)
         results[name] = (cases, summary)
         print_cases(cases)
@@ -274,7 +307,9 @@ def main() -> int:
         print("\n=== baseline vs adaptive ===")
         for k in b:
             delta = a[k] - b[k] if isinstance(b[k], (int, float)) else ""
-            print(f"  {k}: {b[k]} -> {a[k]}  ({'' if delta == '' else f'{delta:+.4f}'})")
+            print(
+                f"  {k}: {b[k]} -> {a[k]}  ({'' if delta == '' else f'{delta:+.4f}'})"
+            )
 
     return 0
 

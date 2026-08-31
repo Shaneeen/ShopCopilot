@@ -1,4 +1,5 @@
 """R2/R3 deterministic rankers built from explicit extracted features."""
+
 from __future__ import annotations
 
 import time
@@ -9,7 +10,11 @@ from neeshops.config.settings import load_strategy
 from neeshops.models.recommendation import Recommendation
 from neeshops.models.session import ConversationState
 from neeshops.ranking.base import Ranker
-from neeshops.ranking.features import ConstraintEvaluation, RankingFeatureExtractor, RankingFeatures
+from neeshops.ranking.features import (
+    ConstraintEvaluation,
+    RankingFeatureExtractor,
+    RankingFeatures,
+)
 from neeshops.ranking.signals import normalize_scores, reciprocal_rank_fusion
 from neeshops.retrieval.base import Candidate
 
@@ -46,6 +51,12 @@ class ConstraintAwareRanker(Ranker):
         self._coverage_weight = float(rank_cfg.get("coverage_weight", 2.0))
         self._coverage_salience_weight = float(
             rank_cfg.get("coverage_salience_weight", 0.5)
+        )
+        self._buying_salience_weight = float(
+            rank_cfg.get("buying_salience_weight", 0.5)
+        )
+        self._buying_popularity_scale = float(
+            rank_cfg.get("buying_popularity_scale", 1.0)
         )
         self._full_match_bonus = float(rank_cfg.get("full_match_bonus", 0.5))
         # Below this many active constraints, title/feature overlap are
@@ -99,7 +110,7 @@ class ConstraintAwareRanker(Ranker):
                 retrieval_score_normalized=retrieval_signal,
             )
             enabled: Mapping[str, bool] = self._cfg.get("features_enabled", {})
-            relevance = self._aggregate(features)
+            relevance = self._aggregate(features, route=state.route)
             if (
                 state.route == "browsing"
                 and self._browsing_popularity_bump
@@ -115,7 +126,11 @@ class ConstraintAwareRanker(Ranker):
             # the remaining enabled features instead of leaving this tier
             # of the ordering unconditionally active.
             sort_coverage = features.coverage if enabled.get("coverage", True) else 0.0
-            sort_popularity = features.popularity if enabled.get("popularity", True) else 0.0
+            sort_popularity = (
+                features.popularity if enabled.get("popularity", True) else 0.0
+            )
+            if state.route == "buying":
+                sort_popularity *= self._buying_popularity_scale
             scored.append(
                 (
                     features.hard_constraint_violation_count,
@@ -135,7 +150,9 @@ class ConstraintAwareRanker(Ranker):
                 reason=self._reason(violations),
                 source=candidate.source,
             )
-            for violations, _neg_coverage, negative_relevance, _neg_popularity, _asin, candidate in scored[:top_k]
+            for violations, _neg_coverage, negative_relevance, _neg_popularity, _asin, candidate in scored[
+                :top_k
+            ]
         ]
         self.last_latency_ms = (time.perf_counter() - started) * 1000
         return recommendations
@@ -144,7 +161,7 @@ class ConstraintAwareRanker(Ranker):
         method = str(self._cfg.get("retrieval_normalization", "raw"))
         return normalize_scores([candidate.score for candidate in candidates], method)
 
-    def _aggregate(self, features: RankingFeatures) -> float:
+    def _aggregate(self, features: RankingFeatures, route: str | None = None) -> float:
         weights: Mapping[str, float] = self._cfg["weights"]
         enabled: Mapping[str, bool] = self._cfg.get("features_enabled", {})
         values = {
@@ -189,7 +206,10 @@ class ConstraintAwareRanker(Ranker):
         # isolates it instead of leaving these terms unconditionally on.
         if enabled.get("coverage", True):
             relevance += self._coverage_weight * features.coverage
-            relevance += self._coverage_salience_weight * features.salience
+            salience_weight = self._coverage_salience_weight
+            if route == "buying":
+                salience_weight = self._buying_salience_weight
+            relevance += salience_weight * features.salience
         if enabled.get("full_match_bonus", True) and features.coverage >= 0.999:
             relevance += self._full_match_bonus
         return relevance
@@ -219,15 +239,21 @@ class FusionAwareRanker(ConstraintAwareRanker):
     def _retrieval_signals(self, candidates: list[Candidate]) -> list[float]:
         method = str(self._cfg.get("fusion_method", "minmax"))
         if method != "rrf":
-            return normalize_scores([candidate.score for candidate in candidates], method)
+            return normalize_scores(
+                [candidate.score for candidate in candidates], method
+            )
         if not self._source_rankings:
             # Candidate.source labels do not contain source ranks; fall back to
             # deterministic rank normalization rather than inventing fusion.
-            return normalize_scores([candidate.score for candidate in candidates], "rank")
+            return normalize_scores(
+                [candidate.score for candidate in candidates], "rank"
+            )
         raw = reciprocal_rank_fusion(
             self._source_rankings, k=int(self._cfg.get("rrf_k", 60))
         )
-        return normalize_scores([raw.get(candidate.parent_asin, 0.0) for candidate in candidates], "minmax")
+        return normalize_scores(
+            [raw.get(candidate.parent_asin, 0.0) for candidate in candidates], "minmax"
+        )
 
 
 def _unique_candidates(candidates: list[Candidate]) -> list[Candidate]:

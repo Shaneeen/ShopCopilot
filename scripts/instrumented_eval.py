@@ -19,6 +19,7 @@ the full internal response (including `diagnostics`) is visible. Adds:
     python scripts/instrumented_eval.py                 # public 200
     python scripts/instrumented_eval.py --limit 50      # quick panel
 """
+
 from __future__ import annotations
 
 import argparse
@@ -76,11 +77,17 @@ def _miss_taxonomy(session: dict) -> str:
     return "rank"
 
 
-def build_agent(catalog_path: Path) -> NeeShopsAgent:
+def build_agent(
+    catalog_path: Path, catalog_lookup: dict | None = None
+) -> NeeShopsAgent:
     """The same wiring starter.Agent does, exposing the full NeeShopsAgent."""
     bm25 = BM25Retriever(catalog_path=catalog_path)
     retriever = HybridRetriever(bm25=bm25)
-    lookup = load_catalog_lookup(catalog_path)
+    lookup = (
+        catalog_lookup
+        if catalog_lookup is not None
+        else load_catalog_lookup(catalog_path)
+    )
     return NeeShopsAgent(
         retriever=retriever, catalog_lookup=lookup, catalog_path=catalog_path
     )
@@ -172,9 +179,8 @@ def run_session(
             retrieval_hit_turns += 1
         if response.get("ask_attribute"):
             questions_asked += 1
-        ranked = normalize_recommendations(
-            response.get("recommendations"), catalog_ids
-        )
+        ranked = normalize_recommendations(response.get("recommendations"), catalog_ids)
+        rank = None
         if target in ranked:
             rank = ranked.index(target) + 1
             if override_applied:
@@ -191,7 +197,7 @@ def run_session(
                 "retrieval_rank": retrieval_rank,
                 "and_set_size": response_diag.get("and_set_size"),
                 "over_generality": response_diag.get("over_generality"),
-                "target_rank": rank if target in ranked else None,
+                "target_rank": rank,
                 "llm_fallback": response_diag.get("llm_fallback"),
             }
         )
@@ -208,11 +214,16 @@ def run_session(
             if new_value:
                 disclosed.add(new_value)
             user_message = str(
-                override.get("message", "Actually, please ignore my earlier preference.")
+                override.get(
+                    "message", "Actually, please ignore my earlier preference."
+                )
             )
         else:
             user_message, boundary_used = customer_reply(
-                effective_sample, response.get("ask_attribute"), disclosed, boundary_used
+                effective_sample,
+                response.get("ask_attribute"),
+                disclosed,
+                boundary_used,
             )
 
     hit = hit_turn is not None
@@ -228,12 +239,17 @@ def run_session(
             miss_type = "insufficient_constraints"
         else:
             miss_type = "rank"
+    miss_taxonomy = None
+    if not hit:
+        miss_taxonomy = "pool" if pool_hit_turns == 0 else "rank"
 
     return {
         "sample_id": sample["sample_id"],
         "scenario_type": sample["scenario_type"],
         "hit": hit,
-        "miss_taxonomy": _miss_taxonomy({"pool_hit_turns": pool_hit_turns}) if not hit else None,
+        "miss_taxonomy": _miss_taxonomy({"pool_hit_turns": pool_hit_turns})
+        if not hit
+        else None,
         "first_hit_turn": hit_turn,
         "best_rank": best_rank,
         "reciprocal_rank": 0.0 if best_rank is None else 1.0 / best_rank,
@@ -242,6 +258,7 @@ def run_session(
         "turns_run": turns_run,
         "questions_asked": questions_asked,
         "miss_type": miss_type,
+        "miss_taxonomy": miss_taxonomy,
         "final_and_set_size": final_diag.get("and_set_size"),
         "latency_ms": statistics.fmean(latencies) if latencies else 0.0,
         "turns": turn_records,
@@ -264,7 +281,8 @@ def summarize_panel(sessions: list[dict]) -> dict:
     hit_at = {
         f"hit_at_{k}": sum(
             1 for s in sessions if s["best_rank"] is not None and s["best_rank"] <= k
-        ) / n
+        )
+        / n
         for k in (1, 3, 5, 10)
     }
     miss_counts: dict[str, int] = {name: 0 for name in MISS_TYPES}
@@ -272,9 +290,13 @@ def summarize_panel(sessions: list[dict]) -> dict:
         if s["miss_type"] is not None:
             miss_counts[s["miss_type"]] += 1
     taxonomy_counts: dict[str, int] = {name: 0 for name in TAXONOMY}
+    per_route_taxonomy: dict[str, dict[str, int]] = {}
     for s in sessions:
-        if s["miss_taxonomy"] is not None:
+        if s.get("miss_taxonomy") is not None:
             taxonomy_counts[s["miss_taxonomy"]] += 1
+            route = s["scenario_type"]
+            bucket = per_route_taxonomy.setdefault(route, {"pool": 0, "rank": 0})
+            bucket[s["miss_taxonomy"]] += 1
     rank_fix_ceiling = float(panel["hit_rate_at_10"]) + taxonomy_counts["rank"] / n
     and_sizes = [
         s["final_and_set_size"]
@@ -285,26 +307,46 @@ def summarize_panel(sessions: list[dict]) -> dict:
         {
             "efficiency": round(efficiency, 6),
             "recommended_technical_score": round(
-                0.50 * panel["hit_rate_at_10"] + 0.30 * panel["mrr"] + 0.20 * efficiency, 6
+                0.50 * panel["hit_rate_at_10"]
+                + 0.30 * panel["mrr"]
+                + 0.20 * efficiency,
+                6,
             ),
             **{k: round(v, 6) for k, v in hit_at.items()},
-            "target_in_pool_at_200": round(100.0 * sum(s["pool_hit_turns"] for s in sessions) / turns_total, 2),
-            "target_in_retrieval_at_200": round(100.0 * sum(s["retrieval_hit_turns"] for s in sessions) / turns_total, 2),
+            "target_in_pool_at_200": round(
+                100.0 * sum(s["pool_hit_turns"] for s in sessions) / turns_total, 2
+            ),
+            "target_in_retrieval_at_200": round(
+                100.0 * sum(s["retrieval_hit_turns"] for s in sessions) / turns_total, 2
+            ),
             "filter_kill_rate": round(
-                (sum(s["retrieval_hit_turns"] for s in sessions) - sum(s["pool_hit_turns"] for s in sessions)) / turns_total, 4
+                (
+                    sum(s["retrieval_hit_turns"] for s in sessions)
+                    - sum(s["pool_hit_turns"] for s in sessions)
+                )
+                / turns_total,
+                4,
             ),
             "avg_questions": round(sum(s["questions_asked"] for s in sessions) / n, 3),
-            "avg_final_and_set_size": round(statistics.fmean(and_sizes), 1) if and_sizes else None,
+            "avg_final_and_set_size": round(statistics.fmean(and_sizes), 1)
+            if and_sizes
+            else None,
             "over_generality_sessions": sum(
                 1 for s in sessions if any(t["over_generality"] for t in s["turns"])
             ),
             "llm_fallback_turns": sum(
                 1 for s in sessions for t in s["turns"] if t["llm_fallback"]
             ),
-            "p50_latency_ms": round(percentile([s["latency_ms"] for s in sessions], 50), 1),
-            "p95_latency_ms": round(percentile([s["latency_ms"] for s in sessions], 95), 1),
+            "p50_latency_ms": round(
+                percentile([s["latency_ms"] for s in sessions], 50), 1
+            ),
+            "p95_latency_ms": round(
+                percentile([s["latency_ms"] for s in sessions], 95), 1
+            ),
             "miss_decomposition": miss_counts,
             "miss_taxonomy": taxonomy_counts,
+            "miss_taxonomy_pool_vs_rank": taxonomy_counts,
+            "miss_taxonomy_per_route": per_route_taxonomy,
             "rank_fix_ceiling": round(rank_fix_ceiling, 6),
         }
     )
@@ -312,18 +354,24 @@ def summarize_panel(sessions: list[dict]) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Instrumented public-set evaluation panel")
+    parser = argparse.ArgumentParser(
+        description="Instrumented public-set evaluation panel"
+    )
     parser.add_argument("--catalog", default="data/catalog.jsonl")
     parser.add_argument("--dataset", default="data/public_set.jsonl")
-    parser.add_argument("--output", default="evaluation/results/instrumented_results.json")
-    parser.add_argument("--limit", type=int, default=0, help="only run the first N samples")
+    parser.add_argument(
+        "--output", default="evaluation/results/instrumented_results.json"
+    )
+    parser.add_argument(
+        "--limit", type=int, default=0, help="only run the first N samples"
+    )
     args = parser.parse_args()
 
     samples = load_jsonl(args.dataset)
     if args.limit:
         samples = samples[: args.limit]
     catalog_ids, categories, products = catalog_index(args.catalog)
-    agent = build_agent(Path(args.catalog))
+    agent = build_agent(Path(args.catalog), catalog_lookup=products)
 
     sessions = []
     for sample in samples:
@@ -339,7 +387,10 @@ def main() -> int:
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps({"panel": panel, "sessions": sessions}, indent=2) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps({"panel": panel, "sessions": sessions}, indent=2) + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(panel, indent=2))
     return 0
 
