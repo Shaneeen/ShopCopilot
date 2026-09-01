@@ -2,7 +2,7 @@
 
 # ShopCopilot — Conversational E-Commerce Search (TikTok TechJam 2026)
 
-> **Start here:** `docs/HANDOVER.md` — single rebuild kit (architecture, Round 1/2 hypotheses, deck/script/report outlines). `docs/V3.md` is frozen at 2026-08-30; `docs/experiment-ledger.md` is the metrics matrix. Parent directory should contain **only** `ShopCopilot/` (worktrees removed 2026-08-31, branches tagged `archive/exp-*`).
+> **Start here:** `docs/experiment-ledger.md` — metrics matrix + run inventory; `docs/final-eval-record.md` — fresh-clone audit. Parent directory should contain **only** `ShopCopilot/` (worktrees removed 2026-08-31, branches tagged `archive/exp-*`).
 
 ## Status (2026-08-31 — Submission Freeze: `46e3322`)
 
@@ -28,14 +28,12 @@
 | **Overall** | **176 / 200 (88.0%)** | **0.8800** | **0.4916** | **3.375 turns** |
 
 ### Submission Deliverables & Documentation
-- **Technical Report:** [REPORT.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/REPORT.md)
-- **Presentation Deck (PPTX):** [ShopCopilot_TechJam_Deck.pptx](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/presentation/ShopCopilot_TechJam_Deck.pptx)
-- **Presentation Deck (PDF):** [ShopCopilot_TechJam_Deck.pdf](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/presentation/ShopCopilot_TechJam_Deck.pdf)
-- **Speaker Script (~9 min with delivery cues):** [docs/SPEAKER_SCRIPT.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/SPEAKER_SCRIPT.md)
-- **Video Storyboard & Script (2 min):** [docs/VIDEO_SCRIPT.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/VIDEO_SCRIPT.md)
-- **Presentation Claim-to-Evidence Map:** [docs/PRESENTATION.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/PRESENTATION.md)
-- **Fresh-Clone Rehearsal & Compliance Audit:** [docs/final-eval-record.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/final-eval-record.md)
-- **Experiment Ledger:** [docs/experiment-ledger.md](file:///c:/Users/Lenovo/Downloads/TIktok%20TechJam%202026/ShopCopilot/docs/experiment-ledger.md)
+- **Presentation Deck (PPTX):** [docs/presentation/ShopCopilot_TechJam_Deck.pptx](docs/presentation/ShopCopilot_TechJam_Deck.pptx)
+- **Presentation Deck (PDF):** [docs/presentation/ShopCopilot_TechJam_Deck.pdf](docs/presentation/ShopCopilot_TechJam_Deck.pdf)
+- **Fresh-Clone Rehearsal & Compliance Audit:** [docs/final-eval-record.md](docs/final-eval-record.md)
+- **Experiment Ledger:** [docs/experiment-ledger.md](docs/experiment-ledger.md)
+- **Architecture & Retrieval/Ranking Detail:** [docs/neeshops/ARCHITECTURE.md](docs/neeshops/ARCHITECTURE.md) *(public summary for Technical Report)*
+- **Claim-to-Evidence / Speaker & Video Scripts:** private — see `Experiment Ledger` + `final-eval-record` for public evidence; deck above is the pushed presentation
 
 ### Quickstart & Reproduction
 ```powershell
@@ -192,11 +190,9 @@ and provenance-stamped merge, metadata filtering, **constraint-aware reranking
 Detail: `docs/neeshops/ARCHITECTURE.md`; P2 measured gains: `docs/archive/p2readme.md`;
 P3 ranking: `neeshops/ranking/README.md` + `docs/archive/person3/`.
 
-**Start here**: `docs/neeshops/PROJECT_OVERVIEW.md` (living status +
-architecture diagrams) → `docs/neeshops/TRACK4_REQUIREMENTS.md`
+**Start here**: `docs/neeshops/ARCHITECTURE.md` (architecture) → `docs/neeshops/TRACK4_REQUIREMENTS.md`
 (competition source of truth) → `docs/neeshops/FOLDER_GUIDE.md` (what
-every folder is for) → `docs/neeshops/TEAM_WORKSTREAMS.md` (the 5-person
-job split) → `docs/neeshops/INTEGRATION_CONTRACTS.md` (module boundaries).
+every folder is for) → `docs/neeshops/INTEGRATION_CONTRACTS.md` (module boundaries).
 
 ## Repository layout (additions)
 
@@ -235,7 +231,7 @@ python scripts/interactive_demo.py                 # http://127.0.0.1:8787 — f
 Six streams (with Person 3 split into 3A Ranking Core and 3B Personalisation & Evaluation), each owning its own module folder to minimise merge
 conflicts: conversation & agent intelligence, retrieval & search, ranking
 core, personalisation & evaluation, research agent & evaluation, and integration/demo/DX.
-Full breakdown: `docs/neeshops/TEAM_WORKSTREAMS.md`.
+Full breakdown: `docs/neeshops/ARCHITECTURE.md` + `docs/neeshops/FOLDER_GUIDE.md` *(workstream split private — see architecture for module map)*.
 
 ## Status (audit repairs 2026-08-30 — extraction correctness, full-pool scoring, robustness)
 
@@ -297,7 +293,7 @@ python scripts/instrumented_eval.py --output evaluation/results/instrumented_res
 | **Public set** (official evaluator) | Hit@10 / MRR / MTTC / Technical | **0.870 / 0.4455 / 3.465 / 0.7193** | 0.805 / 0.402 / 3.93 / 0.665 | 0.125 / 0.068 / 9.81 / 0.107 |
 | By scenario (HR@10) | buying / browsing / intent-override / boundary | **0.875 / 0.900 / 0.800 / 0.800** | 0.913 / 0.725 / 0.800 / 0.60 | — |
 
-The v2 restructure (`docs/IMPLEMENTATION_V2.md` for the full decision log): an exact
+The v2 restructure (see `docs/neeshops/ARCHITECTURE.md` + `docs/experiment-ledger.md` for decision log): an exact
 Boolean-AND **guarantee pool** over a new in-memory token index (the simulator's
 constraint values are verbatim tokens of the target's own text, so the AND set
 contains the target by construction — pool membership ~84% of scored turns),
@@ -319,8 +315,7 @@ P3 `.obsidian`) / `requirements.txt` (`numpy` + `google-genai`). Full suite
 
 *Scores — official evaluator (200 public sessions, 50k catalog, `results.json`).
 Baseline references: organiser weak starter `0.125/0.068/9.81/0.107`; NeeShops
-2026-08-28 initial `0.285/0.189/8.55/0.248` (see
-`docs/neeshops/PROJECT_OVERVIEW.md`).*
+2026-08-28 initial `0.285/0.189/8.55/0.248` (see `docs/experiment-ledger.md`).*
 
 | Suite | Metric | 2026-08-29 rework (current) | staging-main 08-29 (prev) | Organiser weak |
 |---|---|---|---|---|
