@@ -121,6 +121,21 @@ python scripts/interactive_demo.py        # http://127.0.0.1:8787 — funnel, pr
 
 All tuning on `data/dev_split.jsonl` (160) — public-200/holdout are confirmation only. Every new key in `default_strategy.json` must be in `research/experiment.py::SAFE_PARAMETERS` (`test_config_registered.py`).
 
+## Team Contributions — ANYTHING AH
+
+- **Yu Le Tan** — Project lead; core architecture, hybrid retrieval & ranking experiments, overall pipeline orchestration, evaluation and deck.
+- **Shaneen Ho Xin En** — Ranking & personalization; deterministic ranker and LLM reranking layer, personalization scoring and experiments.
+- **Gwen** — Conversational understanding; intent routing, constraint extraction, state tracking and clarification strategy.
+- **Darius** — Research infrastructure & optimization; experiment tooling and **Demo Video / presentation**.
+- **Clarence** — Integration & reliability; Agent contract, test harness and end-to-end reliability.
+
+## Limitations & Future Work
+
+- 4-case LLM probe only (ΔHit 0, ΔMRR −0.005, +2.2–8.3s); no 20/100-case Nemotron confirmation (see `experiment-ledger.md:98` MISSING).
+- 16 dev-160 misses remain (13 rank-depth, 2 pool-cap, 1 extraction) — ceiling 0.900 Hit without deeper retrieval.
+- In-memory hashed TF-IDF, not transformer embeddings — swap-in `sentence-transformers` kept as opt-in (`requirements.txt:32`).
+- Next: larger LLM probe, boundary-scenario retrieval floor tuning, and holdout-40 confirmation.
+
 ## Attribution
 
 Catalog & sessions derived from Amazon Reviews 2023 (McAuley Lab, UCSD).
