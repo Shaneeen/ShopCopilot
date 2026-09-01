@@ -6,7 +6,7 @@
 
 ## Benchmarks
 
-| Metric | Starter | **ShopCopilot (submission-freeze 46e3322)** | Δ |
+| Metric | Starter | **ShopCopilot (Submission)** | Δ |
 |---|---|---|---|
 | **Hit@10** | 0.125 (25/200) | **0.880 (176/200)** | **7.0×** |
 | **MRR** | 0.0680 | **0.4916** | **7.2×** |
@@ -95,7 +95,7 @@ ShopCopilot/
 frontend/                        # decoupled demo prototype (not part of Agent)
 ```
 
-See [docs/neeshops/ARCHITECTURE.md](docs/neeshops/ARCHITECTURE.md) and [docs/neeshops/FOLDER_GUIDE.md](docs/neeshops/FOLDER_GUIDE.md) for module contracts.
+See [docs/neeshops/ARCHITECTURE.md](docs/neeshops/ARCHITECTURE.md) for module contracts.
 
 ## Run Tests & Reproduce
 
@@ -122,6 +122,6 @@ All tuning on `data/dev_split.jsonl` (160) — public-200/holdout are confirmati
 
 ## Attribution
 
-Catalog & sessions derived from Amazon Reviews 2023 (McAuley Lab, UCSD). See [DATA_ATTRIBUTION.md](DATA_ATTRIBUTION.md).
+Catalog & sessions derived from Amazon Reviews 2023 (McAuley Lab, UCSD).
 
 *ShopCopilot — TikTok TechJam 2026 · Team ANYTHING AH · deterministic · reproducible*
