@@ -123,8 +123,8 @@ All tuning on `data/dev_split.jsonl` (160) — public-200/holdout are confirmati
 
 ## Team Contributions — ANYTHING AH
 
-- **Yu Le Tan** — Project lead; core architecture, hybrid retrieval & ranking experiments, overall pipeline orchestration, evaluation and deck.
-- **Shaneen Ho Xin En** — Ranking & personalization; deterministic ranker and LLM reranking layer, personalization scoring and experiments.
+- **Yu Le** — Project core architecture, hybrid retrieval & ranking experiments, overall pipeline orchestration, evaluation and deck.
+- **Shaneen** — Ranking & personalization; deterministic ranker and LLM reranking layer, personalization scoring and experiments.
 - **Gwen** — Conversational understanding; intent routing, constraint extraction, state tracking and clarification strategy.
 - **Darius** — Research infrastructure & optimization; experiment tooling and **Demo Video / presentation**.
 - **Clarence** — Integration & reliability; Agent contract, test harness and end-to-end reliability.
