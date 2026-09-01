@@ -131,7 +131,7 @@ All tuning on `data/dev_split.jsonl` (160) — public-200/holdout are confirmati
 
 ## Limitations & Future Work
 
-- 4-case LLM probe only (ΔHit 0, ΔMRR −0.005, +2.2–8.3s); no 20/100-case Nemotron confirmation (see `experiment-ledger.md:98` MISSING).
+- 4-case LLM probe only (ΔHit 0, ΔMRR −0.005, +2.2–8.3s); full 20/100-case Nemotron validation not yet completed — see `docs/experiment-ledger.md` §6 for details.
 - 16 dev-160 misses remain (13 rank-depth, 2 pool-cap, 1 extraction) — ceiling 0.900 Hit without deeper retrieval.
 - In-memory hashed TF-IDF, not transformer embeddings — swap-in `sentence-transformers` kept as opt-in (`requirements.txt:32`).
 - Next: larger LLM probe, boundary-scenario retrieval floor tuning, and holdout-40 confirmation.
