@@ -1,6 +1,6 @@
-# ShopCopilot — TikTok TechJam 2026 · Team ANYTHING AH
+# ShopCopilot — TikTok TechJam 2026 · Team Anything Ah
 
-> **Track 4 · Conversational E-Commerce Search · 50k catalog · 10 turns max · deterministic · $0 LLM cost** · **Team ANYTHING AH**
+> **Track 4 · Conversational E-Commerce Search · 50k catalog · 10 turns max · deterministic · $0 LLM cost** · **Team Anything Ah**
 
 > **Our Scores (public-200, `results.json`): Hit@10 0.880 · MRR 0.4916 · MTTC 3.375 · Efficiency 0.7625 · TechnicalScore 0.7400**
 
@@ -121,7 +121,7 @@ python scripts/interactive_demo.py        # http://127.0.0.1:8787 — funnel, pr
 
 All tuning on `data/dev_split.jsonl` (160) — public-200/holdout are confirmation only. Every new key in `default_strategy.json` must be in `research/experiment.py::SAFE_PARAMETERS` (`test_config_registered.py`).
 
-## Team Contributions — ANYTHING AH
+## Team Contributions — Anything Ah
 
 - **Yu Le** — Project core architecture, hybrid retrieval & ranking experiments, overall pipeline orchestration, evaluation and deck.
 - **Shaneen** — Ranking & personalization; deterministic ranker and LLM reranking layer, personalization scoring and experiments.
@@ -140,4 +140,4 @@ All tuning on `data/dev_split.jsonl` (160) — public-200/holdout are confirmati
 
 Catalog & sessions derived from Amazon Reviews 2023 (McAuley Lab, UCSD).
 
-*ShopCopilot — TikTok TechJam 2026 · Team ANYTHING AH · deterministic · reproducible*
+*ShopCopilot — TikTok TechJam 2026 · Team Anything Ah · deterministic · reproducible*
