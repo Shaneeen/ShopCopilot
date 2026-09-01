@@ -1,6 +1,6 @@
-# ShopCopilot — TikTok TechJam 2026
+# ShopCopilot — TikTok TechJam 2026 · Team ANYTHING AH
 
-> **Track 4 · Conversational E-Commerce Search · 50k catalog · 10 turns max · deterministic · $0 LLM cost**
+> **Track 4 · Conversational E-Commerce Search · 50k catalog · 10 turns max · deterministic · $0 LLM cost** · **Team ANYTHING AH**
 
 > **Our Scores (public-200, `results.json`): Hit@10 0.880 · MRR 0.4916 · MTTC 3.375 · Efficiency 0.7625 · TechnicalScore 0.7400**
 
