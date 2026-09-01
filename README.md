@@ -34,6 +34,7 @@
 - **Ledger (experiments + forensics):** [docs/experiment-ledger.md](docs/experiment-ledger.md)
 - **Fresh-clone audit:** [docs/final-eval-record.md](docs/final-eval-record.md)
 - **Architecture:** [docs/neeshops/ARCHITECTURE.md](docs/neeshops/ARCHITECTURE.md)
+- **Solution Report:** [docs/neeshops/SolutionReport.md](docs/neeshops/SolutionReport.md)
 
 ## Flow — How It Works
 
